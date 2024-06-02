@@ -1,7 +1,7 @@
 package be.twofold.tinybcdec;
 
 public final class BC3Decoder extends BCDecoder {
-    BC3Decoder(int bytesPerBlock, int bytesPerPixel) {
+    public BC3Decoder() {
         super(16, 4);
     }
 

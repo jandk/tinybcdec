@@ -7,7 +7,7 @@ public final class BC2Decoder extends BCDecoder {
 
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        BC1Decoder.decodeColor(src, srcPos, dst, dstPos, stride, true);
+        BC1Decoder.decodeColor(src, srcPos + 8, dst, dstPos, stride, true);
         decodeAlpha(src, srcPos, dst, dstPos + 3, stride);
     }
 

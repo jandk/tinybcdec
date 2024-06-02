@@ -1,7 +1,7 @@
 package be.twofold.tinybcdec;
 
 public final class BC5UDecoder extends BCDecoder {
-    BC5UDecoder(int bytesPerPixel) {
+    public BC5UDecoder(int bytesPerPixel) {
         super(16, bytesPerPixel);
     }
 
