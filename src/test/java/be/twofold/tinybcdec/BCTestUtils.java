@@ -43,7 +43,7 @@ final class BCTestUtils {
     }
 
     static byte[] readPng(String path) throws IOException {
-        try (var in = BCDecoderTest.class.getResourceAsStream(path)) {
+        try (var in = BCTestUtils.class.getResourceAsStream(path)) {
             BufferedImage image = ImageIO.read(in);
             byte[] data = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
             if (image.getType() == BufferedImage.TYPE_4BYTE_ABGR) {

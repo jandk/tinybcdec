@@ -13,26 +13,32 @@ public final class GenerateTestImages {
     public static void main(String[] args) throws IOException {
         Path target = Path.of(args[0]);
 
-        renderImage("BC1 RGB", "4bbp", "no alpha", Transparency.NONE, target.resolve("bc1.png"));
-        renderImage("BC1 RGBA", "4bbp", "1-bit alpha", Transparency.FULL, target.resolve("bc1a.png"));
-        renderImage("BC2 RGBA", "8bbp", "4-bit alpha", Transparency.FULL, target.resolve("bc2.png"));
-        renderImage("BC3 RGBA", "8bbp", "8-bit alpha", Transparency.FULL, target.resolve("bc3.png"));
-        renderImage("BC6H_SF16 RGB", "8bbp", "no alpha", Transparency.NONE, target.resolve("bc6h_sf16.png"));
-        renderImage("BC6H_UF16 RGB", "8bbp", "no alpha", Transparency.NONE, target.resolve("bc6h_uf16.png"));
-        renderImage("BC7 RGBA", "8bbp", "8-bit alpha", Transparency.HALF, target.resolve("bc7.png"));
+        Color black = new Color(0, 0, 0, 0);
+        Color grey = new Color(0, 0, 0, 255);
+        Color blue = new Color(128, 128, 255, 255);
+        Color white = new Color(255, 255, 255, 255);
+        Color red = new Color(255, 64, 0, 255);
+        Color green = new Color(64, 255, 0, 255);
+
+        renderImage("BC1 RGB", "4bbp", "no alpha", blue, white, target.resolve("bc1.png"));
+        renderImage("BC1 RGBA", "4bbp", "1-bit alpha", blue, black, target.resolve("bc1a.png"));
+        renderImage("BC2 RGBA", "8bbp", "4-bit alpha", blue, black, target.resolve("bc2.png"));
+        renderImage("BC3 RGBA", "8bbp", "8-bit alpha", blue, black, target.resolve("bc3.png"));
+        renderImage("BC4U R", "4bpp", "no alpha", white, grey, target.resolve("bc4u.png"));
+        renderImage("BC5U R", "8bpp", "no alpha", red, green, target.resolve("bc5u.png"));
+        renderImage("BC6H_SF16 RGB", "8bbp", "no alpha", blue, white, target.resolve("bc6h_sf16.png"));
+        renderImage("BC6H_UF16 RGB", "8bbp", "no alpha", blue, white, target.resolve("bc6h_uf16.png"));
+        renderImage("BC7 RGBA", "8bbp", "8-bit alpha", blue, white, target.resolve("bc7.png"));
     }
 
-    private static void renderImage(String s0, String s1, String s2, Transparency transparency, Path path) throws IOException {
+    private static void renderImage(String s0, String s1, String s2, Color c0, Color c1, Path path) throws IOException {
         var image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
 
-        var value = transparency != Transparency.NONE ? 0 : 255;
-        var c0 = new Color(128, 128, 255);
-        var c1 = new Color(value, value, value, value);
-
-        var x1 = transparency == Transparency.HALF ? WIDTH / 3 : 0;
-        var y1 = transparency == Transparency.HALF ? HEIGHT / 3 : 0;
-        var x2 = transparency == Transparency.HALF ? WIDTH * 2 / 3 : WIDTH;
-        var y2 = transparency == Transparency.HALF ? HEIGHT * 2 / 3 : HEIGHT;
+        boolean half = s0.contains("BC7");
+        var x1 = half ? WIDTH / 3 : 0;
+        var y1 = half ? HEIGHT / 3 : 0;
+        var x2 = half ? WIDTH * 2 / 3 : WIDTH;
+        var y2 = half ? HEIGHT * 2 / 3 : HEIGHT;
         var gradientPaint = new GradientPaint(x1, y1, c0, x2, y2, c1);
 
         var g2d = image.createGraphics();
