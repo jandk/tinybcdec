@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-public final class BC3Decoder implements BlockDecoder {
+final class BC3Decoder implements BlockDecoder {
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
         BC1Decoder.decodeColor(src, srcPos + 8, dst, true);

@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-public final class BC7Decoder implements BlockDecoder {
+final class BC7Decoder implements BlockDecoder {
     static final int[] SUBSET2 = {
         0x50505050, 0x40404040, 0x54545454, 0x54505040, 0x50404000, 0x55545450, 0x55545040, 0x54504000,
         0x50400000, 0x55555450, 0x55544000, 0x54400000, 0x55555440, 0x55550000, 0x55555500, 0x55000000,
