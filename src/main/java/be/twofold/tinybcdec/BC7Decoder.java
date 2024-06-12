@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-public final class BC7Decoder extends BCDecoder {
+public final class BC7Decoder implements BlockDecoder {
     static final int[] SUBSET2 = {
         0x50505050, 0x40404040, 0x54545454, 0x54505040, 0x50404000, 0x55545450, 0x55545040, 0x54504000,
         0x50400000, 0x55555450, 0x55544000, 0x54400000, 0x55555440, 0x55550000, 0x55555500, 0x55000000,
@@ -77,12 +77,8 @@ public final class BC7Decoder extends BCDecoder {
         new Mode(2, 6, 0, false, 5, 5, true, false, +2, 0)
     );
 
-    public BC7Decoder() {
-        super(16, 4);
-    }
-
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
         Bits bits = Bits.from(src, srcPos);
         Mode mode = MODES.get(mode(bits));
         int partition = bits.getBits(mode.pb);
@@ -171,39 +167,35 @@ public final class BC7Decoder extends BCDecoder {
 
         int[] weights1 = WEIGHTS[mode.ib1];
         int[] weights2 = WEIGHTS[mode.ib2];
-        for (int y = 0, i = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++, i++) {
-                int index1 = indexBits[i];
-                int cWeight = weights1[index1];
-                int aWeight = weights1[index1];
+        for (int i = 0, o = 0; i < 16; i++, o += 4) {
+            int index1 = indexBits[i];
+            int cWeight = weights1[index1];
+            int aWeight = weights1[index1];
 
-                if (mode.ib2 != 0) {
-                    boolean anchored = i == 0 || i == a1 || i == a2;
-                    int numBits = mode.ib2 - (anchored ? 1 : 0);
-                    int index2 = bits.getBits(numBits);
+            if (mode.ib2 != 0) {
+                boolean anchored = i == 0 || i == a1 || i == a2;
+                int numBits = mode.ib2 - (anchored ? 1 : 0);
+                int index2 = bits.getBits(numBits);
 
-                    if (selection) {
-                        cWeight = weights2[index2];
-                    } else {
-                        aWeight = weights2[index2];
-                    }
+                if (selection) {
+                    cWeight = weights2[index2];
+                } else {
+                    aWeight = weights2[index2];
                 }
-
-                int pIndex = partitionTable >>> (i * 2) & 3;
-                int[] c0 = colors[pIndex * 2];
-                int[] c1 = colors[pIndex * 2 + 1];
-
-                dst[dstPos + 0] = (byte) interpolate(c0[0], c1[0], cWeight);
-                dst[dstPos + 1] = (byte) interpolate(c0[1], c1[1], cWeight);
-                dst[dstPos + 2] = (byte) interpolate(c0[2], c1[2], cWeight);
-                dst[dstPos + 3] = (byte) interpolate(c0[3], c1[3], aWeight);
-
-                if (rotation != 0) {
-                    swap(dst, dstPos + 3, dstPos + rotation - 1);
-                }
-                dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+
+            int pIndex = partitionTable >>> (i * 2) & 3;
+            int[] c0 = colors[pIndex * 2];
+            int[] c1 = colors[pIndex * 2 + 1];
+
+            dst[o + 0] = (byte) interpolate(c0[0], c1[0], cWeight);
+            dst[o + 1] = (byte) interpolate(c0[1], c1[1], cWeight);
+            dst[o + 2] = (byte) interpolate(c0[2], c1[2], cWeight);
+            dst[o + 3] = (byte) interpolate(c0[3], c1[3], aWeight);
+
+            if (rotation != 0) {
+                swap(dst, o + 3, o + rotation - 1);
+            }
         }
     }
 

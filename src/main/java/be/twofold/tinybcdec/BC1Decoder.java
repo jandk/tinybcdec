@@ -1,16 +1,12 @@
 package be.twofold.tinybcdec;
 
-public final class BC1Decoder extends BCDecoder {
-    public BC1Decoder() {
-        super(8, 4);
-    }
-
+public final class BC1Decoder implements BlockDecoder {
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        decodeColor(src, srcPos, dst, dstPos, stride, false);
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
+        decodeColor(src, srcPos, dst, false);
     }
 
-    static void decodeColor(byte[] src, int srcPos, byte[] dst, int dstPos, int stride, boolean opaque) {
+    static void decodeColor(byte[] src, int srcPos, byte[] dst, boolean opaque) {
         long block = ByteArrays.getLong(src, srcPos);
         int c0 = (int) (block & 0xffff);
         int c1 = (int) ((block >>> 16) & 0xffff);
@@ -45,12 +41,8 @@ public final class BC1Decoder extends BCDecoder {
             colors[2] = rgb(r2, g2, b2);
         }
 
-        for (int y = 0, shift = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++, shift += 2) {
-                ByteArrays.setInt(dst, dstPos, colors[(bits >>> shift) & 3]);
-                dstPos += 4;
-            }
-            dstPos += stride - 16;
+        for (int i = 0; i < 16; i++) {
+            ByteArrays.setInt(dst, i * 4, colors[(bits >>> (i * 2)) & 3]);
         }
     }
 
@@ -65,5 +57,4 @@ public final class BC1Decoder extends BCDecoder {
     private static int rgb(int r, int g, int b) {
         return 0xff000000 | (b << 16) | (g << 8) | r;
     }
-
 }

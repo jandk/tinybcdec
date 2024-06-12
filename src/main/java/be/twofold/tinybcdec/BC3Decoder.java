@@ -1,17 +1,13 @@
 package be.twofold.tinybcdec;
 
-public final class BC3Decoder extends BCDecoder {
-    public BC3Decoder() {
-        super(16, 4);
-    }
-
+public final class BC3Decoder implements BlockDecoder {
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        BC1Decoder.decodeColor(src, srcPos + 8, dst, dstPos, stride, true);
-        decodeAlpha(src, srcPos, dst, dstPos + 3, stride, 4);
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
+        BC1Decoder.decodeColor(src, srcPos + 8, dst, true);
+        decodeAlpha(src, srcPos, dst, 3);
     }
 
-    static void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride, int size) {
+    static void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos) {
         long block = ByteArrays.getLong(src, srcPos);
         int a0 = (int) (block & 0xff);
         int a1 = (int) ((block >>> 8) & 0xff);
@@ -37,13 +33,9 @@ public final class BC3Decoder extends BCDecoder {
             alphas[7] = (byte) 0xff;
         }
 
-        for (int y = 0, shift = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++, shift += 3) {
-                int colorIndex = (int) ((block >>> shift) & 7);
-                dst[dstPos] = alphas[colorIndex];
-                dstPos += size;
-            }
-            dstPos += stride - 4 * size;
+        for (int i = 0; i < 16; i++) {
+            int index = (int) ((block >>> (i * 3)) & 7);
+            dst[(i * 4) + dstPos] = alphas[index];
         }
     }
 }

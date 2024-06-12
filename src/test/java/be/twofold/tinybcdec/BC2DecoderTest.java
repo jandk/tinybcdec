@@ -6,7 +6,7 @@ import java.io.*;
 
 class BC2DecoderTest {
 
-    private final BC2Decoder decoder = new BC2Decoder();
+    private final BCDecoder decoder = new BCDecoder(BCFormat.BC2, 4, 0, 1, 2, 3);
 
     @Test
     void testBC2() throws IOException {
