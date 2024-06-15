@@ -23,6 +23,10 @@ public final class BCOrder {
         this.green = validate(count, green, "green");
         this.blue = validate(count, blue, "blue");
         this.alpha = validate(count, alpha, "alpha");
+
+        if (overlap(red, green) || overlap(red, blue) || overlap(red, alpha) || overlap(green, blue) || overlap(green, alpha) || overlap(blue, alpha)) {
+            throw new IllegalArgumentException("channels must not overlap");
+        }
     }
 
     private static int validate(int count, int channel, String color) {
@@ -30,6 +34,10 @@ public final class BCOrder {
             throw new IllegalArgumentException(color + " must be in the range [0, " + count + ")");
         }
         return channel;
+    }
+
+    private static boolean overlap(int a, int b) {
+        return a != -1 && a == b;
     }
 
     public static BCOrder of(int count, int red, int green, int blue, int alpha) {

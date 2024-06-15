@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BCDecoder {
     BC4UDecoder(BCOrder order) {
-        super(BCFormat.BC1, order);
+        super(BCFormat.BC4Unsigned, order);
     }
 
     @Override

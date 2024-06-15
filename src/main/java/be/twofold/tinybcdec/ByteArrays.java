@@ -14,16 +14,8 @@ final class ByteArrays {
     private ByteArrays() {
     }
 
-    public static short getShort(byte[] array, int index) {
-        return (short) ShortVarHandle.get(array, index);
-    }
-
     public static void setShort(byte[] array, int index, short value) {
         ShortVarHandle.set(array, index, value);
-    }
-
-    public static int getInt(byte[] array, int index) {
-        return (int) IntVarHandle.get(array, index);
     }
 
     public static void setInt(byte[] array, int index, int value) {

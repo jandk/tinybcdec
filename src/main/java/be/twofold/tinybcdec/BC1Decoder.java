@@ -17,10 +17,12 @@ final class BC1Decoder extends BCDecoder {
         // doesn't really matter. The fixed point version is slightly faster, but the difference is
         // so small that it's not worth it. The fixed point version is also harder to read and
         // understand, so I'm going with the float version.
-        int c0 = Short.toUnsignedInt(ByteArrays.getShort(src, srcPos));
-        int c1 = Short.toUnsignedInt(ByteArrays.getShort(src, srcPos + 2));
+        long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
+        int c0 = (int) (block       ) & 0xffff;
+        int c1 = (int) (block >>> 16) & 0xffff;
+
         float r0 = ((c0 >>> 11) & 0x1f) * (1.0f / 31.0f);
         float g0 = ((c0 >>>  5) & 0x3f) * (1.0f / 63.0f);
         float b0 = ( c0         & 0x1f) * (1.0f / 31.0f);
@@ -48,7 +50,7 @@ final class BC1Decoder extends BCDecoder {
             colors[2] = rgb(r2, g2, b2);
         }
 
-        int indices = ByteArrays.getInt(src, srcPos + 4);
+        int indices = (int) (block >>> 32);
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, colors[indices & 3]);

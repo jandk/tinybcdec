@@ -84,12 +84,8 @@ public abstract class BCDecoder {
         }
 
         int bytesPerLine = width * bytesPerPixel;
-        int widthInBlocks = (width + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
-        int heightInBlocks = (height + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
-        int expectedSrcLength = widthInBlocks * heightInBlocks * format.bytesPerBlock();
-        int expectedDstLength = height * bytesPerLine;
-        Objects.checkFromIndexSize(srcPos, expectedSrcLength, src.length);
-        Objects.checkFromIndexSize(dstPos, expectedDstLength, dst.length);
+        Objects.checkFromIndexSize(srcPos, format.size(width, height), src.length);
+        Objects.checkFromIndexSize(dstPos, height * bytesPerLine, dst.length);
 
         for (int y = 0; y < height; y += BLOCK_HEIGHT) {
             for (int x = 0; x < width; x += BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
@@ -107,7 +103,7 @@ public abstract class BCDecoder {
         }
     }
 
-    private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int stride) {
+    private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
         int blockStride = BLOCK_WIDTH * bytesPerPixel;
         byte[] block = new byte[BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
@@ -115,13 +111,13 @@ public abstract class BCDecoder {
             fillAlpha(block, 0, blockStride);
         }
 
-        int yLimit = Math.min(height - y, BLOCK_HEIGHT);
-        int xLimit = Math.min(width - x, BLOCK_WIDTH);
-        for (int yy = 0; yy < yLimit; yy++) {
+        int partialWidth = Math.min(width - x, BLOCK_WIDTH);
+        int partialHeight = Math.min(height - y, BLOCK_HEIGHT);
+        for (int yy = 0; yy < partialHeight; yy++) {
             System.arraycopy(
                 block, yy * blockStride,
-                dst, dstPos + yy * stride,
-                xLimit * bytesPerPixel
+                dst, dstPos + yy * bytesPerLine,
+                partialWidth * bytesPerPixel
             );
         }
     }
