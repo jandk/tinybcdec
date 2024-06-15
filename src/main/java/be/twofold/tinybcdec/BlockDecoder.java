@@ -3,8 +3,6 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 public final class BlockDecoder {
-    private final BCFormat format;
-    private final BCDecoder decoder;
     private final int bytesPerPixel;
     private final int rOffset;
     private final int gOffset;
@@ -30,8 +28,7 @@ public final class BlockDecoder {
             throw new IllegalArgumentException("aOffset must be in the range [0, bytesPerPixel)");
         }
 
-        this.format = format;
-        this.decoder = createDecoder(format);
+        BCDecoder decoder = createDecoder(format);
         this.bytesPerPixel = bytesPerPixel;
         this.rOffset = rOffset;
         this.gOffset = gOffset;

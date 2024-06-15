@@ -172,8 +172,8 @@ final class BC7Decoder extends BCDecoder {
         int[] weights1 = WEIGHTS[mode.ib1];
         int[] weights2 = WEIGHTS[mode.ib2];
 
-        for (int y = 0, i = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++, i++) {
+        for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
                 int index1 = indexBits[i];
                 int cWeight = weights1[index1];
                 int aWeight = weights1[index1];
@@ -220,7 +220,7 @@ final class BC7Decoder extends BCDecoder {
                 ByteArrays.setInt(dst, dstPos, rgba(r, g, b, a));
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 

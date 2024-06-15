@@ -20,13 +20,13 @@ final class BC2Decoder extends BCDecoder {
     public void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long alphas = ByteArrays.getLong(src, srcPos);
 
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 dst[dstPos] = (byte) ((alphas & 0xf) * 0x11);
                 alphas >>>= 4;
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 

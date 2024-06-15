@@ -3,8 +3,8 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 public abstract class BCDecoder {
-    private static final int BLOCK_WIDTH = 4;
-    private static final int BLOCK_HEIGHT = 4;
+    static final int BLOCK_WIDTH = 4;
+    static final int BLOCK_HEIGHT = 4;
 
     final int bytesPerBlock;
     final int bytesPerPixel;

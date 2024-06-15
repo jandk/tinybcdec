@@ -49,13 +49,13 @@ final class BC1Decoder extends BCDecoder {
         }
 
         int indices = ByteArrays.getInt(src, srcPos + 4);
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, colors[indices & 3]);
                 indices >>>= 2;
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 

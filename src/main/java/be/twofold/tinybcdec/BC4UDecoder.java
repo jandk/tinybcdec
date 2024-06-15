@@ -13,10 +13,7 @@ final class BC4UDecoder extends BCDecoder {
         int a1 = (int) ((block >>> 8) & 0xff);
         block >>>= 16;
 
-        byte[] alphas = new byte[8];
-        alphas[0] = (byte) a0;
-        alphas[1] = (byte) a1;
-
+        byte[] alphas = {(byte) a0, (byte) a1, 0, 0, 0, 0, 0, (byte) 255};
         if (a0 > a1) {
             alphas[2] = (byte) ((6 * a0 + 1 * a1 + 3) / 7);
             alphas[3] = (byte) ((5 * a0 + 2 * a1 + 3) / 7);
@@ -29,18 +26,16 @@ final class BC4UDecoder extends BCDecoder {
             alphas[3] = (byte) ((3 * a0 + 2 * a1 + 2) / 5);
             alphas[4] = (byte) ((2 * a0 + 3 * a1 + 2) / 5);
             alphas[5] = (byte) ((1 * a0 + 4 * a1 + 2) / 5);
-            alphas[6] = (byte) 0x00;
-            alphas[7] = (byte) 0xff;
         }
 
         dstPos += rOffset;
-        for (int y = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 dst[dstPos] = alphas[(int) (block & 7)];
                 block >>>= 3;
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 }

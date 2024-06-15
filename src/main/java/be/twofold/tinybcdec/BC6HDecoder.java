@@ -93,8 +93,8 @@ final class BC6HDecoder extends BCDecoder {
         }
 
         int[] weights1 = BC7Decoder.WEIGHTS[ib];
-        for (int y = 0, i = 0; y < 4; y++) {
-            for (int x = 0; x < 4; x++, i++) {
+        for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
                 int pIndex = partitionTable >>> (i * 2) & 3;
                 int ci0 = pIndex * 2 * 3;
                 int ci1 = ci0 + 3;
@@ -120,7 +120,7 @@ final class BC6HDecoder extends BCDecoder {
 
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - 4 * bytesPerPixel;
+            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 
