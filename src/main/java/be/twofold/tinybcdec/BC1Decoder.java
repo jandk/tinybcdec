@@ -4,7 +4,7 @@ final class BC1Decoder extends BCDecoder {
     private final boolean opaque;
 
     BC1Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset, boolean opaque) {
-        super(8, 4, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
+        super(8, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
         if (bytesPerPixel < 4) {
             throw new IllegalArgumentException("bytesPerPixel must be at least 4");
         }
