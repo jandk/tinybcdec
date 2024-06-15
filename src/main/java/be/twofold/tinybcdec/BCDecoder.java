@@ -54,9 +54,9 @@ public final class BCDecoder {
             case BC5U_BLUE:
                 return new BC5UDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset);
             case BC6H_UF16:
-                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, false);
+                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, false);
             case BC6H_SF16:
-                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, true);
+                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, true);
             case BC7:
                 return new BC7Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
             default:

@@ -22,8 +22,8 @@ final class BC6HDecoder extends BlockDecoder {
 
     private final boolean signed;
 
-    public BC6HDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, boolean signed) {
-        super(16, bytesPerPixel, rOffset, gOffset, bOffset, -1);
+    public BC6HDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset, boolean signed) {
+        super(16, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
         if (bytesPerPixel != 6 && bytesPerPixel != 8) {
             throw new IllegalArgumentException("bytesPerPixel must be 6 or 8");
         }
@@ -111,9 +111,12 @@ final class BC6HDecoder extends BlockDecoder {
                 short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
                 short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
 
-                ByteArrays.setShort(dst, dstPos + 0, r);
-                ByteArrays.setShort(dst, dstPos + 2, g);
-                ByteArrays.setShort(dst, dstPos + 4, b);
+                ByteArrays.setShort(dst, dstPos + rOffset, r);
+                ByteArrays.setShort(dst, dstPos + gOffset, g);
+                ByteArrays.setShort(dst, dstPos + bOffset, b);
+                if (aOffset != -1) {
+                    ByteArrays.setShort(dst, dstPos + aOffset, (short) 0x3c00);
+                }
 
                 dstPos += bytesPerPixel;
             }

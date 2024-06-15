@@ -41,9 +41,9 @@ final class BC1Decoder extends BlockDecoder {
             int b3 = (b0 + (b1 << 1) + 1) / 3;
             colors[3] = rgb(r3, g3, b3);
         } else {
-            int r2 = (r0 + r1) >>> 1;
-            int g2 = (g0 + g1) >>> 1;
-            int b2 = (b0 + b1) >>> 1;
+            int r2 = (r0 + r1 + 1) >>> 1;
+            int g2 = (g0 + g1 + 1) >>> 1;
+            int b2 = (b0 + b1 + 1) >>> 1;
             colors[2] = rgb(r2, g2, b2);
         }
 
