@@ -13,7 +13,7 @@ public abstract class BCDecoder {
     final int bOffset;
     final int aOffset;
 
-    public BCDecoder(int bytesPerBlock, int minBytesPerPixel, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+    BCDecoder(int bytesPerBlock, int minBytesPerPixel, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
         if (bytesPerPixel < minBytesPerPixel) {
             throw new IllegalArgumentException("bytesPerPixel must be at least " + minBytesPerPixel);
         }
@@ -44,6 +44,8 @@ public abstract class BCDecoder {
     int rgba(int r, int g, int b, int a) {
         return (r << (rOffset * 8)) | (g << (gOffset * 8)) | (b << (bOffset * 8)) | (a << (aOffset * 8));
     }
+
+    public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride);
 
     public byte[] decode(int width, int height, byte[] src, int srcPos) {
         if (width <= 0) {
@@ -95,6 +97,4 @@ public abstract class BCDecoder {
             }
         }
     }
-
-    public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride);
 }

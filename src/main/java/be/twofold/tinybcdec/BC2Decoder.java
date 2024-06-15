@@ -4,7 +4,7 @@ final class BC2Decoder extends BCDecoder {
     private final BC1Decoder colorDecoder;
     private final int aOffset;
 
-    public BC2Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+    BC2Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
         super(16, 4, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
 
         this.colorDecoder = new BC1Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset, true);
@@ -17,7 +17,7 @@ final class BC2Decoder extends BCDecoder {
         decodeAlpha(src, srcPos, dst, dstPos + aOffset, stride);
     }
 
-    public void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    private void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long alphas = ByteArrays.getLong(src, srcPos);
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
@@ -29,5 +29,4 @@ final class BC2Decoder extends BCDecoder {
             dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
-
 }

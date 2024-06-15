@@ -1,7 +1,7 @@
 package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BCDecoder {
-    public BC4UDecoder(int bytesPerPixel, int rOffset) {
+    BC4UDecoder(int bytesPerPixel, int rOffset) {
         super(8, 1, bytesPerPixel, rOffset, -1, -1, -1);
     }
 
