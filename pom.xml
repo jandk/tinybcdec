@@ -5,11 +5,36 @@
 
     <groupId>be.twofold</groupId>
     <artifactId>tinybcdec</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>0.1-SNAPSHOT</version>
+    <packaging>jar</packaging>
+
+    <name>${project.groupId}:${project.artifactId}</name>
+    <description>A small library for decoding block compression (BCn) textures</description>
+    <url>https://github.com/jandk/tinybcdec/</url>
+
+    <licenses>
+        <license>
+            <name>MIT License</name>
+            <url>https://opensource.org/license/mit</url>
+        </license>
+    </licenses>
+
+    <developers>
+        <developer>
+            <name>Jan De Kock</name>
+            <email>jan@twofold.be</email>
+            <organization>Twofold</organization>
+            <organizationUrl>https://twofold.be/</organizationUrl>
+        </developer>
+    </developers>
+
+    <scm>
+        <connection>scm:git:git://github.com/jandk/tinybcdec.git</connection>
+        <developerConnection>scm:git:ssh://github.com:jandk/tinybcdec.git</developerConnection>
+        <url>https://github.com/jandk/tinybcdec/tree/main</url>
+    </scm>
 
     <properties>
-        <maven.compiler.source>11</maven.compiler.source>
-        <maven.compiler.target>11</maven.compiler.target>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
@@ -34,6 +59,14 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <version>3.13.0</version>
+                <configuration>
+                    <release>11</release>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.3.0</version>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
