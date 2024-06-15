@@ -3,6 +3,9 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 public abstract class BCDecoder {
+    private static final int BLOCK_WIDTH = 4;
+    private static final int BLOCK_HEIGHT = 4;
+
     final int bytesPerBlock;
     final int bytesPerPixel;
     final int rOffset;
@@ -63,16 +66,32 @@ public abstract class BCDecoder {
         }
 
         int stride = width * bytesPerPixel;
-        int widthInBlocks = (width + 3) / 4;
-        int heightInBlocks = (height + 3) / 4;
+        int widthInBlocks = (width + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
+        int heightInBlocks = (height + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
         int expectedSrcLength = widthInBlocks * heightInBlocks * bytesPerBlock;
         int expectedDstLength = height * stride;
         Objects.checkFromIndexSize(srcPos, expectedSrcLength, src.length);
         Objects.checkFromIndexSize(dstPos, expectedDstLength, dst.length);
 
-        for (int y = 0; y < height; y += 4) {
-            for (int x = 0; x < width; x += 4, srcPos += bytesPerBlock) {
-                decodeBlock(src, srcPos, dst, dstPos + y * stride + x * bytesPerPixel, stride);
+        for (int y = 0; y < height; y += BLOCK_HEIGHT) {
+            for (int x = 0; x < width; x += BLOCK_WIDTH, srcPos += bytesPerBlock) {
+                if (height - y >= BLOCK_HEIGHT && width - x >= BLOCK_WIDTH) {
+                    decodeBlock(src, srcPos, dst, dstPos + y * stride + x * bytesPerPixel, stride);
+                    continue;
+                }
+
+                // Partial block
+                byte[] block = new byte[BLOCK_WIDTH * BLOCK_HEIGHT * bytesPerBlock];
+                decodeBlock(src, srcPos, block, 0, 4 * bytesPerPixel);
+
+                for (int yy = 0; yy < BLOCK_HEIGHT && y + yy < height; yy++) {
+                    for (int xx = 0; xx < BLOCK_WIDTH && x + xx < width; xx++) {
+                        System.arraycopy(
+                            block, (yy * BLOCK_HEIGHT + xx) * bytesPerPixel,
+                            dst, dstPos + (y + yy) * stride + (x + xx) * bytesPerPixel,
+                            bytesPerPixel);
+                    }
+                }
             }
         }
     }
