@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class BC5UDecoderTest {
 
-    private final BCDecoder decoder = BCDecoder.builder(BCFormat.BC5U).orderBGR().build();
+    private final BCDecoder decoder = BCDecoder.create(BCFormat.BC5Unsigned, BCOrder.BGR);
 
     @Test
     void testBC5U() throws IOException {

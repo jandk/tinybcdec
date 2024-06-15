@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC6HDecoder extends BCDecoder {
+final class BC6Decoder extends BCDecoder {
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
         new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
@@ -22,12 +22,9 @@ final class BC6HDecoder extends BCDecoder {
 
     private final boolean signed;
 
-    BC6HDecoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel, boolean signed) {
-        super(16, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
-        if (bytesPerPixel != 6 && bytesPerPixel != 8) {
-            throw new IllegalArgumentException("bytesPerPixel must be 6 or 8");
-        }
-        this.signed = signed;
+    BC6Decoder(BCFormat format, BCOrder order) {
+        super(format, order);
+        this.signed = format == BCFormat.BC6Signed;
     }
 
     @Override
@@ -111,12 +108,9 @@ final class BC6HDecoder extends BCDecoder {
                 short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
                 short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
 
-                ByteArrays.setShort(dst, dstPos + (redChannel * 2), r);
-                ByteArrays.setShort(dst, dstPos + (greenChannel * 2), g);
-                ByteArrays.setShort(dst, dstPos + (blueChannel * 2), b);
-                if (alphaChannel != -1) {
-                    ByteArrays.setShort(dst, dstPos + (alphaChannel * 2), (short) 0x3c00);
-                }
+                ByteArrays.setShort(dst, dstPos + redOffset, r);
+                ByteArrays.setShort(dst, dstPos + greenOffset, g);
+                ByteArrays.setShort(dst, dstPos + blueOffset, b);
 
                 dstPos += bytesPerPixel;
             }

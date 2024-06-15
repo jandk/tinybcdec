@@ -4,7 +4,7 @@ final class BC5UDecoder extends BCDecoder {
     private static final byte[] NORMAL = new byte[256 * 256];
     private final BC4UDecoder rDecoder;
     private final BC4UDecoder gDecoder;
-    private final boolean normalize;
+    private final boolean normalized;
 
     static {
         for (int y = 0; y < 256; y++) {
@@ -18,11 +18,11 @@ final class BC5UDecoder extends BCDecoder {
         }
     }
 
-    BC5UDecoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel, boolean normalize) {
-        super(16, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
-        this.rDecoder = new BC4UDecoder(bytesPerPixel, redChannel, -1, -1, -1);
-        this.gDecoder = new BC4UDecoder(bytesPerPixel, greenChannel, -1, -1, -1);
-        this.normalize = normalize;
+    BC5UDecoder(BCFormat format, BCOrder order) {
+        super(format, order);
+        this.rDecoder = new BC4UDecoder(BCOrder.single(order.count(), redOffset));
+        this.gDecoder = new BC4UDecoder(BCOrder.single(order.count(), greenOffset));
+        this.normalized = format == BCFormat.BC5UnsignedNormalized;
     }
 
     @Override
@@ -30,12 +30,12 @@ final class BC5UDecoder extends BCDecoder {
         rDecoder.decodeBlock(src, srcPos, dst, dstPos, stride);
         gDecoder.decodeBlock(src, srcPos + 8, dst, dstPos, stride);
 
-        if (normalize) {
+        if (normalized) {
             for (int y = 0; y < BLOCK_HEIGHT; y++) {
                 for (int x = 0; x < BLOCK_WIDTH; x++) {
-                    int r = Byte.toUnsignedInt(dst[dstPos + redChannel]);
-                    int g = Byte.toUnsignedInt(dst[dstPos + greenChannel]);
-                    dst[dstPos + blueChannel] = NORMAL[g * 256 + r];
+                    int r = Byte.toUnsignedInt(dst[dstPos + redOffset]);
+                    int g = Byte.toUnsignedInt(dst[dstPos + greenOffset]);
+                    dst[dstPos + blueOffset] = NORMAL[g * 256 + r];
                     dstPos += bytesPerPixel;
                 }
                 dstPos += stride - BLOCK_WIDTH * bytesPerPixel;

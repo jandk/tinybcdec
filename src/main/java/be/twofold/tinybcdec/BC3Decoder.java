@@ -4,10 +4,10 @@ final class BC3Decoder extends BCDecoder {
     private final BC1Decoder colorDecoder;
     private final BC4UDecoder alphaDecoder;
 
-    BC3Decoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel) {
-        super(16, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
-        this.colorDecoder = new BC1Decoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel, true);
-        this.alphaDecoder = new BC4UDecoder(bytesPerPixel, alphaChannel, -1, -1, -1);
+    BC3Decoder(BCOrder order) {
+        super(BCFormat.BC3, order);
+        this.colorDecoder = new BC1Decoder(order, true);
+        this.alphaDecoder = new BC4UDecoder(BCOrder.single(order.count(), alphaOffset));
     }
 
     @Override

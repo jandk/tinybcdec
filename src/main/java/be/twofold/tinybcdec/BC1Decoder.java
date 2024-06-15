@@ -3,8 +3,8 @@ package be.twofold.tinybcdec;
 final class BC1Decoder extends BCDecoder {
     private final boolean opaque;
 
-    BC1Decoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel, boolean opaque) {
-        super(8, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
+    BC1Decoder(BCOrder order, boolean opaque) {
+        super(BCFormat.BC1, order);
         if (bytesPerPixel < 4) {
             throw new IllegalArgumentException("bytesPerPixel must be at least 4");
         }
@@ -60,7 +60,7 @@ final class BC1Decoder extends BCDecoder {
     }
 
     private int rgb(float r, float g, float b) {
-        return rgb(pack(r), pack(g), pack(b));
+        return rgba(pack(r), pack(g), pack(b), 255);
     }
 
     private static int pack(float value) {
