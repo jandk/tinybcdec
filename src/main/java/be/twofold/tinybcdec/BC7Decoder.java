@@ -77,8 +77,8 @@ final class BC7Decoder extends BCDecoder {
         new Mode(2, 6, 0, false, 5, 5, true, false, +2, 0)
     );
 
-    BC7Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
-        super(16, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
+    BC7Decoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel) {
+        super(16, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
     }
 
     @Override

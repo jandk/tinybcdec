@@ -22,8 +22,8 @@ final class BC6HDecoder extends BCDecoder {
 
     private final boolean signed;
 
-    BC6HDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset, boolean signed) {
-        super(16, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
+    BC6HDecoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel, boolean signed) {
+        super(16, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
         if (bytesPerPixel != 6 && bytesPerPixel != 8) {
             throw new IllegalArgumentException("bytesPerPixel must be 6 or 8");
         }
@@ -111,11 +111,11 @@ final class BC6HDecoder extends BCDecoder {
                 short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
                 short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
 
-                ByteArrays.setShort(dst, dstPos + (rOffset * 2), r);
-                ByteArrays.setShort(dst, dstPos + (gOffset * 2), g);
-                ByteArrays.setShort(dst, dstPos + (bOffset * 2), b);
-                if (aOffset != -1) {
-                    ByteArrays.setShort(dst, dstPos + (aOffset * 2), (short) 0x3c00);
+                ByteArrays.setShort(dst, dstPos + (redChannel * 2), r);
+                ByteArrays.setShort(dst, dstPos + (greenChannel * 2), g);
+                ByteArrays.setShort(dst, dstPos + (blueChannel * 2), b);
+                if (alphaChannel != -1) {
+                    ByteArrays.setShort(dst, dstPos + (alphaChannel * 2), (short) 0x3c00);
                 }
 
                 dstPos += bytesPerPixel;

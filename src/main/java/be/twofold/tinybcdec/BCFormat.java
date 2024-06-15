@@ -6,7 +6,7 @@ public enum BCFormat {
     BC3(16, 4),
     BC4U(8, 1),
     BC5U(16, 2),
-    BC5U_BLUE(16, 2),
+    BC5U_BLUE(16, 3),
     BC6H_UF16(16, 6),
     BC6H_SF16(16, 6),
     BC7(16, 4);

@@ -10,8 +10,8 @@ final class Bits {
     }
 
     static Bits from(byte[] array, int index) {
-        var lo = ByteArrays.getLong(array, index);
-        var hi = ByteArrays.getLong(array, index + 8);
+        long lo = ByteArrays.getLong(array, index);
+        long hi = ByteArrays.getLong(array, index + 8);
         return new Bits(lo, hi);
     }
 

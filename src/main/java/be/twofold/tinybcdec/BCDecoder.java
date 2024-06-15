@@ -8,18 +8,18 @@ public abstract class BCDecoder {
 
     final int bytesPerBlock;
     final int bytesPerPixel;
-    final int rOffset;
-    final int gOffset;
-    final int bOffset;
-    final int aOffset;
+    final int redChannel;
+    final int greenChannel;
+    final int blueChannel;
+    final int alphaChannel;
 
-    BCDecoder(int bytesPerBlock, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+    BCDecoder(int bytesPerBlock, int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel) {
         this.bytesPerBlock = bytesPerBlock;
         this.bytesPerPixel = bytesPerPixel;
-        this.rOffset = rOffset;
-        this.gOffset = gOffset;
-        this.bOffset = bOffset;
-        this.aOffset = aOffset;
+        this.redChannel = redChannel;
+        this.greenChannel = greenChannel;
+        this.blueChannel = blueChannel;
+        this.alphaChannel = alphaChannel;
     }
 
     /**
@@ -36,7 +36,7 @@ public abstract class BCDecoder {
     }
 
     int rgba(int r, int g, int b, int a) {
-        return (r << (rOffset * 8)) | (g << (gOffset * 8)) | (b << (bOffset * 8)) | (a << (aOffset * 8));
+        return (r << (redChannel * 8)) | (g << (greenChannel * 8)) | (b << (blueChannel * 8)) | (a << (alphaChannel * 8));
     }
 
     public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride);
@@ -250,11 +250,11 @@ public abstract class BCDecoder {
                 case BC3:
                     return new BC3Decoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
                 case BC4U:
-                    return new BC4UDecoder(bytesPerPixel, redChannel);
+                    return new BC4UDecoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
                 case BC5U:
-                    return new BC5UDecoder(bytesPerPixel, redChannel, greenChannel);
+                    return new BC5UDecoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel, false);
                 case BC5U_BLUE:
-                    return new BC5UDecoder(bytesPerPixel, redChannel, greenChannel, blueChannel);
+                    return new BC5UDecoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel, true);
                 case BC6H_UF16:
                     return new BC6HDecoder(bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel, false);
                 case BC6H_SF16:

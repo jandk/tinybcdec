@@ -33,8 +33,4 @@ final class ByteArrays {
     public static long getLong(byte[] array, int index) {
         return (long) LongVarHandle.get(array, index);
     }
-
-    public static void setLong(byte[] array, int index, long value) {
-        LongVarHandle.set(array, index, value);
-    }
 }

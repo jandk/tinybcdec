@@ -12,13 +12,13 @@ final class BCTestUtils {
     }
 
     static byte[] readResource(String path) throws IOException {
-        try (var in = BCTestUtils.class.getResourceAsStream(path)) {
+        try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
             return in.readAllBytes();
         }
     }
 
     static byte[] readPng(String path) throws IOException {
-        try (var in = BCTestUtils.class.getResourceAsStream(path)) {
+        try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
             BufferedImage image = ImageIO.read(in);
             return ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
         }

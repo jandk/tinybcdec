@@ -32,16 +32,16 @@ public final class GenerateTestImages {
     }
 
     private static void renderImage(String s0, String s1, String s2, Color c0, Color c1, Path path) throws IOException {
-        var image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
+        BufferedImage image = new BufferedImage(WIDTH, HEIGHT, BufferedImage.TYPE_INT_ARGB);
 
         boolean half = s0.contains("BC7");
-        var x1 = half ? WIDTH / 3 : 0;
-        var y1 = half ? HEIGHT / 3 : 0;
-        var x2 = half ? WIDTH * 2 / 3 : WIDTH;
-        var y2 = half ? HEIGHT * 2 / 3 : HEIGHT;
-        var gradientPaint = new GradientPaint(x1, y1, c0, x2, y2, c1);
+        int x1 = half ? WIDTH / 3 : 0;
+        int y1 = half ? HEIGHT / 3 : 0;
+        int x2 = half ? WIDTH * 2 / 3 : WIDTH;
+        int y2 = half ? HEIGHT * 2 / 3 : HEIGHT;
+        GradientPaint gradientPaint = new GradientPaint(x1, y1, c0, x2, y2, c1);
 
-        var g2d = image.createGraphics();
+        Graphics2D g2d = image.createGraphics();
         primoGraphics(g2d);
         g2d.setPaint(gradientPaint);
         g2d.fillRect(0, 0, WIDTH, HEIGHT);

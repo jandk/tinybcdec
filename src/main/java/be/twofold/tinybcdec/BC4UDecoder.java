@@ -1,8 +1,8 @@
 package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BCDecoder {
-    BC4UDecoder(int bytesPerPixel, int rOffset) {
-        super(8, bytesPerPixel, rOffset, -1, -1, -1);
+    BC4UDecoder(int bytesPerPixel, int redChannel, int greenChannel, int blueChannel, int alphaChannel) {
+        super(8, bytesPerPixel, redChannel, greenChannel, blueChannel, alphaChannel);
     }
 
     @Override
@@ -28,7 +28,7 @@ final class BC4UDecoder extends BCDecoder {
             alphas[5] = (byte) ((1 * a0 + 4 * a1 + 2) / 5);
         }
 
-        dstPos += rOffset;
+        dstPos += redChannel;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 dst[dstPos] = alphas[(int) (block & 7)];
