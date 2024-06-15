@@ -7,20 +7,14 @@ final class BC5UDecoder extends BlockDecoder {
     private final boolean normalize;
 
     public BC5UDecoder(int bytesPerPixel, int rOffset, int gOffset) {
-        super(16, bytesPerPixel, rOffset, gOffset, -1, -1);
-        if (bytesPerPixel < 2) {
-            throw new IllegalArgumentException("bytesPerPixel must be at least 2");
-        }
+        super(16, 2, bytesPerPixel, rOffset, gOffset, -1, -1);
         this.rDecoder = new BC4UDecoder(bytesPerPixel, rOffset);
         this.gDecoder = new BC4UDecoder(bytesPerPixel, gOffset);
         this.normalize = false;
     }
 
     public BC5UDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset) {
-        super(16, bytesPerPixel, rOffset, gOffset, bOffset, -1);
-        if (bytesPerPixel < 3) {
-            throw new IllegalArgumentException("bytesPerPixel must be at least 3");
-        }
+        super(16, 3, bytesPerPixel, rOffset, gOffset, bOffset, -1);
         this.rDecoder = new BC4UDecoder(bytesPerPixel, rOffset);
         this.gDecoder = new BC4UDecoder(bytesPerPixel, gOffset);
         this.normalize = true;

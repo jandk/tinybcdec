@@ -3,14 +3,29 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 public abstract class BlockDecoder {
-    private final int bytesPerBlock;
+    final int bytesPerBlock;
     final int bytesPerPixel;
     final int rOffset;
     final int gOffset;
     final int bOffset;
     final int aOffset;
 
-    public BlockDecoder(int bytesPerBlock, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+    public BlockDecoder(int bytesPerBlock, int minBytesPerPixel, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+        if (bytesPerPixel < minBytesPerPixel) {
+            throw new IllegalArgumentException("bytesPerPixel must be at least " + minBytesPerPixel);
+        }
+        if (rOffset != -1 && rOffset < 0 || rOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("rOffset must be in the range [0, bytesPerPixel)");
+        }
+        if (gOffset != -1 && gOffset < 0 || gOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("gOffset must be in the range [0, bytesPerPixel)");
+        }
+        if (bOffset != -1 && bOffset < 0 || bOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("bOffset must be in the range [0, bytesPerPixel)");
+        }
+        if (aOffset != -1 && aOffset < 0 || aOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("aOffset must be in the range [0, bytesPerPixel)");
+        }
         this.bytesPerBlock = bytesPerBlock;
         this.bytesPerPixel = bytesPerPixel;
         this.rOffset = rOffset;

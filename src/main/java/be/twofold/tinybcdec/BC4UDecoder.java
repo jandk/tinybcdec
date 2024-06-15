@@ -2,13 +2,14 @@ package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BlockDecoder {
     public BC4UDecoder(int bytesPerPixel, int rOffset) {
-        super(8, bytesPerPixel, rOffset, -1, -1, -1);
+        super(8, 1, bytesPerPixel, rOffset, -1, -1, -1);
     }
 
     @Override
+    @SuppressWarnings({"PointlessArithmeticExpression", "PointlessBitwiseExpression"})
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
-        int a0 = (int) (block & 0xff);
+        int a0 = (int) ((block >>> 0) & 0xff);
         int a1 = (int) ((block >>> 8) & 0xff);
         block >>>= 16;
 

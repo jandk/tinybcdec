@@ -4,11 +4,11 @@ import java.lang.invoke.*;
 import java.nio.*;
 
 final class ByteArrays {
-    static final VarHandle ShortVarHandle =
+    private static final VarHandle ShortVarHandle =
         MethodHandles.byteArrayViewVarHandle(short[].class, ByteOrder.LITTLE_ENDIAN);
-    static final VarHandle IntVarHandle =
+    private static final VarHandle IntVarHandle =
         MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.LITTLE_ENDIAN);
-    static final VarHandle LongVarHandle =
+    private static final VarHandle LongVarHandle =
         MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
 
     private ByteArrays() {

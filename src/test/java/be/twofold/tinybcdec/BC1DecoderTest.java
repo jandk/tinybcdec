@@ -4,6 +4,8 @@ import org.junit.jupiter.api.*;
 
 import java.io.*;
 
+import static org.assertj.core.api.Assertions.*;
+
 class BC1DecoderTest {
 
     private final BlockDecoder decoder = new BC1Decoder(4, 3, 2, 1, 0, false);
@@ -15,7 +17,7 @@ class BC1DecoderTest {
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc1a.png");
 
-        BCTestUtils.compareBC(actual, expected, 3, 2, 1, 0);
+        assertThat(actual).isEqualTo(expected);
     }
 
     @Test
@@ -25,7 +27,7 @@ class BC1DecoderTest {
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc1.png");
 
-        BCTestUtils.compareBC(actual, expected, 3, 2, 1, 0);
+        assertThat(actual).isEqualTo(expected);
     }
 
 }

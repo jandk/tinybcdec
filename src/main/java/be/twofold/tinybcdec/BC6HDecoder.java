@@ -23,7 +23,7 @@ final class BC6HDecoder extends BlockDecoder {
     private final boolean signed;
 
     public BC6HDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset, boolean signed) {
-        super(16, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
+        super(16, 6, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
         if (bytesPerPixel != 6 && bytesPerPixel != 8) {
             throw new IllegalArgumentException("bytesPerPixel must be 6 or 8");
         }

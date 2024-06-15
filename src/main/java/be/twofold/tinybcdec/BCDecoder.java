@@ -6,59 +6,59 @@ public final class BCDecoder {
     private final BCFormat format;
     private final BlockDecoder decoder;
     private final int bytesPerPixel;
-    private final int redOffset;
-    private final int greenOffset;
-    private final int blueOffset;
-    private final int alphaOffset;
+    private final int rOffset;
+    private final int gOffset;
+    private final int bOffset;
+    private final int aOffset;
     final byte[] buffer = new byte[128];
 
-    public BCDecoder(BCFormat format, int bytesPerPixel, int redOffset, int greenOffset, int blueOffset, int alphaOffset) {
+    public BCDecoder(BCFormat format, int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
         Objects.requireNonNull(format, "format must not be null");
         if (bytesPerPixel < format.minBytesPerPixel()) {
             throw new IllegalArgumentException("bytesPerPixel must be at least " + format.minBytesPerPixel());
         }
-        if (redOffset != -1 && redOffset < 0 || redOffset >= bytesPerPixel) {
-            throw new IllegalArgumentException("redOffset must be in the range [0, bytesPerPixel)");
+        if (rOffset != -1 && rOffset < 0 || rOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("rOffset must be in the range [0, bytesPerPixel)");
         }
-        if (greenOffset != -1 && greenOffset < 0 || greenOffset >= bytesPerPixel) {
-            throw new IllegalArgumentException("greenOffset must be in the range [0, bytesPerPixel)");
+        if (gOffset != -1 && gOffset < 0 || gOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("gOffset must be in the range [0, bytesPerPixel)");
         }
-        if (blueOffset != -1 && blueOffset < 0 || blueOffset >= bytesPerPixel) {
-            throw new IllegalArgumentException("blueOffset must be in the range [0, bytesPerPixel)");
+        if (bOffset != -1 && bOffset < 0 || bOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("bOffset must be in the range [0, bytesPerPixel)");
         }
-        if (alphaOffset != -1 && alphaOffset < 0 || alphaOffset >= bytesPerPixel) {
-            throw new IllegalArgumentException("alphaOffset must be in the range [0, bytesPerPixel)");
+        if (aOffset != -1 && aOffset < 0 || aOffset >= bytesPerPixel) {
+            throw new IllegalArgumentException("aOffset must be in the range [0, bytesPerPixel)");
         }
 
         this.format = format;
         this.decoder = createDecoder(format);
         this.bytesPerPixel = bytesPerPixel;
-        this.redOffset = redOffset;
-        this.greenOffset = greenOffset;
-        this.blueOffset = blueOffset;
-        this.alphaOffset = alphaOffset;
+        this.rOffset = rOffset;
+        this.gOffset = gOffset;
+        this.bOffset = bOffset;
+        this.aOffset = aOffset;
     }
 
     private BlockDecoder createDecoder(BCFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, false);
+                return new BC1Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset, false);
             case BC2:
-                return new BC2Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
+                return new BC2Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
             case BC3:
-                return new BC3Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
+                return new BC3Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
             case BC4U:
-                return new BC4UDecoder(bytesPerPixel, redOffset);
+                return new BC4UDecoder(bytesPerPixel, rOffset);
             case BC5U:
-                return new BC5UDecoder(bytesPerPixel, redOffset, greenOffset);
+                return new BC5UDecoder(bytesPerPixel, rOffset, gOffset);
             case BC5U_BLUE:
-                return new BC5UDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset);
+                return new BC5UDecoder(bytesPerPixel, rOffset, gOffset, bOffset);
             case BC6H_UF16:
-                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, false);
+                return new BC6HDecoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset, false);
             case BC6H_SF16:
-                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, true);
+                return new BC6HDecoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset, true);
             case BC7:
-                return new BC7Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
+                return new BC7Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
             default:
                 throw new IllegalArgumentException("Unsupported format: " + format);
         }
@@ -109,17 +109,17 @@ public final class BCDecoder {
         for (int y = 0, bufferPos = 0; y < 4; y++) {
             for (int x = 0; x < 4; x++, bufferPos += 4) {
                 int color = ByteArrays.getInt(buffer, bufferPos);
-                if (redOffset != -1) {
-                    dst[dstPos + redOffset] = (byte) ((color >>> 0) & 0xff);
+                if (rOffset != -1) {
+                    dst[dstPos + rOffset] = (byte) ((color >>> 0) & 0xff);
                 }
-                if (greenOffset != -1) {
-                    dst[dstPos + greenOffset] = (byte) ((color >>> 8) & 0xff);
+                if (gOffset != -1) {
+                    dst[dstPos + gOffset] = (byte) ((color >>> 8) & 0xff);
                 }
-                if (blueOffset != -1) {
-                    dst[dstPos + blueOffset] = (byte) ((color >>> 16) & 0xff);
+                if (bOffset != -1) {
+                    dst[dstPos + bOffset] = (byte) ((color >>> 16) & 0xff);
                 }
-                if (alphaOffset != -1) {
-                    dst[dstPos + alphaOffset] = (byte) ((color >>> 24) & 0xff);
+                if (aOffset != -1) {
+                    dst[dstPos + aOffset] = (byte) ((color >>> 24) & 0xff);
                 }
                 dstPos += bytesPerPixel;
             }
