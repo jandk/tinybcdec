@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-final class BC3Decoder extends BlockDecoder {
+final class BC3Decoder extends BCDecoder {
     private final BC1Decoder colorDecoder;
     private final BC4UDecoder alphaDecoder;
 

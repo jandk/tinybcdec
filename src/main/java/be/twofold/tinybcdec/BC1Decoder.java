@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-final class BC1Decoder extends BlockDecoder {
+final class BC1Decoder extends BCDecoder {
     private final boolean opaque;
 
     public BC1Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset, boolean opaque) {

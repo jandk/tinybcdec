@@ -12,7 +12,7 @@ class BC6HDecoderTest {
     void testBC6H_UF16() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc6h_uf16.dds");
 
-        BlockDecoder decoder = new BC6HDecoder(8, 0, 2, 4, 6, false);
+        BCDecoder decoder = new BC6HDecoder(8, 0, 2, 4, 6, false);
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readDDSFP16("/bc6h_uf16_out.dds", 256, 256);
 
@@ -23,7 +23,7 @@ class BC6HDecoderTest {
     void testBC6H_SF16() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc6h_sf16.dds");
 
-        BlockDecoder decoder = new BC6HDecoder(8, 0, 2, 4, 6, true);
+        BCDecoder decoder = new BC6HDecoder(8, 0, 2, 4, 6, true);
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readDDSFP16("/bc6h_sf16_out.dds", 256, 256);
 

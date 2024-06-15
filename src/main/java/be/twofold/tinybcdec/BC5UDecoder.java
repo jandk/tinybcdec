@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-final class BC5UDecoder extends BlockDecoder {
+final class BC5UDecoder extends BCDecoder {
     private static final byte[] NORMAL_LUT = initializeLut();
     private final BC4UDecoder rDecoder;
     private final BC4UDecoder gDecoder;

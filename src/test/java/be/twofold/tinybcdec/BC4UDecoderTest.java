@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class BC4UDecoderTest {
 
-    private final BlockDecoder decoder = new BC4UDecoder(1, 0);
+    private final BCDecoder decoder = new BC4UDecoder(1, 0);
 
     @Test
     void testBC4U() throws IOException {
