@@ -6,7 +6,7 @@ import java.io.*;
 
 class BC3DecoderTest {
 
-    private final BCDecoder decoder = new BCDecoder(BCFormat.BC3, 4, 0, 1, 2, 3);
+    private final BlockDecoder decoder = new BC3Decoder(4, 0, 1, 2, 3);
 
     @Test
     void testBC3() throws IOException {

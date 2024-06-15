@@ -1,11 +1,29 @@
 package be.twofold.tinybcdec;
 
-final class BC5UDecoder implements BlockDecoder {
+final class BC5UDecoder extends BlockDecoder {
     private static final byte[] NORMAL_LUT = initializeLut();
+    private final BC4UDecoder rDecoder;
+    private final BC4UDecoder gDecoder;
     private final boolean normalize;
 
-    public BC5UDecoder(boolean normalize) {
-        this.normalize = normalize;
+    public BC5UDecoder(int bytesPerPixel, int rOffset, int gOffset) {
+        super(16, bytesPerPixel, rOffset, gOffset, -1, -1);
+        if (bytesPerPixel < 2) {
+            throw new IllegalArgumentException("bytesPerPixel must be at least 2");
+        }
+        this.rDecoder = new BC4UDecoder(bytesPerPixel, rOffset);
+        this.gDecoder = new BC4UDecoder(bytesPerPixel, gOffset);
+        this.normalize = false;
+    }
+
+    public BC5UDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset) {
+        super(16, bytesPerPixel, rOffset, gOffset, bOffset, -1);
+        if (bytesPerPixel < 3) {
+            throw new IllegalArgumentException("bytesPerPixel must be at least 3");
+        }
+        this.rDecoder = new BC4UDecoder(bytesPerPixel, rOffset);
+        this.gDecoder = new BC4UDecoder(bytesPerPixel, gOffset);
+        this.normalize = true;
     }
 
     private static byte lookup(byte r, byte g) {
@@ -39,9 +57,9 @@ final class BC5UDecoder implements BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
-        BC3Decoder.decodeAlpha(src, srcPos + 0, dst, 0);
-        BC3Decoder.decodeAlpha(src, srcPos + 8, dst, 1);
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+        rDecoder.decodeBlock(src, srcPos, dst, dstPos, stride);
+        gDecoder.decodeBlock(src, srcPos + 8, dst, dstPos, stride);
 
         if (normalize) {
             for (var i = 0; i < 64; i += 4) {

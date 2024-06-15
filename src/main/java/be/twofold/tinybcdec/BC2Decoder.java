@@ -1,17 +1,33 @@
 package be.twofold.tinybcdec;
 
-final class BC2Decoder implements BlockDecoder {
-    @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
-        BC1Decoder.decodeColor(src, srcPos + 8, dst, true);
-        decodeAlpha(src, srcPos, dst);
+final class BC2Decoder extends BlockDecoder {
+    private final BC1Decoder colorDecoder;
+    private final int aOffset;
+
+    public BC2Decoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, int aOffset) {
+        super(16, bytesPerPixel, rOffset, gOffset, bOffset, aOffset);
+
+        this.colorDecoder = new BC1Decoder(bytesPerPixel, rOffset, gOffset, bOffset, aOffset, true);
+        this.aOffset = aOffset;
     }
 
-    private static void decodeAlpha(byte[] src, int srcPos, byte[] dst) {
+    @Override
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+        colorDecoder.decodeBlock(src, srcPos + 8, dst, dstPos, stride);
+        decodeAlpha(src, srcPos, dst, dstPos + aOffset, stride);
+    }
+
+    public void decodeAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
-        for (int i = 0; i < 16; i++) {
-            dst[(i * 4) + 3] = (byte) (((block >>> (i * 4)) & 0x0f) * 0x11);
+        for (int y = 0; y < 4; y++) {
+            for (int x = 0; x < 4; x++) {
+                dst[dstPos] = (byte) ((block & 0xf) * 0x11);
+                block >>>= 4;
+                dstPos += bytesPerPixel;
+            }
+            dstPos += stride - 4 * bytesPerPixel;
         }
     }
+
 }

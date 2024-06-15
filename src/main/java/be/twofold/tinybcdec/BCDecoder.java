@@ -42,23 +42,23 @@ public final class BCDecoder {
     private BlockDecoder createDecoder(BCFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder();
+                return new BC1Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset, false);
             case BC2:
-                return new BC2Decoder();
+                return new BC2Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
             case BC3:
-                return new BC3Decoder();
+                return new BC3Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
             case BC4U:
-                return new BC4UDecoder();
+                return new BC4UDecoder(bytesPerPixel, redOffset);
             case BC5U:
-                return new BC5UDecoder(false);
+                return new BC5UDecoder(bytesPerPixel, redOffset, greenOffset);
             case BC5U_BLUE:
-                return new BC5UDecoder(true);
+                return new BC5UDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset);
             case BC6H_UF16:
-                return new BC6HDecoder(false);
+                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, false);
             case BC6H_SF16:
-                return new BC6HDecoder(true);
+                return new BC6HDecoder(bytesPerPixel, redOffset, greenOffset, blueOffset, true);
             case BC7:
-                return new BC7Decoder();
+                return new BC7Decoder(bytesPerPixel, redOffset, greenOffset, blueOffset, alphaOffset);
             default:
                 throw new IllegalArgumentException("Unsupported format: " + format);
         }
@@ -94,7 +94,7 @@ public final class BCDecoder {
 
         for (int y = 0; y < height; y += 4) {
             for (int x = 0; x < width; x += 4, srcPos += format.bytesPerBlock()) {
-                decoder.decodeBlock(src, srcPos, buffer);
+                decoder.decodeBlock(src, srcPos, buffer, 0, stride);
 
                 if (decoder instanceof BC6HDecoder) {
                     throw new UnsupportedOperationException("BC6HDecoder not supported");

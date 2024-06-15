@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC6HDecoder implements BlockDecoder {
+final class BC6HDecoder extends BlockDecoder {
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
         new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
@@ -22,13 +22,17 @@ final class BC6HDecoder implements BlockDecoder {
 
     private final boolean signed;
 
-    public BC6HDecoder(boolean signed) {
+    public BC6HDecoder(int bytesPerPixel, int rOffset, int gOffset, int bOffset, boolean signed) {
+        super(16, bytesPerPixel, rOffset, gOffset, bOffset, -1);
+        if (bytesPerPixel != 6 && bytesPerPixel != 8) {
+            throw new IllegalArgumentException("bytesPerPixel must be 6 or 8");
+        }
         this.signed = signed;
     }
 
     @Override
     @SuppressWarnings("PointlessArithmeticExpression")
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
         Mode mode = MODES.get(mode(bits));
 
@@ -89,26 +93,31 @@ final class BC6HDecoder implements BlockDecoder {
         }
 
         int[] weights1 = BC7Decoder.WEIGHTS[ib];
-        for (int i = 0; i < 16; i++) {
-            int pIndex = partitionTable >>> (i * 2) & 3;
-            int ci0 = pIndex * 2 * 3;
-            int ci1 = ci0 + 3;
+        for (int y = 0, i = 0; y < 4; y++) {
+            for (int x = 0; x < 4; x++, i++) {
+                int pIndex = partitionTable >>> (i * 2) & 3;
+                int ci0 = pIndex * 2 * 3;
+                int ci1 = ci0 + 3;
 
-            int ra = colors[ci0 + 0];
-            int ga = colors[ci0 + 1];
-            int ba = colors[ci0 + 2];
-            int rb = colors[ci1 + 0];
-            int gb = colors[ci1 + 1];
-            int bb = colors[ci1 + 2];
+                int ra = colors[ci0 + 0];
+                int ga = colors[ci0 + 1];
+                int ba = colors[ci0 + 2];
+                int rb = colors[ci1 + 0];
+                int gb = colors[ci1 + 1];
+                int bb = colors[ci1 + 2];
 
-            int weight = weights1[indexBits[i]];
-            short r = (short) finalUnquantize(BC7Decoder.interpolate(ra, rb, weight), signed);
-            short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
-            short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
+                int weight = weights1[indexBits[i]];
+                short r = (short) finalUnquantize(BC7Decoder.interpolate(ra, rb, weight), signed);
+                short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
+                short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
 
-            ByteArrays.setShort(dst, (i * 8) + 0, r);
-            ByteArrays.setShort(dst, (i * 8) + 2, g);
-            ByteArrays.setShort(dst, (i * 8) + 4, b);
+                ByteArrays.setShort(dst, dstPos + 0, r);
+                ByteArrays.setShort(dst, dstPos + 2, g);
+                ByteArrays.setShort(dst, dstPos + 4, b);
+
+                dstPos += bytesPerPixel;
+            }
+            dstPos += stride - 4 * bytesPerPixel;
         }
     }
 
