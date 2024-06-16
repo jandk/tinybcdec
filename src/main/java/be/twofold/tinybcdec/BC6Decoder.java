@@ -38,7 +38,7 @@ final class BC6Decoder extends BCDecoder {
             readOp(bits, op, colors);
         }
 
-        int partition = bits.getBits(mode.pb);
+        int partition = bits.get(mode.pb);
         int numPartitions = mode.pb != 0 ? 2 : 1;
 
         // The values in E0 are sign-extended to the implementation’s internal integer representation if
@@ -86,27 +86,18 @@ final class BC6Decoder extends BCDecoder {
         for (int i = 0; i < 16; i++) {
             boolean anchored = i == 0 || i == anchor;
             int numBits = ib - (anchored ? 1 : 0);
-            indexBits[i] = bits.getBits(numBits);
+            indexBits[i] = bits.get(numBits);
         }
 
         int[] weights1 = BC7Decoder.WEIGHTS[ib];
         for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
-                int pIndex = partitionTable >>> (i * 2) & 3;
-                int ci0 = pIndex * 2 * 3;
-                int ci1 = ci0 + 3;
-
-                int ra = colors[ci0 + 0];
-                int ga = colors[ci0 + 1];
-                int ba = colors[ci0 + 2];
-                int rb = colors[ci1 + 0];
-                int gb = colors[ci1 + 1];
-                int bb = colors[ci1 + 2];
-
                 int weight = weights1[indexBits[i]];
-                short r = (short) finalUnquantize(BC7Decoder.interpolate(ra, rb, weight), signed);
-                short g = (short) finalUnquantize(BC7Decoder.interpolate(ga, gb, weight), signed);
-                short b = (short) finalUnquantize(BC7Decoder.interpolate(ba, bb, weight), signed);
+
+                int pIndex = partitionTable >>> (i * 2) & 3;
+                short r = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
+                short g = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
+                short b = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
                 ByteArrays.setShort(dst, dstPos + redOffset, r);
                 ByteArrays.setShort(dst, dstPos + greenOffset, g);
@@ -125,7 +116,7 @@ final class BC6Decoder extends BCDecoder {
         int index = (op >>> 8) & 0x0F;
         boolean reverse = (op >>> 12) != 0;
 
-        int value = bits.getBits(count);
+        int value = bits.get(count);
         if (reverse) {
             value = Integer.reverse(value) >>> (32 - count);
         }
@@ -133,15 +124,15 @@ final class BC6Decoder extends BCDecoder {
     }
 
     private int mode(Bits bits) {
-        int mode = bits.getBits(2);
+        int mode = bits.get(2);
         switch (mode) {
             case 0:
             case 1:
                 return mode;
             case 2:
-                return bits.getBits(3) + 2;
+                return bits.get(3) + 2;
             case 3:
-                return bits.getBits(3) + 10;
+                return bits.get(3) + 10;
             default:
                 throw new UnsupportedOperationException();
         }

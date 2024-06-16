@@ -15,7 +15,7 @@ final class Bits {
         return new Bits(lo, hi);
     }
 
-    int getBits(int count) {
+    int get(int count) {
         int mask = (1 << count) - 1;
         int bits = (int) (lo & mask);
         lo = (lo >>> count) | ((hi & mask) << (64 - count));
@@ -23,7 +23,7 @@ final class Bits {
         return bits;
     }
 
-    int getBit() {
-        return getBits(1);
+    int get1() {
+        return get(1);
     }
 }
