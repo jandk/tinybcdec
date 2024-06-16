@@ -26,17 +26,35 @@ directly AWT, JavaFX, or even OpenGL or Vulkan.
 
 Using the library is very easy, all you need is the compressed data, and the format of the data.
 
-The library provides a `BlockDecoder` class, which can be used to decode, by specifying the format and the pixel order.
+The following features are present:
 
-Optionally you can provide your own output buffer, or let the library allocate one for you.
+- Pixel order with alpha filling: If the pixel order contains an alpha channel, and the source does not, the alpha
+  channel will be set to `255` or `1.0` in the case of BC6H.
+- Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case).
+- Z reconstruction ("Blue" normal maps): BC5 uses two channels to store a normal map, the library can reconstruct the Z
+  value from the two channels. Clamping is done to prevent negative values or values above 255.
+- BC6H: BC6H is decoded to a Little-Endian Half-Float buffer. The library does not provide a way to convert this to
+  full float. This can be done with `Float.float16toFloat` in Java 21, or with a library. This also means that the
+  output buffer is twice as big.
 
-Given `data` is the compressed data, the following code snippet shows how to decode a BC1 texture:
+The library provides the `BlockDecoder` class, which can be used to decode, by specifying the format and the pixel
+order. You can let the library create a new buffer, or pass an existing one to save allocations.
+
+Given `src` is the compressed data, starting at offset `srcPos`, the following code snippet shows how to decode a BC1
+texture.
 
 ```java
 import be.twofold.tinybcdec.*;
 
 BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1, PixelOrder.RGBA);
-byte[] result = decoder.decode(256, 256, data, 0);
+byte[] result = decoder.decode(256, 256, src, srcPos);
+```
+
+If you want to pass an existing buffer, you can pass it as the last two arguments `dst` and `dstPos`. There will be no
+return value.
+
+```java
+decoder.decode(256,256,src, srcPos, dst, dstPos);
 ```
 
 ## Performance
@@ -64,4 +82,5 @@ decoded them again and compared the output. The output is identical, except when
 library uses a different method.
 
 This is done by doing a full float implementation of BC1 (and by extension BC2 and BC3). The other formats have
-bit-exact implementations.
+bit-exact implementations. Z reconstruction uses a lookup table that is generated at runtime, and is also full float
+accurate.
