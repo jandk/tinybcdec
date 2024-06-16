@@ -1,12 +1,12 @@
 # tinybcdec
 
-![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/jandk/tinybcdec/maven.yml?logo=github)
-![Maven Central Version](https://img.shields.io/maven-central/v/be.twofold/tinybcdec?logo=apachemaven)
-![License](https://img.shields.io/github/license/jandk/tinybcdec)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/jandk/tinybcdec/maven.yml?logo=github)](https://github.com/jandk/tinybcdec/actions/workflows/maven.yml)
+[![Maven Central Version](https://img.shields.io/maven-central/v/be.twofold/tinybcdec?logo=apachemaven)](https://central.sonatype.com/artifact/be.twofold/tinybcdec)
+[![License](https://img.shields.io/github/license/jandk/tinybcdec)](https://opensource.org/licenses/MIT)
 
 ## Description
 
-TinyBCDec is a tiny library for decoding block compressed texture formats. It's written in pure Java, without any
+TinyBCDec is a tiny library for decoding block compressed texture formats. It's written in pure Java (11+), without any
 dependencies, with a focus on speed and accuracy.
 
 Currently, the following formats are supported:
@@ -16,7 +16,7 @@ Currently, the following formats are supported:
 - BC3 (DXT5)
 - BC4 (ATI1)
 - BC5 (ATI2)
-- BC6H (BPTC)
+- BC6H
 - BC7
 
 For ease of use, the library provides functionality to reorder the output channels, so the decoded data can be used
