@@ -16,7 +16,7 @@ public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
     static final int BLOCK_HEIGHT = 4;
 
-    final BlockFormat format;
+    private final BlockFormat format;
     final int bytesPerPixel;
     final int redOffset;
     final int greenOffset;
@@ -137,7 +137,7 @@ public abstract class BlockDecoder {
                 }
 
                 decodeBlock(src, srcPos, dst, dstOffset, bytesPerLine);
-                if (format.minChannels() < 4 && alphaOffset != -1) {
+                if (format.minChannels() < 4 && alphaOffset >= 0) {
                     fillAlpha(dst, dstOffset, bytesPerLine);
                 }
             }
@@ -152,7 +152,7 @@ public abstract class BlockDecoder {
         int blockStride = BLOCK_WIDTH * bytesPerPixel;
         byte[] block = new byte[BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
-        if (format.minChannels() < 4 && alphaOffset != -1) {
+        if (format.minChannels() < 4 && alphaOffset >= 0) {
             fillAlpha(block, 0, blockStride);
         }
 
