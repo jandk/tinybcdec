@@ -20,4 +20,11 @@ class BC7DecoderTest {
         assertThat(actual).isEqualTo(expected);
     }
 
+    @Test
+    void testBC7InvalidBlock() {
+        byte[] src = new byte[16];
+        byte[] actual = decoder.decode(4, 4, src, 0);
+        assertThat(actual).isEqualTo(new byte[16 * 4]);
+    }
+
 }

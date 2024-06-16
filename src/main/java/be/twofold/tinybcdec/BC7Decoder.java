@@ -84,7 +84,11 @@ final class BC7Decoder extends BlockDecoder {
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         Bits bits = Bits.from(src, srcPos);
-        Mode mode = MODES.get(mode(bits));
+        int modeIndex = mode(bits);
+        if (modeIndex >= MODES.size()) {
+            return;
+        }
+        Mode mode = MODES.get(modeIndex);
         int partition = bits.get(mode.pb);
         int rotation = bits.get(mode.rb);
         boolean selection = bits.get(mode.isb) != 0;
@@ -235,12 +239,10 @@ final class BC7Decoder extends BlockDecoder {
 
     private int mode(Bits bits) {
         int mode = 0;
-        while (true) {
-            if (bits.get1() != 0) {
-                return mode;
-            }
+        while (mode < 8 && bits.get1() == 0) {
             mode++;
         }
+        return mode;
     }
 
     private static final class Mode {

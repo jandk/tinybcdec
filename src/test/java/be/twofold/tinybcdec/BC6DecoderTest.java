@@ -30,4 +30,15 @@ class BC6DecoderTest {
         assertThat(actual).isEqualTo(expected);
     }
 
+    @Test
+    void testBC6InvalidBlock() {
+        byte[] src = new byte[16];
+        byte[] invalidModes = {0b10011, 0b10111, 0b11011, 0b11111};
+        for (byte invalidMode : invalidModes) {
+            src[0] = invalidMode;
+            BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned, PixelOrder.RGB);
+            var actual = decoder.decode(4, 4, src, 0);
+            assertThat(actual).isEqualTo(new byte[16 * 3 * 2]);
+        }
+    }
 }

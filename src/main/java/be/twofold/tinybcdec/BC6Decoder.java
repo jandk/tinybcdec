@@ -31,7 +31,11 @@ final class BC6Decoder extends BlockDecoder {
     @SuppressWarnings("PointlessArithmeticExpression")
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         Bits bits = Bits.from(src, srcPos);
-        Mode mode = MODES.get(mode(bits));
+        int modeIndex = mode(bits);
+        if (modeIndex >= MODES.size()) {
+            return;
+        }
+        Mode mode = MODES.get(modeIndex);
 
         int[] colors = new int[12];
         for (short op : mode.ops) {
