@@ -29,9 +29,9 @@
     </developers>
 
     <scm>
-        <connection>scm:git:git://github.com/jandk/tinybcdec.git</connection>
-        <developerConnection>scm:git:ssh://github.com:jandk/tinybcdec.git</developerConnection>
-        <url>https://github.com/jandk/tinybcdec/tree/main</url>
+        <connection>scm:git:https://github.com/jandk/tinybcdec</connection>
+        <developerConnection>scm:git:https://github.com/jandk/tinybcdec</developerConnection>
+        <url>https://github.com/jandk/tinybcdec</url>
     </scm>
 
     <properties>
