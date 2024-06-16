@@ -73,7 +73,7 @@ Some quick benchmarks:
 
 These numbers are just a rough estimate, and can vary depending on the hardware and the JVM.
 
-For an idea, this means about 30ms to decode a 4K texture in BC1, and about 120ms for BC6 or BC7.
+To give you an idea, this means about 30ms to decode a 4K texture in BC1, and about 120ms for BC6 or BC7.
 
 ## Accuracy
 
