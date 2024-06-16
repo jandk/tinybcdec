@@ -5,9 +5,6 @@ final class BC1Decoder extends BlockDecoder {
 
     BC1Decoder(PixelOrder order, boolean opaque) {
         super(BlockFormat.BC1, order);
-        if (bytesPerPixel < 4) {
-            throw new IllegalArgumentException("bytesPerPixel must be at least 4");
-        }
         this.opaque = opaque;
     }
 

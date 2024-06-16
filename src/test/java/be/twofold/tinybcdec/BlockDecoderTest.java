@@ -57,8 +57,25 @@ class BlockDecoderTest {
         assertThatNullPointerException()
             .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, null));
 
-        assertThatThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.BGR))
-            .isInstanceOf(IllegalArgumentException.class)
-            .hasMessageContaining("alphaChannel must be set for at least 4 bytes per pixel");
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.R))
+            .withMessage("greenChannel must be set for at least 2 bytes per pixel");
+
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.of(2, 0, 1, -1, -1)))
+            .withMessage("blueChannel must be set for at least 3 bytes per pixel");
+
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.BGR))
+            .withMessage("alphaChannel must be set for at least 4 bytes per pixel");
+
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.RGBA)
+                .decode(0, 256, null, 0))
+            .withMessage("width must be greater than 0");
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.RGBA)
+                .decode(256, 0, null, 0))
+            .withMessage("height must be greater than 0");
     }
 }

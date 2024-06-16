@@ -40,9 +40,6 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder create(BlockFormat format, PixelOrder order) {
-        if (format.minChannels() >= 1 && order.red() == -1) {
-            throw new IllegalArgumentException("redChannel must be set for at least 1 byte per pixel");
-        }
         if (format.minChannels() >= 2 && order.green() == -1) {
             throw new IllegalArgumentException("greenChannel must be set for at least 2 bytes per pixel");
         }
