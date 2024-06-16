@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC6Decoder extends BCDecoder {
+final class BC6Decoder extends BlockDecoder {
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
         new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
@@ -22,14 +22,14 @@ final class BC6Decoder extends BCDecoder {
 
     private final boolean signed;
 
-    BC6Decoder(BCFormat format, BCOrder order) {
+    BC6Decoder(BlockFormat format, PixelOrder order) {
         super(format, order);
-        this.signed = format == BCFormat.BC6Signed;
+        this.signed = format == BlockFormat.BC6Signed;
     }
 
     @Override
     @SuppressWarnings("PointlessArithmeticExpression")
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         Bits bits = Bits.from(src, srcPos);
         Mode mode = MODES.get(mode(bits));
 
@@ -105,7 +105,7 @@ final class BC6Decoder extends BCDecoder {
 
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 

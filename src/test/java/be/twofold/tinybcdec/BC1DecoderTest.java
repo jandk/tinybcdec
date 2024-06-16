@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class BC1DecoderTest {
 
-    private final BCDecoder decoder = BCDecoder.create(BCFormat.BC1, BCOrder.ABGR);
+    private final BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1, PixelOrder.ABGR);
 
     @Test
     void testBC1() throws IOException {

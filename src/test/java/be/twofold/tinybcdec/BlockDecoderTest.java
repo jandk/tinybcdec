@@ -6,13 +6,13 @@ import java.io.*;
 
 import static org.assertj.core.api.Assertions.*;
 
-class BCDecoderTest {
+class BlockDecoderTest {
 
     @Test
     void testPartialBlock() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
 
-        byte[] actual = BCDecoder.create(BCFormat.BC4Unsigned, BCOrder.R)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC4Unsigned, PixelOrder.R)
             .decode(157, 119, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
 
@@ -23,7 +23,7 @@ class BCDecoderTest {
     void testPartialBlockWithAlphaFill() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
 
-        byte[] actual = BCDecoder.create(BCFormat.BC4Unsigned, BCOrder.RGBA)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC4Unsigned, PixelOrder.RGBA)
             .decode(157, 119, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
 
@@ -40,7 +40,7 @@ class BCDecoderTest {
     void testAlphaFill() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5u.dds");
 
-        byte[] actual = BCDecoder.create(BCFormat.BC5Unsigned, BCOrder.BGRA)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC5Unsigned, PixelOrder.BGRA)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
 
         assertThat(actual).satisfies(data -> {
@@ -53,11 +53,11 @@ class BCDecoderTest {
     @Test
     void testValidation() {
         assertThatNullPointerException()
-            .isThrownBy(() -> BCDecoder.create(null, BCOrder.BGR));
+            .isThrownBy(() -> BlockDecoder.create(null, PixelOrder.BGR));
         assertThatNullPointerException()
-            .isThrownBy(() -> BCDecoder.create(BCFormat.BC1, null));
+            .isThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, null));
 
-        assertThatThrownBy(() -> BCDecoder.create(BCFormat.BC1, BCOrder.BGR))
+        assertThatThrownBy(() -> BlockDecoder.create(BlockFormat.BC1, PixelOrder.BGR))
             .isInstanceOf(IllegalArgumentException.class)
             .hasMessageContaining("alphaChannel must be set for at least 4 bytes per pixel");
     }

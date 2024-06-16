@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC7Decoder extends BCDecoder {
+final class BC7Decoder extends BlockDecoder {
     static final int[] SUBSET2 = {
         0x50505050, 0x40404040, 0x54545454, 0x54505040, 0x50404000, 0x55545450, 0x55545040, 0x54504000,
         0x50400000, 0x55555450, 0x55544000, 0x54400000, 0x55555440, 0x55550000, 0x55555500, 0x55000000,
@@ -77,12 +77,12 @@ final class BC7Decoder extends BCDecoder {
         new Mode(2, 6, 0, 0, 5, 5, 1, 0, 2, 0)
     );
 
-    BC7Decoder(BCOrder order) {
-        super(BCFormat.BC7, order);
+    BC7Decoder(PixelOrder order) {
+        super(BlockFormat.BC7, order);
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         Bits bits = Bits.from(src, srcPos);
         Mode mode = MODES.get(mode(bits));
         int partition = bits.get(mode.pb);
@@ -220,7 +220,7 @@ final class BC7Decoder extends BCDecoder {
                 ByteArrays.setInt(dst, dstPos, rgba(r, g, b, a));
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 

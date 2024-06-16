@@ -1,10 +1,10 @@
 package be.twofold.tinybcdec;
 
-final class BC1Decoder extends BCDecoder {
+final class BC1Decoder extends BlockDecoder {
     private final boolean opaque;
 
-    BC1Decoder(BCOrder order, boolean opaque) {
-        super(BCFormat.BC1, order);
+    BC1Decoder(PixelOrder order, boolean opaque) {
+        super(BlockFormat.BC1, order);
         if (bytesPerPixel < 4) {
             throw new IllegalArgumentException("bytesPerPixel must be at least 4");
         }
@@ -12,7 +12,7 @@ final class BC1Decoder extends BCDecoder {
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         // After a lot of benchmarking, it appears that just doing the full float vs fixed point
         // doesn't really matter. The fixed point version is slightly faster, but the difference is
         // so small that it's not worth it. The fixed point version is also harder to read and
@@ -57,7 +57,7 @@ final class BC1Decoder extends BCDecoder {
                 indices >>>= 2;
                 dstPos += bytesPerPixel;
             }
-            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 
