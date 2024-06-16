@@ -1,7 +1,7 @@
 # tinybcdec
 
-![Build Status](https://github.com/jandk/tinybcdec/actions/workflows/maven.yml/badge.svg)
-
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/jandk/tinybcdec/maven.yml?logo=github)
+![Maven Central Version](https://img.shields.io/maven-central/v/be.twofold/tinybcdec?logo=apachemaven)
 ![License](https://img.shields.io/github/license/jandk/tinybcdec)
 
 ## Description
