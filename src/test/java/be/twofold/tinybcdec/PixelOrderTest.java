@@ -27,6 +27,16 @@ class PixelOrderTest {
     }
 
     @Test
+    void testARGB() {
+        PixelOrder order = PixelOrder.ARGB;
+        assertThat(order.count()).isEqualTo(4);
+        assertThat(order.red()).isEqualTo(1);
+        assertThat(order.green()).isEqualTo(2);
+        assertThat(order.blue()).isEqualTo(3);
+        assertThat(order.alpha()).isEqualTo(0);
+    }
+
+    @Test
     void testABGR() {
         PixelOrder order = PixelOrder.ABGR;
         assertThat(order.count()).isEqualTo(4);

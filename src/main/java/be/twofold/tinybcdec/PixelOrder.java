@@ -23,15 +23,22 @@ public final class PixelOrder {
 
     /**
      * A standard order for BGRA colors.
-     *
-     * <p>The blue channel is at index 0, the green channel is at index 1, the red channel is at index 2, and the alpha channel is at index 3.
+     * <p>
+     * The red channel is at index 2, the green channel is at index 1, the blue channel is at index 0, and the alpha channel is at index 3.
      */
     public static PixelOrder BGRA = of(4, 2, 1, 0, 3);
 
     /**
+     * A standard order for ARGB colors.
+     * <p>
+     * The red channel is at index 3, the green channel is at index 2, the blue channel is at index 1, and the alpha channel is at index 0.
+     */
+    public static PixelOrder ARGB = of(4, 1, 2, 3, 0);
+
+    /**
      * A standard order for ABGR colors.
-     *
-     * <p>The alpha channel is at index 0, the blue channel is at index 1, the green channel is at index 2, and the red channel is at index 3.
+     * <p>
+     * The red channel is at index 3, the green channel is at index 2, the blue channel is at index 1, and the alpha channel is at index 0.
      */
     public static PixelOrder ABGR = of(4, 3, 2, 1, 0);
 
