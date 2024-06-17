@@ -4,7 +4,7 @@
 
     <groupId>be.twofold</groupId>
     <artifactId>tinybcdec</artifactId>
-    <version>0.2-SNAPSHOT</version>
+    <version>0.1.1</version>
     <packaging>jar</packaging>
 
     <name>${project.groupId}:${project.artifactId}</name>
@@ -31,7 +31,7 @@
         <connection>scm:git:https://github.com/jandk/tinybcdec</connection>
         <developerConnection>scm:git:https://github.com/jandk/tinybcdec</developerConnection>
         <url>https://github.com/jandk/tinybcdec</url>
-      <tag>HEAD</tag>
+      <tag>tinybcdec-0.1.1</tag>
   </scm>
 
     <properties>
