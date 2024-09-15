@@ -240,14 +240,6 @@ final class BC7Decoder extends BlockDecoder {
         return i << (8 - n) | i >> (2 * n - 8);
     }
 
-    private int mode(Bits bits) {
-        int mode = 0;
-        while (mode < 8 && bits.get1() == 0) {
-            mode++;
-        }
-        return mode;
-    }
-
     private static final class Mode {
         private final int ns;
         private final int pb;

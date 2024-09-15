@@ -19,49 +19,56 @@ public final class PixelOrder {
      * <p>
      * The red channel is at index 0, the green channel is at index 1, the blue channel is at index 2, and the alpha channel is at index 3.
      */
-    public static PixelOrder RGBA = of(4, 0, 1, 2, 3);
+    public static final PixelOrder RGBA = of(4, 0, 1, 2, 3);
 
     /**
      * A standard order for BGRA colors.
      * <p>
      * The red channel is at index 2, the green channel is at index 1, the blue channel is at index 0, and the alpha channel is at index 3.
      */
-    public static PixelOrder BGRA = of(4, 2, 1, 0, 3);
+    public static final PixelOrder BGRA = of(4, 2, 1, 0, 3);
 
     /**
      * A standard order for ARGB colors.
      * <p>
      * The red channel is at index 3, the green channel is at index 2, the blue channel is at index 1, and the alpha channel is at index 0.
      */
-    public static PixelOrder ARGB = of(4, 1, 2, 3, 0);
+    public static final PixelOrder ARGB = of(4, 1, 2, 3, 0);
 
     /**
      * A standard order for ABGR colors.
      * <p>
      * The red channel is at index 3, the green channel is at index 2, the blue channel is at index 1, and the alpha channel is at index 0.
      */
-    public static PixelOrder ABGR = of(4, 3, 2, 1, 0);
+    public static final PixelOrder ABGR = of(4, 3, 2, 1, 0);
 
     /**
      * A standard order for RGB colors.
      *
      * <p>The red channel is at index 0, the green channel is at index 1, and the blue channel is at index 2.
      */
-    public static PixelOrder RGB = of(3, 0, 1, 2, -1);
+    public static final PixelOrder RGB = of(3, 0, 1, 2, -1);
 
     /**
      * A standard order for BGR colors.
      *
      * <p>The blue channel is at index 0, the green channel is at index 1, and the red channel is at index 2.
      */
-    public static PixelOrder BGR = of(3, 2, 1, 0, -1);
+    public static final PixelOrder BGR = of(3, 2, 1, 0, -1);
+
+    /**
+     * A standard order for RG colors.
+     *
+     * <p>The red channel is at index 0, the green channel is at index 1. This is often used for normal maps.</p>
+     */
+    public static final PixelOrder RG = of(2, 0, 1, -1, -1);
 
     /**
      * A standard order for grayscale colors.
      *
      * <p>The red channel is at index 0.
      */
-    public static PixelOrder R = of(1, 0, -1, -1, -1);
+    public static final PixelOrder R = of(1, 0, -1, -1, -1);
 
     private final int count;
     private final int red;

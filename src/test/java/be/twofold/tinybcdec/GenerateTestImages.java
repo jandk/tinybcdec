@@ -84,8 +84,4 @@ public final class GenerateTestImages {
         graphics.setRenderingHint(RenderingHints.KEY_STROKE_CONTROL, RenderingHints.VALUE_STROKE_NORMALIZE);
         graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_GASP);
     }
-
-    private enum Transparency {
-        NONE, HALF, FULL
-    }
 }

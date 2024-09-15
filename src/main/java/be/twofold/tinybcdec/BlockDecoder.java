@@ -169,26 +169,26 @@ public abstract class BlockDecoder {
 
     private void fillAlpha(byte[] dst, int dstPos, int stride) {
         if (format == BlockFormat.BC6Signed || format == BlockFormat.BC6Unsigned) {
-            fillAlphaShort(dst, dstPos, stride, (short) 0x3C00);
+            fillAlphaShort(dst, dstPos, stride);
         } else {
-            fillAlphaByte(dst, dstPos, stride, (byte) 0xFF);
+            fillAlphaByte(dst, dstPos, stride);
         }
     }
 
-    private void fillAlphaShort(byte[] dst, int dstPos, int stride, short value) {
+    private void fillAlphaShort(byte[] dst, int dstPos, int stride) {
         for (int yy = 0; yy < BLOCK_HEIGHT; yy++) {
             for (int xx = 0; xx < BLOCK_WIDTH; xx++) {
-                ByteArrays.setShort(dst, dstPos + alphaOffset, value);
+                ByteArrays.setShort(dst, dstPos + alphaOffset, (short) 0x3c00);
                 dstPos += bytesPerPixel;
             }
             dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 
-    private void fillAlphaByte(byte[] dst, int dstPos, int stride, byte value) {
+    private void fillAlphaByte(byte[] dst, int dstPos, int stride) {
         for (int yy = 0; yy < BLOCK_HEIGHT; yy++) {
             for (int xx = 0; xx < BLOCK_WIDTH; xx++) {
-                dst[dstPos + alphaOffset] = value;
+                dst[dstPos + alphaOffset] = (byte) 0xff;
                 dstPos += bytesPerPixel;
             }
             dstPos += stride - BLOCK_WIDTH * bytesPerPixel;

@@ -13,8 +13,6 @@
  * </ul>
  */
 module be.twofold.tinybcdec {
-    requires java.base;
-
     // Used for testing
     requires static java.desktop;
 
