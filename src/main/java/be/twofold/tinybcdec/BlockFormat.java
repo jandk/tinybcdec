@@ -40,6 +40,14 @@ public enum BlockFormat {
      */
     BC5UnsignedNormalized(16, 1, 3),
     /**
+     * BC5 Signed: 16 bytes per block, 1 byte per value, 2 channels (RG)
+     */
+    BC5Signed(16, 1, 2),
+    /**
+     * BC5 Signed Normalized: 16 bytes per block, 1 byte per value, 3 channels (RGB)
+     */
+    BC5SignedNormalized(16, 1, 3),
+    /**
      * BC6 Unsigned: 16 bytes per block, 2 bytes per value, 3 channels (RGB)
      */
     BC6Unsigned(16, 2, 3),
