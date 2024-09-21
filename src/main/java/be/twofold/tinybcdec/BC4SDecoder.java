@@ -9,25 +9,23 @@ final class BC4SDecoder extends BlockDecoder {
     @SuppressWarnings({"PointlessBitwiseExpression"})
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         long block = ByteArrays.getLong(src, srcPos);
-        byte a0 = (byte) (block >>> 0);
-        byte a1 = (byte) (block >>> 8);
+        float a0 = unpack((byte) (block >>> 0));
+        float a1 = unpack((byte) (block >>> 8));
         block >>>= 16;
 
-        float f0 = unpack(a0);
-        float f1 = unpack(a1);
-        byte[] alphas = {pack(f0), pack(f1), 0, 0, 0, 0, 0, (byte) 255};
+        byte[] alphas = {pack(a0), pack(a1), 0, 0, 0, 0, 0, (byte) 255};
         if (a0 > a1) {
-            alphas[2] = pack((f0 * 6f + f1 * 1f) / 7f);
-            alphas[3] = pack((f0 * 5f + f1 * 2f) / 7f);
-            alphas[4] = pack((f0 * 4f + f1 * 3f) / 7f);
-            alphas[5] = pack((f0 * 3f + f1 * 4f) / 7f);
-            alphas[6] = pack((f0 * 2f + f1 * 5f) / 7f);
-            alphas[7] = pack((f0 * 1f + f1 * 6f) / 7f);
+            alphas[2] = pack(lerp(a0, a1, 1.0f / 7.0f));
+            alphas[3] = pack(lerp(a0, a1, 2.0f / 7.0f));
+            alphas[4] = pack(lerp(a0, a1, 3.0f / 7.0f));
+            alphas[5] = pack(lerp(a0, a1, 4.0f / 7.0f));
+            alphas[6] = pack(lerp(a0, a1, 5.0f / 7.0f));
+            alphas[7] = pack(lerp(a0, a1, 6.0f / 7.0f));
         } else {
-            alphas[2] = pack((f0 * 4f + f1 * 1f) / 5f);
-            alphas[3] = pack((f0 * 3f + f1 * 2f) / 5f);
-            alphas[4] = pack((f0 * 2f + f1 * 3f) / 5f);
-            alphas[5] = pack((f0 * 1f + f1 * 4f) / 5f);
+            alphas[2] = pack(lerp(a0, a1, 1.0f / 5.0f));
+            alphas[3] = pack(lerp(a0, a1, 2.0f / 5.0f));
+            alphas[4] = pack(lerp(a0, a1, 3.0f / 5.0f));
+            alphas[5] = pack(lerp(a0, a1, 4.0f / 5.0f));
         }
 
         dstPos += redOffset;
@@ -41,15 +39,15 @@ final class BC4SDecoder extends BlockDecoder {
         }
     }
 
-    private byte pack(float f) {
-        return (byte) ((f * 0.5f + 0.5f) * 255f + 0.5f);
+    private static byte pack(float f) {
+        return (byte) Math.fma(f, 127.5f, 128.0f);
     }
 
-    private float unpack(byte b) {
-        return Math.max(b, -127) / 127f;
+    private static float unpack(byte b) {
+        return Math.max(b, -127) / 127.0f;
     }
 
-    private float lerp(float a, float b, float t) {
+    private static float lerp(float a, float b, float t) {
         return Math.fma(t, b - a, a);
     }
 }
