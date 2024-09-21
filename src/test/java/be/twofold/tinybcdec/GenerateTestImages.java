@@ -25,7 +25,9 @@ public final class GenerateTestImages {
         renderImage("BC2 RGBA", "8bbp", "4-bit alpha", blue, black, target.resolve("bc2.png"));
         renderImage("BC3 RGBA", "8bbp", "8-bit alpha", blue, black, target.resolve("bc3.png"));
         renderImage("BC4U R", "4bpp", "no alpha", white, grey, target.resolve("bc4u.png"));
-        renderImage("BC5U R", "8bpp", "no alpha", red, green, target.resolve("bc5u.png"));
+        renderImage("BC4S R", "4bpp", "no alpha", white, grey, target.resolve("bc4s.png"));
+        renderImage("BC5U RG", "8bpp", "no alpha", red, green, target.resolve("bc5u.png"));
+        renderImage("BC5S RG", "8bpp", "no alpha", red, green, target.resolve("bc5s.png"));
         renderImage("BC6H_SF16 RGB", "8bbp", "no alpha", blue, white, target.resolve("bc6h_sf16.png"));
         renderImage("BC6H_UF16 RGB", "8bbp", "no alpha", blue, white, target.resolve("bc6h_uf16.png"));
         renderImage("BC7 RGBA", "8bbp", "8-bit alpha", blue, white, target.resolve("bc7.png"));

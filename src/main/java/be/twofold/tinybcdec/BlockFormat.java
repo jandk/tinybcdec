@@ -28,6 +28,10 @@ public enum BlockFormat {
      */
     BC4Unsigned(8, 1, 1),
     /**
+     * BC4 Signed: 8 bytes per block, 1 byte per value, 1 channel (R)
+     */
+    BC4Signed(8, 1, 1),
+    /**
      * BC5 Unsigned: 16 bytes per block, 1 byte per value, 2 channels (RG)
      */
     BC5Unsigned(16, 1, 2),

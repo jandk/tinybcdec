@@ -58,6 +58,8 @@ public abstract class BlockDecoder {
                 return new BC3Decoder(order);
             case BC4Unsigned:
                 return new BC4UDecoder(order);
+            case BC4Signed:
+                return new BC4SDecoder(order);
             case BC5Unsigned:
             case BC5UnsignedNormalized:
                 return new BC5UDecoder(format, order);
