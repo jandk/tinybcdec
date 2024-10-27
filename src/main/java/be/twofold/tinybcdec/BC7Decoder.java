@@ -158,46 +158,41 @@ final class BC7Decoder extends BlockDecoder {
             }
         }
 
+        // Let's try a new method
+        int ib1 = mode.ib1;
+        int ib2 = mode.ib2;
+        long indexBits1 = indexBits(bits, mode.ib1, mode.ns, partition);
+        long indexBits2 = indexBits(bits, mode.ib2, mode.ns, partition);
 
-        int a1 = 0;
-        int a2 = 0;
-        int partitionTable = 0;
+        int partitionTable;
         if (mode.ns == 2) {
-            a1 = ANCHOR_11[partition];
             partitionTable = SUBSET2[partition];
         } else if (mode.ns == 3) {
-            a1 = ANCHOR_21[partition];
-            a2 = ANCHOR_22[partition];
             partitionTable = SUBSET3[partition];
+        } else {
+            partitionTable = 0;
         }
 
-        // Interleaving would have been so much nicer...
-        int[] indexBits = new int[16];
-        for (int i = 0; i < 16; i++) {
-            boolean anchored = i == 0 || i == a1 || i == a2;
-            int numBits = mode.ib1 - (anchored ? 1 : 0);
-            indexBits[i] = bits.get(numBits);
-        }
+        int[] weights1 = WEIGHTS[ib1];
+        int[] weights2 = WEIGHTS[ib2];
 
-        int[] weights1 = WEIGHTS[mode.ib1];
-        int[] weights2 = WEIGHTS[mode.ib2];
-
+        int mask1 = (1 << ib1) - 1;
+        int mask2 = (1 << ib2) - 1;
         for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
-                int index1 = indexBits[i];
-                int cWeight = weights1[index1];
-                int aWeight = weights1[index1];
+                int i1 = (int) (indexBits1 & mask1);
+                indexBits1 >>>= ib1;
+                int cWeight = weights1[i1];
+                int aWeight = weights1[i1];
 
-                if (mode.ib2 != 0) {
-                    boolean anchored = i == 0 || i == a1 || i == a2;
-                    int numBits = mode.ib2 - (anchored ? 1 : 0);
-                    int index2 = bits.get(numBits);
-
+                if (ib2 != 0) {
+                    int i2 = (int) (indexBits2 & mask2);
                     if (selection) {
-                        cWeight = weights2[index2];
+                        cWeight = weights2[i2];
                     } else {
-                        aWeight = weights2[index2];
+                        aWeight = weights2[i2];
                     }
+                    indexBits2 >>>= ib2;
                 }
 
                 int pIndex = partitionTable >>> (i * 2) & 3;
@@ -229,6 +224,27 @@ final class BC7Decoder extends BlockDecoder {
             }
             dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
         }
+    }
+
+    private long indexBits(Bits bits, int ib, int ns, int partition) {
+        long indexBits = bits.getLong(ib * 16 - ns);
+        indexBits = insertZeroBit(indexBits, ib - 1);
+
+        if (ns == 2) {
+            int anchor = ANCHOR_11[partition] + 1;
+            indexBits = insertZeroBit(indexBits, (anchor * ib) - 1);
+        } else if (ns == 3) {
+            int anchor1 = ANCHOR_21[partition] + 1;
+            int anchor2 = ANCHOR_22[partition] + 1;
+            indexBits = insertZeroBit(indexBits, (Math.min(anchor1, anchor2) * ib) - 1);
+            indexBits = insertZeroBit(indexBits, (Math.max(anchor1, anchor2) * ib) - 1);
+        }
+        return indexBits;
+    }
+
+    private long insertZeroBit(long value, int pos) {
+        long topMask = ~0L << pos;
+        return value + (value & topMask);
     }
 
     static int interpolate(int e0, int e1, int weight) {

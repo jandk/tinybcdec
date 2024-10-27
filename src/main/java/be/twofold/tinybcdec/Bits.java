@@ -23,6 +23,14 @@ final class Bits {
         return bits;
     }
 
+    long getLong(int count) {
+        long mask = (1L << count) - 1;
+        long bits = lo & mask;
+        lo = (lo >>> count) | ((hi & mask) << (64 - count));
+        hi = (hi >>> count);
+        return bits;
+    }
+
     int get1() {
         return get(1);
     }
