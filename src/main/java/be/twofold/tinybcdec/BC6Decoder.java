@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC6Decoder extends BlockDecoder {
+final class BC6Decoder extends BPTCDecoder {
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
         new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
@@ -35,22 +35,31 @@ final class BC6Decoder extends BlockDecoder {
         if (modeIndex >= MODES.size()) {
             return;
         }
+
         Mode mode = MODES.get(modeIndex);
+        int endPointBits = mode.epb;
 
         int[] colors = new int[12];
         for (short op : mode.ops) {
             readOp(bits, op, colors);
         }
 
-        int partition = bits.get(mode.pb);
-        int numPartitions = mode.pb != 0 ? 2 : 1;
+        int partition;
+        int numPartitions;
+        if (mode.pb == 0) {
+            partition = 0;
+            numPartitions = 1;
+        } else {
+            partition = bits.get(mode.pb);
+            numPartitions = 2;
+        }
 
         // The values in E0 are sign-extended to the implementation’s internal integer representation if
         // the format of the texture is signed
         if (signed) {
-            colors[0] = extendSign(colors[0], mode.epb);
-            colors[1] = extendSign(colors[1], mode.epb);
-            colors[2] = extendSign(colors[2], mode.epb);
+            colors[0] = extendSign(colors[0], endPointBits);
+            colors[1] = extendSign(colors[1], endPointBits);
+            colors[2] = extendSign(colors[2], endPointBits);
         }
 
         if (mode.te || signed) {
@@ -63,45 +72,33 @@ final class BC6Decoder extends BlockDecoder {
 
         if (mode.te) {
             for (int i = 3; i < numPartitions * 6; i += 3) {
-                colors[i + 0] = transformInverse(colors[i + 0], colors[0], mode.epb, signed);
-                colors[i + 1] = transformInverse(colors[i + 1], colors[1], mode.epb, signed);
-                colors[i + 2] = transformInverse(colors[i + 2], colors[2], mode.epb, signed);
+                colors[i + 0] = transformInverse(colors[i + 0], colors[0], endPointBits, signed);
+                colors[i + 1] = transformInverse(colors[i + 1], colors[1], endPointBits, signed);
+                colors[i + 2] = transformInverse(colors[i + 2], colors[2], endPointBits, signed);
             }
         }
 
         for (int i = 0; i < numPartitions * 6; i += 3) {
-            colors[i + 0] = unquantize(colors[i + 0], mode.epb, signed);
-            colors[i + 1] = unquantize(colors[i + 1], mode.epb, signed);
-            colors[i + 2] = unquantize(colors[i + 2], mode.epb, signed);
+            colors[i + 0] = unquantize(colors[i + 0], endPointBits, signed);
+            colors[i + 1] = unquantize(colors[i + 1], endPointBits, signed);
+            colors[i + 2] = unquantize(colors[i + 2], endPointBits, signed);
         }
 
-
-        int ib = 4;
-        int anchor = 0;
-        int partitionTable = 0;
-        if (numPartitions == 2) {
-            ib = 3;
-            anchor = BC7Decoder.ANCHOR_11[partition];
-            partitionTable = BC7Decoder.SUBSET2[partition];
-        }
-
-        // Interleaving would have been so much nicer...
-        int[] indexBits = new int[16];
-        for (int i = 0; i < 16; i++) {
-            boolean anchored = i == 0 || i == anchor;
-            int numBits = ib - (anchored ? 1 : 0);
-            indexBits[i] = bits.get(numBits);
-        }
-
-        int[] weights1 = BC7Decoder.WEIGHTS[ib];
+        int ib = numPartitions == 1 ? 4 : 3;
+        int[] weights = weights(ib);
+        long indexBits = indexBits(bits, ib, numPartitions, partition);
+        int partitionTable = partitionTable(numPartitions, partition);
         for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
-                int weight = weights1[indexBits[i]];
+                int index = (int) (indexBits & (1 << ib) - 1);
+                int pIndex = partitionTable & 3;
+                int weight = weights[index];
+                indexBits >>>= ib;
+                partitionTable >>>= 2;
 
-                int pIndex = partitionTable >>> (i * 2) & 3;
-                short r = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
-                short g = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
-                short b = (short) finalUnquantize(BC7Decoder.interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
+                short r = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
+                short g = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
+                short b = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
                 ByteArrays.setShort(dst, dstPos + redOffset, r);
                 ByteArrays.setShort(dst, dstPos + greenOffset, g);
@@ -122,7 +119,23 @@ final class BC6Decoder extends BlockDecoder {
 
         int value = bits.get(count);
         if (reverse) {
-            value = Integer.reverse(value) >>> (32 - count);
+            switch (count) {
+                case 2: {
+                    int i = value;
+                    value = (i & 0x55) << 1 | (i >>> 1) & 0x55;
+                    break;
+                }
+                case 6: {
+                    int i = value;
+                    i = (i & 0x55) << 1 | (i >>> 1) & 0x55;
+                    i = (i & 0x33) << 2 | (i >>> 2) & 0x33;
+                    i = (i & 0x0F) << 4 | (i >>> 4) & 0x0F;
+                    value = i >>> 2;
+                    break;
+                }
+                default:
+                    throw new UnsupportedOperationException();
+            }
         }
         colors[index] |= value << shift;
     }
@@ -144,48 +157,56 @@ final class BC6Decoder extends BlockDecoder {
 
     private int unquantize(int value, int bits, boolean signed) {
         if (signed) {
-            if (bits >= 16 || value == 0) {
-                return value;
-            }
-
-            boolean sign;
-            if (value < 0) {
-                value = -value;
-                sign = true;
-            } else {
-                sign = false;
-            }
-
-            int unq;
-            if (value >= ((1 << (bits - 1)) - 1)) {
-                unq = 0x7FFF;
-            } else {
-                unq = ((value << 15) + 0x4000) >> (bits - 1);
-            }
-            return sign ? -unq : unq;
+            return unquantizeSigned(value, bits);
         } else {
-            if (bits >= 15 || value == 0) {
-                return value;
-            }
-            if (value == ((1 << bits) - 1)) {
-                return 0xFFFF;
-            }
-            return ((value << 15) + 0x4000) >> (bits - 1);
+            return unquantizeUnsigned(value, bits);
         }
+    }
+
+    private static int unquantizeUnsigned(int value, int bits) {
+        if (bits >= 15 || value == 0) {
+            return value;
+        }
+        if (value == ((1 << bits) - 1)) {
+            return 0xFFFF;
+        }
+        return ((value << 15) + 0x4000) >> (bits - 1);
+    }
+
+    private static int unquantizeSigned(int value, int bits) {
+        if (bits >= 16 || value == 0) {
+            return value;
+        }
+
+        boolean sign;
+        if (value < 0) {
+            value = -value;
+            sign = true;
+        } else {
+            sign = false;
+        }
+
+        int unq;
+        if (value >= ((1 << (bits - 1)) - 1)) {
+            unq = 0x7FFF;
+        } else {
+            unq = ((value << 15) + 0x4000) >> (bits - 1);
+        }
+        return sign ? -unq : unq;
     }
 
     private static int finalUnquantize(int i, boolean signed) {
         if (signed) {
             i = (short) i;
-            return i < 0 ? (((-i) * 31) >> 5) | 0x8000 : (i * 31) >> 5;
+            return i < 0 ? (((-i) * 31) >> 5) + 0x8000 : (i * 31) >> 5;
         } else {
             return (i * 31) >> 6;
         }
     }
 
     private int extendSign(int value, int bits) {
-        int shift = 32 - bits;
-        return value << shift >> shift;
+        int signBit = 1 << (bits - 1);
+        return (value ^ signBit) - signBit;
     }
 
     private int transformInverse(int value, int value0, int bits, boolean signed) {
