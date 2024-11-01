@@ -91,8 +91,8 @@ final class BC6Decoder extends BPTCDecoder {
         int[] weights = weights(ib);
         int partitionTable = partitionTable(numPartitions, partition);
         long indexBits = indexBits(bits, ib, numPartitions, partition);
-        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int pIndex = partitionTable & 3;
                 int index = (int) (indexBits & (1 << ib) - 1);
                 int weight = weights[index];
@@ -215,12 +215,12 @@ final class BC6Decoder extends BPTCDecoder {
 
     private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
         long pixel = rgb16(0, 0, 0);
-        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setLong(dst, dstPos, pixel);
                 dstPos += BYTES_PER_PIXEL16;
             }
-            dstPos += bytesPerLine - BCDecoder.BLOCK_WIDTH * BYTES_PER_PIXEL16;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL16;
         }
     }
 

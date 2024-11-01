@@ -108,8 +108,8 @@ final class BC7Decoder extends BPTCDecoder {
 
         int mask1 = (1 << mode.ib1) - 1;
         int mask2 = (1 << mode.ib2) - 1;
-        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int index1 = (int) (indexBits1 & mask1);
                 int cWeight = weights1[index1];
                 int aWeight = weights1[index1];
@@ -151,19 +151,19 @@ final class BC7Decoder extends BPTCDecoder {
                 }
 
                 ByteArrays.setInt(dst, dstPos, rgba(r, g, b, a));
-                dstPos += BCDecoder.BYTES_PER_PIXEL;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += stride - BCDecoder.BLOCK_WIDTH * BCDecoder.BYTES_PER_PIXEL;
+            dstPos += stride - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 
     private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
-        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, 0);
-                dstPos += BCDecoder.BYTES_PER_PIXEL;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BCDecoder.BLOCK_WIDTH * BCDecoder.BYTES_PER_PIXEL;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 

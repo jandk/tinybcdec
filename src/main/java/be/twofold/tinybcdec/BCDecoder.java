@@ -1,11 +1,12 @@
 package be.twofold.tinybcdec;
 
-final class BCDecoder {
+abstract class BCDecoder extends BlockDecoder {
     static final int BLOCK_WIDTH = 4;
     static final int BLOCK_HEIGHT = 4;
     static final int BYTES_PER_PIXEL = 4;
 
-    private BCDecoder() {
+    BCDecoder(BlockFormat format) {
+        super(format);
     }
 
     static void decodeColorBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride, boolean opaque) {
@@ -134,7 +135,7 @@ final class BCDecoder {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int i = dstPos + x * BYTES_PER_PIXEL;
                 int v = Byte.toUnsignedInt(dst[i]);
-                ByteArrays.setInt(dst, i, BlockDecoder.rgba(v, v, v, 0xFF));
+                ByteArrays.setInt(dst, i, rgba(v, v, v, 0xFF));
             }
             dstPos += stride;
         }
@@ -161,7 +162,11 @@ final class BCDecoder {
     }
 
     private static int rgb(float r, float g, float b) {
-        return BlockDecoder.rgba(packUNorm(r), packUNorm(g), packUNorm(b), 0xFF);
+        return rgba(packUNorm(r), packUNorm(g), packUNorm(b), 0xFF);
+    }
+
+    static int rgba(int r, int g, int b, int a) {
+        return r | g << 8 | b << 16 | a << 24;
     }
 
     private static int packUNorm(float value) {

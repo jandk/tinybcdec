@@ -125,10 +125,6 @@ public abstract class BlockDecoder {
         }
     }
 
-    static int rgba(int r, int g, int b, int a) {
-        return r | g << 8 | b << 16 | a << 24;
-    }
-
     private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
         int blockStride = BCDecoder.BLOCK_WIDTH * bytesPerPixel;
         byte[] block = new byte[BCDecoder.BLOCK_HEIGHT * blockStride];
