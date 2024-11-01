@@ -20,16 +20,17 @@ final class BC7Decoder extends BPTCDecoder {
     }
 
     @Override
+    @SuppressWarnings("PointlessArithmeticExpression")
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
 
         int modeIndex = Integer.numberOfTrailingZeros(src[srcPos]);
-        bits.get(modeIndex + 1); // Skip mode bits
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride);
             return;
         }
 
+        bits.get(modeIndex + 1); // Skip mode bits
         Mode mode = MODES.get(modeIndex);
         int partition = bits.get(mode.pb);
         int rotation = bits.get(mode.rb);

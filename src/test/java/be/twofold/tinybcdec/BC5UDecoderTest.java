@@ -30,7 +30,7 @@ class BC5UDecoderTest {
         for (int i = 0; i < expected.length; i += 4) {
             assertThat(actual[i + 0] & 0xFF).isEqualTo(expected[i + 0] & 0xFF);
             assertThat(actual[i + 1] & 0xFF).isEqualTo(expected[i + 1] & 0xFF);
-            assertThat(actual[i + 3] & 0xFF).isEqualTo(expected[i + 3] & 0xFF);
+            assertThat(actual[i + 3]).isEqualTo((byte) 0xFF);
             int za = actual[i + 2] & 0xFF;
             int ze = expected[i + 2] & 0xFF;
             if (ze != 0) {

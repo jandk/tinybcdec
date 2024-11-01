@@ -26,6 +26,14 @@ final class ByteArrays {
         LongVarHandle.set(array, index, value);
     }
 
+    static short getShort(byte[] array, int index) {
+        return (short) ShortVarHandle.get(array, index);
+    }
+
+    static int getInt(byte[] array, int index) {
+        return (int) IntVarHandle.get(array, index);
+    }
+
     static long getLong(byte[] array, int index) {
         return (long) LongVarHandle.get(array, index);
     }

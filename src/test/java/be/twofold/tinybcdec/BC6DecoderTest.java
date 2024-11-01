@@ -37,8 +37,8 @@ class BC6DecoderTest {
         for (byte invalidMode : invalidModes) {
             src[0] = invalidMode;
             BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned);
-            var actual = decoder.decode(4, 4, src, 0);
-            var expected = new byte[16 * 2 * 4];
+            byte[] actual = decoder.decode(4, 4, src, 0);
+            byte[] expected = new byte[16 * 2 * 4];
             for (int i = 0; i < expected.length; i += 8) {
                 ByteArrays.setShort(expected, i + 6, (short) 0x3c00);
             }
