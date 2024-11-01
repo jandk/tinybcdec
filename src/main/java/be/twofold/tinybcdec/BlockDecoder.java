@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the main class for decoding block compressed textures.
  * <p>
- * To create a new instance, use the {@link #create(BlockFormat, PixelOrder)} method.
+ * To create a new instance, use the {@link #create(BlockFormat)} method.
  * <p>
  * To decode an entire image, use the {@link #decode(int, int, byte[], int)} or {@link #decode(int, int, byte[], int, byte[], int)} method.
  * Depending on if you want to allocate a new byte array or use an existing one.
@@ -15,62 +15,46 @@ import java.util.*;
 public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
     static final int BLOCK_HEIGHT = 4;
+    static final int BYTES_PER_PIXEL = 4;
+    static final int BYTES_PER_PIXEL16 = 8;
 
     private final BlockFormat format;
     final int bytesPerPixel;
-    final int redOffset;
-    final int greenOffset;
-    final int blueOffset;
-    final int alphaOffset;
 
-    BlockDecoder(BlockFormat format, PixelOrder order) {
+    BlockDecoder(BlockFormat format) {
         this.format = format;
-        this.bytesPerPixel = order.count() * format.bytesPerValue();
-        this.redOffset = order.red() * format.bytesPerValue();
-        this.greenOffset = order.green() * format.bytesPerValue();
-        this.blueOffset = order.blue() * format.bytesPerValue();
-        this.alphaOffset = order.alpha() * format.bytesPerValue();
+        this.bytesPerPixel = 4 * format.bytesPerValue();
     }
 
     /**
      * Creates a new block decoder for the given format and order.
      *
      * @param format The block format.
-     * @param order  The channel order.
      * @return The block decoder.
      */
-    public static BlockDecoder create(BlockFormat format, PixelOrder order) {
-        if (format.minChannels() >= 2 && order.green() == -1) {
-            throw new IllegalArgumentException("greenChannel must be set for at least 2 bytes per pixel");
-        }
-        if (format.minChannels() >= 3 && order.blue() == -1) {
-            throw new IllegalArgumentException("blueChannel must be set for at least 3 bytes per pixel");
-        }
-        if (format.minChannels() >= 4 && order.alpha() == -1) {
-            throw new IllegalArgumentException("alphaChannel must be set for at least 4 bytes per pixel");
-        }
+    public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder(order, false);
+                return new BC1Decoder(false);
             case BC2:
-                return new BC2Decoder(order);
+                return new BC2Decoder();
             case BC3:
-                return new BC3Decoder(order);
+                return new BC3Decoder();
             case BC4Unsigned:
-                return new BC4UDecoder(order);
+                return new BC4UDecoder();
             case BC4Signed:
-                return new BC4SDecoder(order);
+                return new BC4SDecoder();
             case BC5Unsigned:
             case BC5UnsignedNormalized:
-                return new BC5UDecoder(format, order);
+                return new BC5UDecoder(format);
             case BC5Signed:
             case BC5SignedNormalized:
-                return new BC5SDecoder(format, order);
+                return new BC5SDecoder(format);
             case BC6Unsigned:
             case BC6Signed:
-                return new BC6Decoder(format, order);
+                return new BC6Decoder(format);
             case BC7:
-                return new BC7Decoder(order);
+                return new BC7Decoder();
             default:
                 throw new IllegalArgumentException("Unsupported format: " + format);
         }
@@ -142,22 +126,26 @@ public abstract class BlockDecoder {
                 }
 
                 decodeBlock(src, srcPos, dst, dstOffset, bytesPerLine);
-                if (format.minChannels() < 4 && alphaOffset >= 0) {
+                if (format.minChannels() < 4) {
                     fillAlpha(dst, dstOffset, bytesPerLine);
                 }
             }
         }
     }
 
-    int rgba(int r, int g, int b, int a) {
-        return (r << (redOffset * 8)) | (g << (greenOffset * 8)) | (b << (blueOffset * 8)) | (a << (alphaOffset * 8));
+    static int rgba(int r, int g, int b, int a) {
+        return r | g << 8 | b << 16 | a << 24;
+    }
+
+    static long rgba16(int r, int g, int b, int a) {
+        return (long) r | ((long) g << 16) | ((long) b << 32) | ((long) a << 48);
     }
 
     private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
         int blockStride = BLOCK_WIDTH * bytesPerPixel;
         byte[] block = new byte[BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
-        if (format.minChannels() < 4 && alphaOffset >= 0) {
+        if (format.minChannels() < 4) {
             fillAlpha(block, 0, blockStride);
         }
 
@@ -181,9 +169,9 @@ public abstract class BlockDecoder {
     }
 
     private void fillAlphaShort(byte[] dst, int dstPos, int stride) {
-        for (int yy = 0; yy < BLOCK_HEIGHT; yy++) {
-            for (int xx = 0; xx < BLOCK_WIDTH; xx++) {
-                ByteArrays.setShort(dst, dstPos + alphaOffset, (short) 0x3c00);
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
+                ByteArrays.setShort(dst, dstPos + 6, (short) 0x3c00);
                 dstPos += bytesPerPixel;
             }
             dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
@@ -191,9 +179,9 @@ public abstract class BlockDecoder {
     }
 
     private void fillAlphaByte(byte[] dst, int dstPos, int stride) {
-        for (int yy = 0; yy < BLOCK_HEIGHT; yy++) {
-            for (int xx = 0; xx < BLOCK_WIDTH; xx++) {
-                dst[dstPos + alphaOffset] = (byte) 0xff;
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
+                dst[dstPos + 3] = (byte) 0xFF;
                 dstPos += bytesPerPixel;
             }
             dstPos += stride - BLOCK_WIDTH * bytesPerPixel;

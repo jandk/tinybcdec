@@ -3,8 +3,8 @@ package be.twofold.tinybcdec;
 final class BC1Decoder extends BlockDecoder {
     private final boolean opaque;
 
-    BC1Decoder(PixelOrder order, boolean opaque) {
-        super(BlockFormat.BC1, order);
+    BC1Decoder(boolean opaque) {
+        super(BlockFormat.BC1);
         this.opaque = opaque;
     }
 
@@ -17,16 +17,16 @@ final class BC1Decoder extends BlockDecoder {
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
-        int c0 = (int) (block       ) & 0xffff;
-        int c1 = (int) (block >>> 16) & 0xffff;
+        int c0 = (int) (block       ) & 0xFFFF;
+        int c1 = (int) (block >>> 16) & 0xFFFF;
 
-        float r0 = ((c0 >>> 11) & 0x1f) * (1.0f / 31.0f);
-        float g0 = ((c0 >>>  5) & 0x3f) * (1.0f / 63.0f);
-        float b0 = ( c0         & 0x1f) * (1.0f / 31.0f);
+        float r0 = ((c0 >>> 11) & 0x1F) * (1.0f / 31.0f);
+        float g0 = ((c0 >>>  5) & 0x3F) * (1.0f / 63.0f);
+        float b0 = ( c0         & 0x1F) * (1.0f / 31.0f);
 
-        float r1 = ((c1 >>> 11) & 0x1f) * (1.0f / 31.0f);
-        float g1 = ((c1 >>> 5)  & 0x3f) * (1.0f / 63.0f);
-        float b1 = ( c1         & 0x1f) * (1.0f / 31.0f);
+        float r1 = ((c1 >>> 11) & 0x1F) * (1.0f / 31.0f);
+        float g1 = ((c1 >>> 5)  & 0x3F) * (1.0f / 63.0f);
+        float b1 = ( c1         & 0x1F) * (1.0f / 31.0f);
         // @formatter:on
 
         int[] colors = {rgb(r0, g0, b0), rgb(r1, g1, b1), 0, 0};
@@ -52,14 +52,14 @@ final class BC1Decoder extends BlockDecoder {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, colors[indices & 3]);
                 indices >>>= 2;
-                dstPos += bytesPerPixel;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 
     private int rgb(float r, float g, float b) {
-        return rgba(pack(r), pack(g), pack(b), 255);
+        return rgba(pack(r), pack(g), pack(b), 0xFF);
     }
 
     private static int pack(float value) {

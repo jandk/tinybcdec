@@ -12,7 +12,7 @@ class BC6DecoderTest {
     void testBC6H_UF16() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc6h_uf16.dds");
 
-        BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned, PixelOrder.RGBA);
+        BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned);
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readDDSFP16("/bc6h_uf16_out.dds", 256, 256);
 
@@ -23,7 +23,7 @@ class BC6DecoderTest {
     void testBC6H_SF16() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc6h_sf16.dds");
 
-        BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Signed, PixelOrder.RGBA);
+        BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Signed);
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readDDSFP16("/bc6h_sf16_out.dds", 256, 256);
 
@@ -36,9 +36,14 @@ class BC6DecoderTest {
         byte[] invalidModes = {0b10011, 0b10111, 0b11011, 0b11111};
         for (byte invalidMode : invalidModes) {
             src[0] = invalidMode;
-            BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned, PixelOrder.RGB);
+            BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned);
             var actual = decoder.decode(4, 4, src, 0);
-            assertThat(actual).isEqualTo(new byte[16 * 3 * 2]);
+            var expected = new byte[16 * 2 * 4];
+            for (int i = 0; i < expected.length; i += 8) {
+                ByteArrays.setShort(expected, i + 6, (short) 0x3c00);
+            }
+
+            assertThat(actual).isEqualTo(expected);
         }
     }
 }

@@ -5,7 +5,5 @@
  * It provides methods to decode a single block or multiple blocks at once.
  * <p>
  * The {@link be.twofold.tinybcdec.BlockFormat} enum represents the different block formats that are supported by the decoder.
- * <p>
- * The {@link be.twofold.tinybcdec.PixelOrder} class represents the different channel orders that are supported by the decoder.
  */
 package be.twofold.tinybcdec;

@@ -22,6 +22,10 @@ final class ByteArrays {
         IntVarHandle.set(array, index, value);
     }
 
+    public static void setLong(byte[] array, int index, long value) {
+        LongVarHandle.set(array, index, value);
+    }
+
     public static long getLong(byte[] array, int index) {
         return (long) LongVarHandle.get(array, index);
     }

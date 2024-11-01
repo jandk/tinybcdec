@@ -1,8 +1,8 @@
 package be.twofold.tinybcdec;
 
 final class BC4SDecoder extends BlockDecoder {
-    BC4SDecoder(PixelOrder order) {
-        super(BlockFormat.BC4Unsigned, order);
+    BC4SDecoder() {
+        super(BlockFormat.BC4Unsigned);
     }
 
     @Override
@@ -28,14 +28,13 @@ final class BC4SDecoder extends BlockDecoder {
             alphas[5] = pack(lerp(a0, a1, 4.0f / 5.0f));
         }
 
-        dstPos += redOffset;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 dst[dstPos] = alphas[(int) (block & 7)];
                 block >>>= 3;
-                dstPos += bytesPerPixel;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 

@@ -1,16 +1,16 @@
 package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BlockDecoder {
-    BC4UDecoder(PixelOrder order) {
-        super(BlockFormat.BC4Unsigned, order);
+    BC4UDecoder() {
+        super(BlockFormat.BC4Unsigned);
     }
 
     @Override
     @SuppressWarnings({"PointlessArithmeticExpression", "PointlessBitwiseExpression"})
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
         long block = ByteArrays.getLong(src, srcPos);
-        int a0 = (int) ((block >>> 0) & 0xff);
-        int a1 = (int) ((block >>> 8) & 0xff);
+        int a0 = (int) ((block >>> 0) & 0xFF);
+        int a1 = (int) ((block >>> 8) & 0xFF);
         block >>>= 16;
 
         byte[] alphas = {(byte) a0, (byte) a1, 0, 0, 0, 0, 0, (byte) 255};
@@ -28,14 +28,13 @@ final class BC4UDecoder extends BlockDecoder {
             alphas[5] = (byte) ((1 * a0 + 4 * a1 + 2) / 5);
         }
 
-        dstPos += redOffset;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 dst[dstPos] = alphas[(int) (block & 7)];
                 block >>>= 3;
-                dstPos += bytesPerPixel;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 }

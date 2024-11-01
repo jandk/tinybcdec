@@ -65,8 +65,8 @@ abstract class BPTCDecoder extends BlockDecoder {
         0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64
     };
 
-    BPTCDecoder(BlockFormat format, PixelOrder order) {
-        super(format, order);
+    BPTCDecoder(BlockFormat format) {
+        super(format);
     }
 
     static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {
@@ -74,13 +74,13 @@ abstract class BPTCDecoder extends BlockDecoder {
         indexBits = insertZeroBit(indexBits, numIndexBits - 1);
 
         if (numPartitions == 2) {
-            int anchor = ANCHOR_11[partition] + 1;
-            indexBits = insertZeroBit(indexBits, (anchor * numIndexBits) - 1);
+            int anchor = ANCHOR_11[partition];
+            indexBits = insertZeroBit(indexBits, ((anchor + 1) * numIndexBits) - 1);
         } else if (numPartitions == 3) {
-            int anchor1 = ANCHOR_21[partition] + 1;
-            int anchor2 = ANCHOR_22[partition] + 1;
-            indexBits = insertZeroBit(indexBits, (Math.min(anchor1, anchor2) * numIndexBits) - 1);
-            indexBits = insertZeroBit(indexBits, (Math.max(anchor1, anchor2) * numIndexBits) - 1);
+            int anchor1 = ANCHOR_21[partition];
+            int anchor2 = ANCHOR_22[partition];
+            indexBits = insertZeroBit(indexBits, ((Math.min(anchor1, anchor2) + 1) * numIndexBits) - 1);
+            indexBits = insertZeroBit(indexBits, ((Math.max(anchor1, anchor2) + 1) * numIndexBits) - 1);
         }
         return indexBits;
     }

@@ -46,7 +46,7 @@ texture.
 ```java
 import be.twofold.tinybcdec.*;
 
-BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1, PixelOrder.RGBA);
+BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1);
 byte[] result = decoder.decode(256, 256, src, srcPos);
 ```
 
@@ -54,7 +54,7 @@ If you want to pass an existing buffer, you can pass it as the last two argument
 return value.
 
 ```java
-decoder.decode(256,256,src, srcPos, dst, dstPos);
+decoder.decode(256, 256, src, srcPos, dst, dstPos);
 ```
 
 ## Performance

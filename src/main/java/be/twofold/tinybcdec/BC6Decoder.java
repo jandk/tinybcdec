@@ -22,8 +22,8 @@ final class BC6Decoder extends BPTCDecoder {
 
     private final boolean signed;
 
-    BC6Decoder(BlockFormat format, PixelOrder order) {
-        super(format, order);
+    BC6Decoder(BlockFormat format) {
+        super(format);
         this.signed = format == BlockFormat.BC6Signed;
     }
 
@@ -96,17 +96,14 @@ final class BC6Decoder extends BPTCDecoder {
                 indexBits >>>= ib;
                 partitionTable >>>= 2;
 
-                short r = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
-                short g = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
-                short b = (short) finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
+                int r = finalUnquantize(interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
+                int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
+                int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
-                ByteArrays.setShort(dst, dstPos + redOffset, r);
-                ByteArrays.setShort(dst, dstPos + greenOffset, g);
-                ByteArrays.setShort(dst, dstPos + blueOffset, b);
-
-                dstPos += bytesPerPixel;
+                ByteArrays.setLong(dst, dstPos, rgba16(r, g, b, 0x3C00));
+                dstPos += BYTES_PER_PIXEL16;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL16;
         }
     }
 

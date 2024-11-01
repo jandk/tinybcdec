@@ -15,19 +15,15 @@ final class ReconstructZ {
         }
     }
 
-    static void reconstruct(
-        byte[] dst, int dstPos,
-        int bytesPerLine, int bytesPerPixel,
-        int redOffset, int greenOffset, int blueOffset
-    ) {
+    static void reconstruct(byte[] dst, int dstPos, int bytesPerLine) {
         for (int y = 0; y < BlockDecoder.BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BlockDecoder.BLOCK_WIDTH; x++) {
-                int r = Byte.toUnsignedInt(dst[dstPos + redOffset]);
-                int g = Byte.toUnsignedInt(dst[dstPos + greenOffset]);
-                dst[dstPos + blueOffset] = NORMAL[g * 256 + r];
-                dstPos += bytesPerPixel;
+                int r = Byte.toUnsignedInt(dst[dstPos + 0]);
+                int g = Byte.toUnsignedInt(dst[dstPos + 1]);
+                dst[dstPos + 2] = NORMAL[g * 256 + r];
+                dstPos += BlockDecoder.BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BlockDecoder.BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BlockDecoder.BLOCK_WIDTH * BlockDecoder.BYTES_PER_PIXEL;
         }
     }
 }

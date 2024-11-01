@@ -15,8 +15,8 @@ final class BC7Decoder extends BPTCDecoder {
         new Mode(2, 6, 0, 0, 5, 5, 1, 0, 2, 0)
     );
 
-    BC7Decoder(PixelOrder order) {
-        super(BlockFormat.BC7, order);
+    BC7Decoder() {
+        super(BlockFormat.BC7);
     }
 
     @Override
@@ -107,19 +107,19 @@ final class BC7Decoder extends BPTCDecoder {
 
         int mask1 = (1 << mode.ib1) - 1;
         int mask2 = (1 << mode.ib2) - 1;
-        for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
-                int i1 = (int) (indexBits1 & mask1);
-                int cWeight = weights1[i1];
-                int aWeight = weights1[i1];
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
+                int index1 = (int) (indexBits1 & mask1);
+                int cWeight = weights1[index1];
+                int aWeight = weights1[index1];
                 indexBits1 >>>= mode.ib1;
 
                 if (mode.ib2 != 0) {
-                    int i2 = (int) (indexBits2 & mask2);
+                    int index2 = (int) (indexBits2 & mask2);
                     if (selection) {
-                        cWeight = weights2[i2];
+                        cWeight = weights2[index2];
                     } else {
-                        aWeight = weights2[i2];
+                        aWeight = weights2[index2];
                     }
                     indexBits2 >>>= mode.ib2;
                 }
@@ -150,9 +150,9 @@ final class BC7Decoder extends BPTCDecoder {
                 }
 
                 ByteArrays.setInt(dst, dstPos, rgba(r, g, b, a));
-                dstPos += bytesPerPixel;
+                dstPos += BYTES_PER_PIXEL;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * bytesPerPixel;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
         }
     }
 
