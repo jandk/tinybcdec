@@ -63,13 +63,13 @@ I've done some performance testing, and the library is quite fast. I've run some
 
 Some quick benchmarks, tested on a Ryzen 5950X:
 
-- BC1: ~1000MP/s
+- BC1: ~1050MP/s
 - BC2: ~650MP/s
-- BC3: ~400MP/s
-- BC4: ~900MP/s
-- BC5: ~450MP/s
-- BC6: ~100MP/s
-- BC7: ~100MP/s
+- BC3: ~500MP/s
+- BC4: ~550MP/s
+- BC5: ~425MP/s
+- BC6: ~130MP/s
+- BC7: ~150MP/s
 
 These numbers are just a rough estimate, and can vary depending on the hardware and the JVM.
 

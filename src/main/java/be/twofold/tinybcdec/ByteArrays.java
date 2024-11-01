@@ -14,27 +14,19 @@ final class ByteArrays {
     private ByteArrays() {
     }
 
-    public static void setShort(byte[] array, int index, short value) {
+    static void setShort(byte[] array, int index, short value) {
         ShortVarHandle.set(array, index, value);
     }
 
-    public static void setInt(byte[] array, int index, int value) {
+    static void setInt(byte[] array, int index, int value) {
         IntVarHandle.set(array, index, value);
     }
 
-    public static void setLong(byte[] array, int index, long value) {
+    static void setLong(byte[] array, int index, long value) {
         LongVarHandle.set(array, index, value);
     }
 
-    public static short getShort(byte[] array, int index) {
-        return (short) ShortVarHandle.get(array, index);
-    }
-
-    public static int getInt(byte[] array, int index) {
-        return (int) IntVarHandle.get(array, index);
-    }
-
-    public static long getLong(byte[] array, int index) {
+    static long getLong(byte[] array, int index) {
         return (long) LongVarHandle.get(array, index);
     }
 }

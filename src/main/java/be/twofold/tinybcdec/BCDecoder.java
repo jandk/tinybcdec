@@ -29,12 +29,7 @@ abstract class BCDecoder extends BlockDecoder {
         float b1 = ( c1         & 0x1F) * (1.0f / 31.0f);
         // @formatter:on
 
-        int[] colors = {
-            rgb(r0, g0, b0),
-            rgb(r1, g1, b1),
-            0,
-            0
-        };
+        int[] colors = {rgb(r0, g0, b0), rgb(r1, g1, b1), 0, 0};
         if (c0 > c1 || opaque) {
             float r2 = lerp(r0, r1, 1.0f / 3.0f);
             float g2 = lerp(g0, g1, 1.0f / 3.0f);
