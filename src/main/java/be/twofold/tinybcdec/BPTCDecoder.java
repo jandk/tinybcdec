@@ -53,6 +53,8 @@ abstract class BPTCDecoder extends BlockDecoder {
         15, 15, 15, 15, +3, 15, 15, +8,
     };
 
+    private static final int[] WEIGHTS_0 = {
+    };
     private static final int[] WEIGHTS_2 = {
         0, 21, 43, 64
     };
@@ -102,6 +104,8 @@ abstract class BPTCDecoder extends BlockDecoder {
 
     static int[] weights(int numIndexBits) {
         switch (numIndexBits) {
+            case 0:
+                return WEIGHTS_0;
             case 2:
                 return WEIGHTS_2;
             case 3:
