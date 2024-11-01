@@ -20,20 +20,6 @@ class BlockDecoderTest {
     }
 
     @Test
-    void testAlphaFill() throws IOException {
-        byte[] src = BCTestUtils.readResource("/bc5u.dds");
-
-        byte[] actual = BlockDecoder.create(BlockFormat.BC5Unsigned)
-            .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
-
-        assertThat(actual).satisfies(data -> {
-            for (int i = 3; i < data.length; i += 4) {
-                assertThat(data[i]).isEqualTo((byte) 0xFF);
-            }
-        });
-    }
-
-    @Test
     void testValidation() {
         assertThatNullPointerException()
             .isThrownBy(() -> BlockDecoder.create(null));

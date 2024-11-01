@@ -3,6 +3,8 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 final class BC6Decoder extends BPTCDecoder {
+
+    static final int BYTES_PER_PIXEL16 = 8;
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
         new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
@@ -29,10 +31,11 @@ final class BC6Decoder extends BPTCDecoder {
 
     @Override
     @SuppressWarnings("PointlessArithmeticExpression")
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine) {
+    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
         int modeIndex = mode(bits);
         if (modeIndex >= MODES.size()) {
+            fillInvalidBlock(dst, dstPos, stride);
             return;
         }
 
@@ -86,24 +89,23 @@ final class BC6Decoder extends BPTCDecoder {
 
         int ib = numPartitions == 1 ? 4 : 3;
         int[] weights = weights(ib);
-        long indexBits = indexBits(bits, ib, numPartitions, partition);
         int partitionTable = partitionTable(numPartitions, partition);
-        for (int y = 0, i = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++, i++) {
-                int index = (int) (indexBits & (1 << ib) - 1);
+        long indexBits = indexBits(bits, ib, numPartitions, partition);
+        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
                 int pIndex = partitionTable & 3;
+                int index = (int) (indexBits & (1 << ib) - 1);
                 int weight = weights[index];
-                indexBits >>>= ib;
                 partitionTable >>>= 2;
+                indexBits >>>= ib;
 
                 int r = finalUnquantize(interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
                 int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
                 int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
-                ByteArrays.setLong(dst, dstPos, rgba16(r, g, b, 0x3C00));
-                dstPos += BYTES_PER_PIXEL16;
+                ByteArrays.setLong(dst, dstPos + x * BYTES_PER_PIXEL16, rgb16(r, g, b));
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL16;
+            dstPos += stride;
         }
     }
 
@@ -209,6 +211,21 @@ final class BC6Decoder extends BPTCDecoder {
     private int transformInverse(int value, int value0, int bits, boolean signed) {
         value = (value + value0) & ((1 << bits) - 1);
         return signed ? extendSign(value, bits) : value;
+    }
+
+    private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
+        long pixel = rgb16(0, 0, 0);
+        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+                ByteArrays.setLong(dst, dstPos, pixel);
+                dstPos += BYTES_PER_PIXEL16;
+            }
+            dstPos += bytesPerLine - BCDecoder.BLOCK_WIDTH * BYTES_PER_PIXEL16;
+        }
+    }
+
+    private static long rgb16(int r, int g, int b) {
+        return (long) r | ((long) g << 16) | ((long) b << 32) | 0x3c00000000000000L;
     }
 
     private static final class Mode {

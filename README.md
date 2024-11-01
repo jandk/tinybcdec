@@ -61,10 +61,10 @@ decoder.decode(256, 256, src, srcPos, dst, dstPos);
 
 I've done some performance testing, and the library is quite fast. I've run some benchmarks on my machine (AMD 7840U).
 
-Some quick benchmarks:
+Some quick benchmarks, tested on a Ryzen 5950X:
 
-- BC1: ~600MP/s
-- BC2: ~450MP/s
+- BC1: ~1000MP/s
+- BC2: ~650MP/s
 - BC3: ~400MP/s
 - BC4: ~900MP/s
 - BC5: ~450MP/s

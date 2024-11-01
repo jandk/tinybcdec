@@ -13,11 +13,6 @@ import java.util.*;
  * To decode a single block, use the {@link #decodeBlock(byte[], int, byte[], int, int)} method.
  */
 public abstract class BlockDecoder {
-    static final int BLOCK_WIDTH = 4;
-    static final int BLOCK_HEIGHT = 4;
-    static final int BYTES_PER_PIXEL = 4;
-    static final int BYTES_PER_PIXEL16 = 8;
-
     private final BlockFormat format;
     final int bytesPerPixel;
 
@@ -35,7 +30,7 @@ public abstract class BlockDecoder {
     public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder(false);
+                return new BC1Decoder();
             case BC2:
                 return new BC2Decoder();
             case BC3:
@@ -67,13 +62,13 @@ public abstract class BlockDecoder {
      * <p>
      * There should be enough data/room in the source and the destination to read/write the block.
      *
-     * @param src          The source data.
-     * @param srcPos       The position in the source data.
-     * @param dst          The destination data.
-     * @param dstPos       The position in the destination data.
-     * @param bytesPerLine The number of bytes per line in the destination data.
+     * @param src    The source data.
+     * @param srcPos The position in the source data.
+     * @param dst    The destination data.
+     * @param dstPos The position in the destination data.
+     * @param stride The number of bytes per line in the destination data.
      */
-    public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int bytesPerLine);
+    public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride);
 
     /**
      * Decode an entire image, allocating a new byte array as the destination.
@@ -117,18 +112,15 @@ public abstract class BlockDecoder {
         Objects.checkFromIndexSize(srcPos, format.size(width, height), src.length);
         Objects.checkFromIndexSize(dstPos, height * bytesPerLine, dst.length);
 
-        for (int y = 0; y < height; y += BLOCK_HEIGHT) {
-            for (int x = 0; x < width; x += BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
+        for (int y = 0; y < height; y += BCDecoder.BLOCK_HEIGHT) {
+            for (int x = 0; x < width; x += BCDecoder.BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
                 int dstOffset = dstPos + y * bytesPerLine + x * bytesPerPixel;
-                if (height - y < BLOCK_HEIGHT || width - x < BLOCK_WIDTH) {
+                if (height - y < BCDecoder.BLOCK_HEIGHT || width - x < BCDecoder.BLOCK_WIDTH) {
                     partialBlock(width, height, src, srcPos, dst, dstOffset, x, y, bytesPerLine);
                     continue;
                 }
 
                 decodeBlock(src, srcPos, dst, dstOffset, bytesPerLine);
-                if (format.minChannels() < 4) {
-                    fillAlpha(dst, dstOffset, bytesPerLine);
-                }
             }
         }
     }
@@ -137,54 +129,19 @@ public abstract class BlockDecoder {
         return r | g << 8 | b << 16 | a << 24;
     }
 
-    static long rgba16(int r, int g, int b, int a) {
-        return (long) r | ((long) g << 16) | ((long) b << 32) | ((long) a << 48);
-    }
-
     private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
-        int blockStride = BLOCK_WIDTH * bytesPerPixel;
-        byte[] block = new byte[BLOCK_HEIGHT * blockStride];
+        int blockStride = BCDecoder.BLOCK_WIDTH * bytesPerPixel;
+        byte[] block = new byte[BCDecoder.BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
-        if (format.minChannels() < 4) {
-            fillAlpha(block, 0, blockStride);
-        }
 
-        int partialWidth = Math.min(width - x, BLOCK_WIDTH);
-        int partialHeight = Math.min(height - y, BLOCK_HEIGHT);
+        int partialWidth = Math.min(width - x, BCDecoder.BLOCK_WIDTH);
+        int partialHeight = Math.min(height - y, BCDecoder.BLOCK_HEIGHT);
         for (int yy = 0; yy < partialHeight; yy++) {
             System.arraycopy(
                 block, yy * blockStride,
                 dst, dstPos + yy * bytesPerLine,
                 partialWidth * bytesPerPixel
             );
-        }
-    }
-
-    private void fillAlpha(byte[] dst, int dstPos, int stride) {
-        if (format == BlockFormat.BC6Signed || format == BlockFormat.BC6Unsigned) {
-            fillAlphaShort(dst, dstPos, stride);
-        } else {
-            fillAlphaByte(dst, dstPos, stride);
-        }
-    }
-
-    private void fillAlphaShort(byte[] dst, int dstPos, int stride) {
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                ByteArrays.setShort(dst, dstPos + 6, (short) 0x3c00);
-                dstPos += bytesPerPixel;
-            }
-            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
-        }
-    }
-
-    private void fillAlphaByte(byte[] dst, int dstPos, int stride) {
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                dst[dstPos + 3] = (byte) 0xFF;
-                dstPos += bytesPerPixel;
-            }
-            dstPos += stride - BLOCK_WIDTH * bytesPerPixel;
         }
     }
 }
