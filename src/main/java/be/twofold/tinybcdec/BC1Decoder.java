@@ -12,40 +12,40 @@ final class BC1Decoder extends BlockDecoder {
 
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        // After a lot of benchmarking, it appears that just doing the full float vs fixed point
-        // doesn't really matter. The fixed point version is slightly faster, but the difference is
-        // so small that it's not worth it. The fixed point version is also harder to read and
-        // understand, so I'm going with the float version.
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
         int c0 = (int) (block       ) & 0xFFFF;
         int c1 = (int) (block >>> 16) & 0xFFFF;
 
-        float r0 = ((c0 >>> 11) & 0x1F) * (1.0f / 31.0f);
-        float g0 = ((c0 >>>  5) & 0x3F) * (1.0f / 63.0f);
-        float b0 = ( c0         & 0x1F) * (1.0f / 31.0f);
+        int r0 = (c0 >>> 11) & 0x1F;
+        int g0 = (c0 >>>  5) & 0x3F;
+        int b0 =  c0         & 0x1F;
 
-        float r1 = ((c1 >>> 11) & 0x1F) * (1.0f / 31.0f);
-        float g1 = ((c1 >>> 5)  & 0x3F) * (1.0f / 63.0f);
-        float b1 = ( c1         & 0x1F) * (1.0f / 31.0f);
+        int r1 = (c1 >>> 11) & 0x1F;
+        int g1 = (c1 >>>  5) & 0x3F;
+        int b1 =  c1         & 0x1F;
         // @formatter:on
 
-        int[] colors = {rgb(r0, g0, b0), rgb(r1, g1, b1), 0, 0};
+        int[] colors = {
+            rgb(scale031(r0), scale063(g0), scale031(b0)),
+            rgb(scale031(r1), scale063(g1), scale031(b1)),
+            0, 0
+        };
         if (c0 > c1 || opaque) {
-            float r2 = lerp(r0, r1, 1.0f / 3.0f);
-            float g2 = lerp(g0, g1, 1.0f / 3.0f);
-            float b2 = lerp(b0, b1, 1.0f / 3.0f);
+            int r2 = scale093(2 * r0 + r1);
+            int g2 = scale189(2 * g0 + g1);
+            int b2 = scale093(2 * b0 + b1);
             colors[2] = rgb(r2, g2, b2);
 
-            float r3 = lerp(r1, r0, 1.0f / 3.0f);
-            float g3 = lerp(g1, g0, 1.0f / 3.0f);
-            float b3 = lerp(b1, b0, 1.0f / 3.0f);
+            int r3 = scale093(r0 + 2 * r1);
+            int g3 = scale189(g0 + 2 * g1);
+            int b3 = scale093(b0 + 2 * b1);
             colors[3] = rgb(r3, g3, b3);
         } else {
-            float r2 = lerp(r0, r1, 1.0f / 2.0f);
-            float g2 = lerp(g0, g1, 1.0f / 2.0f);
-            float b2 = lerp(b0, b1, 1.0f / 2.0f);
+            int r2 = scale062(r0 + r1);
+            int g2 = scale126(g0 + g1);
+            int b2 = scale062(b0 + b1);
             colors[2] = rgb(r2, g2, b2);
         }
 
@@ -60,15 +60,31 @@ final class BC1Decoder extends BlockDecoder {
         }
     }
 
-    private static int rgb(float r, float g, float b) {
-        return pack(r) | pack(g) << 8 | pack(b) << 16 | 0xFF000000;
+    private static int rgb(int r, int g, int b) {
+        return r | g << 8 | b << 16 | 0xFF000000;
     }
 
-    private static int pack(float value) {
-        return (int) Math.fma(value, 255.0f, 0.5f);
+    private static int scale031(int i) {
+        return (i * 527 + 23) >> 6;
     }
 
-    private static float lerp(float a, float b, float t) {
-        return Math.fma(t, b - a, a);
+    private static int scale063(int i) {
+        return (i * 259 + 33) >> 6;
+    }
+
+    private static int scale093(int i) {
+        return (i * 351 + 61) >> 7;
+    }
+
+    private static int scale189(int i) {
+        return (i * 2763 + 1039) >> 11;
+    }
+
+    private static int scale062(int i) {
+        return (i * 1053 + 125) >> 8;
+    }
+
+    private static int scale126(int i) {
+        return (i * 259 + 66) >> 7;
     }
 }
