@@ -103,7 +103,10 @@ final class BC6Decoder extends BPTCDecoder {
                 int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
                 int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
-                ByteArrays.setLong(dst, dstPos + x * BYTES_PER_PIXEL16, rgb16(r, g, b));
+                int o = dstPos + x * bytesPerPixel;
+                ByteArrays.setShort(dst, o + 0, (short) r);
+                ByteArrays.setShort(dst, o + 2, (short) g);
+                ByteArrays.setShort(dst, o + 4, (short) b);
             }
             dstPos += stride;
         }
@@ -214,18 +217,10 @@ final class BC6Decoder extends BPTCDecoder {
     }
 
     private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
-        long pixel = rgb16(0, 0, 0);
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                ByteArrays.setLong(dst, dstPos, pixel);
-                dstPos += BYTES_PER_PIXEL16;
-            }
-            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL16;
+            Arrays.fill(dst, dstPos, dstPos + 24, (byte) 0);
+            dstPos += bytesPerLine;
         }
-    }
-
-    private static long rgb16(int r, int g, int b) {
-        return (long) r | ((long) g << 16) | ((long) b << 32) | 0x3c00000000000000L;
     }
 
     private static final class Mode {

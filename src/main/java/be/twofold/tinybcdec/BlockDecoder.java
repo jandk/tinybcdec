@@ -18,7 +18,7 @@ public abstract class BlockDecoder {
 
     BlockDecoder(BlockFormat format) {
         this.format = format;
-        this.bytesPerPixel = 4 * format.bytesPerValue();
+        this.bytesPerPixel = format.bytesPerPixel();
     }
 
     /**

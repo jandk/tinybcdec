@@ -38,11 +38,7 @@ class BC6DecoderTest {
             src[0] = invalidMode;
             BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC6Unsigned);
             byte[] actual = decoder.decode(4, 4, src, 0);
-            byte[] expected = new byte[16 * 2 * 4];
-            for (int i = 0; i < expected.length; i += 8) {
-                ByteArrays.setShort(expected, i + 6, (short) 0x3c00);
-            }
-
+            byte[] expected = new byte[16 * 2 * 3];
             assertThat(actual).isEqualTo(expected);
         }
     }

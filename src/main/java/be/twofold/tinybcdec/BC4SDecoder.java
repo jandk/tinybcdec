@@ -8,6 +8,5 @@ final class BC4SDecoder extends BCDecoder {
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         decodeAlphaSigned(src, srcPos, dst, dstPos, stride);
-        expandGray(dst, dstPos, stride);
     }
 }

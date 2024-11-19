@@ -16,11 +16,10 @@ class BC5SDecoderTest {
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc5s.png");
 
-        for (int i = 0; i < expected.length; i += 4) {
+        for (int i = 0; i < expected.length; i += 3) {
             assertThat(actual[i + 0]).isEqualTo(expected[i + 0]);
             assertThat(actual[i + 1]).isEqualTo(expected[i + 1]);
             assertThat(actual[i + 2]).isZero();
-            assertThat(actual[i + 3]).isEqualTo((byte) 0xFF);
         }
     }
 

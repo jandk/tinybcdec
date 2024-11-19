@@ -9,7 +9,7 @@ abstract class BCDecoder extends BlockDecoder {
         super(format);
     }
 
-    static void decodeColorBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride, boolean opaque) {
+    void decodeColorBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride, boolean opaque) {
         // After a lot of benchmarking, it appears that just doing the full float vs fixed point
         // doesn't really matter. The fixed point version is slightly faster, but the difference is
         // so small that it's not worth it. The fixed point version is also harder to read and
@@ -51,27 +51,27 @@ abstract class BCDecoder extends BlockDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int index = indices & 3;
-                ByteArrays.setInt(dst, dstPos + x * BYTES_PER_PIXEL, colors[index]);
+                ByteArrays.setInt(dst, dstPos + x * bytesPerPixel, colors[index]);
                 indices >>>= 2;
             }
             dstPos += stride;
         }
     }
 
-    static void decodeFixedAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    void decodeFixedAlpha(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long alphas = ByteArrays.getLong(src, srcPos);
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 byte value = (byte) ((alphas & 0x0F) * 0x11);
-                dst[dstPos + x * BYTES_PER_PIXEL] = value;
+                dst[dstPos + x * bytesPerPixel] = value;
                 alphas >>>= 4;
             }
             dstPos += stride;
         }
     }
 
-    static void decodeAlphaUnsigned(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    void decodeAlphaUnsigned(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
@@ -98,7 +98,7 @@ abstract class BCDecoder extends BlockDecoder {
         storeAlphas(dst, dstPos, stride, block, alphas);
     }
 
-    static void decodeAlphaSigned(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    void decodeAlphaSigned(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
@@ -125,31 +125,14 @@ abstract class BCDecoder extends BlockDecoder {
         storeAlphas(dst, dstPos, stride, block, alphas);
     }
 
-    static void expandGray(byte[] dst, int dstPos, int stride) {
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int i = dstPos + x * BYTES_PER_PIXEL;
-                int v = Byte.toUnsignedInt(dst[i]);
-                ByteArrays.setInt(dst, i, rgba(v, v, v, 0xFF));
-            }
-            dstPos += stride;
-        }
+    void fillAlpha(byte[] dst, int dstPos, int stride) {
     }
 
-    static void fillAlpha(byte[] dst, int dstPos, int stride) {
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                dst[dstPos + x * BYTES_PER_PIXEL + 3] = (byte) 0xFF;
-            }
-            dstPos += stride;
-        }
-    }
-
-    private static void storeAlphas(byte[] dst, int dstPos, int stride, long indices, byte[] alphas) {
+    void storeAlphas(byte[] dst, int dstPos, int stride, long indices, byte[] alphas) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int index = (int) (indices & 0x07);
-                dst[dstPos + x * BYTES_PER_PIXEL] = alphas[index];
+                dst[dstPos + x * bytesPerPixel] = alphas[index];
                 indices >>>= 3;
             }
             dstPos += stride;

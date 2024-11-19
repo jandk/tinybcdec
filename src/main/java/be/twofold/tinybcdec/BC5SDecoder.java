@@ -15,7 +15,7 @@ final class BC5SDecoder extends BCDecoder {
         fillAlpha(dst, dstPos, stride);
 
         if (normalized) {
-            ReconstructZ.reconstruct(dst, dstPos, stride);
+            ReconstructZ.reconstruct(dst, dstPos, stride, bytesPerPixel);
         }
     }
 }

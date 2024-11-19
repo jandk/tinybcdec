@@ -28,27 +28,21 @@ final class BCTestUtils {
 
     static byte[] readDDSFP16(String path, int width, int height) throws IOException {
         byte[] rawImage = Arrays.copyOfRange(readResource(path), DDS_HEADER_SIZE, DDS_HEADER_SIZE + width * height * 8);
+        byte[] result = new byte[rawImage.length * 6 / 8];
 
-        for (int i = 0; i < rawImage.length; i += 8) {
-//            swap(rawImage, i + 0, i + 6);
-//            swap(rawImage, i + 1, i + 7);
-//            swap(rawImage, i + 2, i + 4);
-//            swap(rawImage, i + 3, i + 5);
+        for (int i = 0, o = 0; i < rawImage.length; i += 8, o += 6) {
+            System.arraycopy(rawImage, i, result, o, 6);
         }
-        return rawImage;
+        return result;
     }
 
     private static byte[] decodeImage(byte[] image, int type) {
         switch (type) {
             case BufferedImage.TYPE_3BYTE_BGR: {
-                byte[] result = new byte[image.length / 3 * 4];
-                for (int i = 0, o = 0; i < image.length; i += 3, o += 4) {
-                    result[o + 0] = image[i + 2];
-                    result[o + 1] = image[i + 1];
-                    result[o + 2] = image[i + 0];
-                    result[o + 3] = (byte) 0xFF;
+                for (int i = 0; i < image.length; i += 3) {
+                    swap(image, i + 0, i + 2);
                 }
-                return result;
+                return image;
             }
             case BufferedImage.TYPE_4BYTE_ABGR: {
                 for (int i = 0; i < image.length; i += 4) {
@@ -58,15 +52,7 @@ final class BCTestUtils {
                 return image;
             }
             case BufferedImage.TYPE_BYTE_GRAY: {
-                byte[] result = new byte[image.length * 4];
-                for (int i = 0, o = 0; i < image.length; i++, o += 4) {
-                    byte a = image[i];
-                    result[o + 0] = a;
-                    result[o + 1] = a;
-                    result[o + 2] = a;
-                    result[o + 3] = (byte) 0xFF;
-                }
-                return result;
+                return image;
             }
             default:
                 throw new UnsupportedOperationException(type + " not supported");
