@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-abstract class BPTCDecoder extends BCDecoder {
+abstract class BPTCDecoder extends BlockDecoder {
     private static final int[] SUBSET2 = {
         0x50505050, 0x40404040, 0x54545454, 0x54505040, 0x50404000, 0x55545450, 0x55545040, 0x54504000,
         0x50400000, 0x55555450, 0x55544000, 0x54400000, 0x55555440, 0x55550000, 0x55555500, 0x55000000,
@@ -65,8 +65,8 @@ abstract class BPTCDecoder extends BCDecoder {
         0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64
     };
 
-    BPTCDecoder(BlockFormat format) {
-        super(format);
+    BPTCDecoder(BlockFormat format, int bytesPerPixel) {
+        super(format, bytesPerPixel);
     }
 
     static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {

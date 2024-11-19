@@ -16,8 +16,8 @@ final class ReconstructZ {
     }
 
     static void reconstruct(byte[] dst, int dstPos, int stride, int bytesPerPixel) {
-        for (int y = 0; y < BCDecoder.BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BCDecoder.BLOCK_WIDTH; x++) {
+        for (int y = 0; y < BlockDecoder.BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BlockDecoder.BLOCK_WIDTH; x++) {
                 int i = dstPos + x * bytesPerPixel;
                 int r = Byte.toUnsignedInt(dst[i]);
                 int g = Byte.toUnsignedInt(dst[i + 1]);

@@ -25,7 +25,7 @@ final class BC6Decoder extends BPTCDecoder {
     private final boolean signed;
 
     BC6Decoder(BlockFormat format) {
-        super(format);
+        super(format, 6);
         this.signed = format == BlockFormat.BC6Signed;
     }
 

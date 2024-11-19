@@ -13,12 +13,15 @@ import java.util.*;
  * To decode a single block, use the {@link #decodeBlock(byte[], int, byte[], int, int)} method.
  */
 public abstract class BlockDecoder {
+    static final int BLOCK_WIDTH = 4;
+    static final int BLOCK_HEIGHT = 4;
+
     private final BlockFormat format;
     final int bytesPerPixel;
 
-    BlockDecoder(BlockFormat format) {
+    BlockDecoder(BlockFormat format, int bytesPerPixel) {
         this.format = format;
-        this.bytesPerPixel = format.bytesPerPixel();
+        this.bytesPerPixel = bytesPerPixel;
     }
 
     /**
@@ -30,15 +33,15 @@ public abstract class BlockDecoder {
     public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder();
+                return new BC1Decoder(false);
             case BC2:
                 return new BC2Decoder();
             case BC3:
                 return new BC3Decoder();
             case BC4Unsigned:
-                return new BC4UDecoder();
+                return new BC4UDecoder(1);
             case BC4Signed:
-                return new BC4SDecoder();
+                return new BC4SDecoder(1);
             case BC5Unsigned:
             case BC5UnsignedNormalized:
                 return new BC5UDecoder(format);
@@ -112,10 +115,10 @@ public abstract class BlockDecoder {
         Objects.checkFromIndexSize(srcPos, format.size(width, height), src.length);
         Objects.checkFromIndexSize(dstPos, height * bytesPerLine, dst.length);
 
-        for (int y = 0; y < height; y += BCDecoder.BLOCK_HEIGHT) {
-            for (int x = 0; x < width; x += BCDecoder.BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
+        for (int y = 0; y < height; y += BLOCK_HEIGHT) {
+            for (int x = 0; x < width; x += BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
                 int dstOffset = dstPos + y * bytesPerLine + x * bytesPerPixel;
-                if (height - y < BCDecoder.BLOCK_HEIGHT || width - x < BCDecoder.BLOCK_WIDTH) {
+                if (height - y < BLOCK_HEIGHT || width - x < BLOCK_WIDTH) {
                     partialBlock(width, height, src, srcPos, dst, dstOffset, x, y, bytesPerLine);
                     continue;
                 }
@@ -146,12 +149,12 @@ public abstract class BlockDecoder {
     }
 
     private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
-        int blockStride = BCDecoder.BLOCK_WIDTH * bytesPerPixel;
-        byte[] block = new byte[BCDecoder.BLOCK_HEIGHT * blockStride];
+        int blockStride = BLOCK_WIDTH * bytesPerPixel;
+        byte[] block = new byte[BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
 
-        int partialWidth = Math.min(width - x, BCDecoder.BLOCK_WIDTH);
-        int partialHeight = Math.min(height - y, BCDecoder.BLOCK_HEIGHT);
+        int partialWidth = Math.min(width - x, BLOCK_WIDTH);
+        int partialHeight = Math.min(height - y, BLOCK_HEIGHT);
         for (int yy = 0; yy < partialHeight; yy++) {
             System.arraycopy(
                 block, yy * blockStride,

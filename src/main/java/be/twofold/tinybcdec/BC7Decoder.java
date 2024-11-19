@@ -3,6 +3,7 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 final class BC7Decoder extends BPTCDecoder {
+    private static final int BPP = 4;
 
     private static final List<Mode> MODES = List.of(
         new Mode(3, 4, 0, 0, 4, 0, 1, 0, 3, 0),
@@ -16,7 +17,7 @@ final class BC7Decoder extends BPTCDecoder {
     );
 
     BC7Decoder() {
-        super(BlockFormat.BC7);
+        super(BlockFormat.BC7, BPP);
     }
 
     @Override
@@ -151,10 +152,11 @@ final class BC7Decoder extends BPTCDecoder {
                     }
                 }
 
-                ByteArrays.setInt(dst, dstPos, rgba(r, g, b, a));
-                dstPos += BYTES_PER_PIXEL;
+                int pixel = r | g << 8 | b << 16 | a << 24;
+                ByteArrays.setInt(dst, dstPos, pixel);
+                dstPos += BPP;
             }
-            dstPos += stride - BLOCK_WIDTH * BYTES_PER_PIXEL;
+            dstPos += stride - BLOCK_WIDTH * BPP;
         }
     }
 
@@ -162,9 +164,9 @@ final class BC7Decoder extends BPTCDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, 0);
-                dstPos += BYTES_PER_PIXEL;
+                dstPos += BPP;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * BYTES_PER_PIXEL;
+            dstPos += bytesPerLine - BLOCK_WIDTH * BPP;
         }
     }
 
