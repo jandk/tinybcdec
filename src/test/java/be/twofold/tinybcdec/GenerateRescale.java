@@ -11,8 +11,11 @@ final class GenerateRescale {
         generateRescale(7 * 255, 255, false);
         generateRescale(5 * 255, 255, false);
 
-        generateRescale(7 * 127, 127, true);
-        generateRescale(5 * 127, 127, true);
+        generateRescale(7 * 127, 255, true);
+        generateRescale(5 * 127, 255, true);
+
+        // System.out.println(test(7 * 127, 255, 75193, 67108864, 19, true));
+        // System.out.println(test(5 * 127, 255, 13159, 8388708, 16, true));
     }
 
     /**
@@ -22,32 +25,37 @@ final class GenerateRescale {
      */
 
     private static void generateRescale(int srcMax, int dstMax, boolean signed) {
-        for (int shift = 0; shift <= 16; shift++) {
-            float factor = (float) dstMax / (float) srcMax;
-            int multiplicand = (int) ((1 << shift) * factor);
-            int addend = 1 << shift;
+        for (int shift = 0; shift <= 20; shift++) {
+            double factor = getFactor(srcMax, dstMax, signed);
+            int mul = (int) ((1 << shift) * factor);
+            int addMin = (int) (Math.round(getOffset(dstMax, signed) * (1 << shift)));
+            int addMax = addMin + (1 << shift);
 
-            for (int m = multiplicand - 10; m <= multiplicand + 10; m++) {
-                for (int a = 0; a < addend; a++) {
-                    if (signed) {
-                        if (testSigned(srcMax, factor, m, a, shift)) {
-                            printFunction(srcMax, dstMax, m, a, shift, true);
-                            return;
-                        }
-                    } else {
-                        if (testUnsigned(srcMax, factor, m, a, shift)) {
-                            printFunction(srcMax, dstMax, m, a, shift, false);
-                            return;
-                        }
+            // Sometimes +1 gives you a smaller constant solution
+            for (int m = mul - 1; m <= mul + 2; m++) {
+                for (int a = 0; a < addMax; a++) {
+                    if (test(srcMax, dstMax, m, a, shift, signed)) {
+                        printFunction(srcMax, m, a, shift);
+                        return;
                     }
                 }
             }
         }
     }
 
-    private static boolean testUnsigned(int srcMax, float factor, int m, int a, int shift) {
-        for (int i = 0; i <= srcMax; i++) {
-            int expected = (int) (i * factor + 0.5);
+    private static double getFactor(double srcMax, double dstMax, boolean signed) {
+        return (dstMax / srcMax) * (signed ? 0.5 : 1.0);
+    }
+
+    private static double getOffset(int dstMax, boolean signed) {
+        return signed ? dstMax * 0.5 : 0.0;
+    }
+
+    private static boolean test(int srcMax, int dstMax, int m, int a, int shift, boolean signed) {
+        double factor = getFactor(srcMax, dstMax, signed);
+        double offset = getOffset(dstMax, signed);
+        for (int i = signed ? -srcMax : 0; i <= srcMax; i++) {
+            int expected = (int) (i * factor + offset + 0.5);
             int actual = (i * m + a) >> shift;
 
             if (expected != actual) {
@@ -57,21 +65,9 @@ final class GenerateRescale {
         return true;
     }
 
-    private static boolean testSigned(int srcMax, float factor, int m, int a, int shift) {
-        for (int i = -srcMax; i <= srcMax; i++) {
-            int expected = Math.round(i * factor);
-            int actual = (i * m + a) >> shift;
-
-            if (expected != actual) {
-                return false;
-            }
-        }
-        return true;
-    }
-
-    private static void printFunction(int srcMax, int dstMax, int m, int a, int shift, boolean signed) {
-        System.out.println("private static int rescale" + srcMax + "To" + dstMax + (signed ? "Signed" : "") + "(int i) {");
-        System.out.println("    return (i * " + m + " + " + a + ") >> " + shift + ";");
+    private static void printFunction(int srcMax, int m, int a, int shift) {
+        System.out.println("private static byte scale" + srcMax + "(int i) {");
+        System.out.println("    return (byte) ((i * " + m + " + " + a + ") >> " + shift + ");");
         System.out.println("}");
     }
 }

@@ -10,24 +10,24 @@ final class BC4SDecoder extends BlockDecoder {
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
-        float a0 = unpackSNorm((byte)  block       );
-        float a1 = unpackSNorm((byte) (block >>> 8));
-        // @formatter:on
+        int a0 = (byte)  block;
+        int a1 = (byte) (block >>> 8);
 
-        byte[] alphas = {packSNormToUNorm(a0), packSNormToUNorm(a1), 0, 0, 0, 0, 0, (byte) 0xFF};
+        byte[] alphas = {scale127(a0), scale127(a1), 0, 0, 0, 0, 0, (byte) 0xFF};
         if (a0 > a1) {
-            alphas[2] = packSNormToUNorm(lerp(a0, a1, 1.0f / 7.0f));
-            alphas[3] = packSNormToUNorm(lerp(a0, a1, 2.0f / 7.0f));
-            alphas[4] = packSNormToUNorm(lerp(a0, a1, 3.0f / 7.0f));
-            alphas[5] = packSNormToUNorm(lerp(a0, a1, 4.0f / 7.0f));
-            alphas[6] = packSNormToUNorm(lerp(a0, a1, 5.0f / 7.0f));
-            alphas[7] = packSNormToUNorm(lerp(a0, a1, 6.0f / 7.0f));
+            alphas[2] = scale889(6 * a0 +     a1);
+            alphas[3] = scale889(5 * a0 + 2 * a1);
+            alphas[4] = scale889(4 * a0 + 3 * a1);
+            alphas[5] = scale889(3 * a0 + 4 * a1);
+            alphas[6] = scale889(2 * a0 + 5 * a1);
+            alphas[7] = scale889(    a0 + 6 * a1);
         } else {
-            alphas[2] = packSNormToUNorm(lerp(a0, a1, 1.0f / 5.0f));
-            alphas[3] = packSNormToUNorm(lerp(a0, a1, 2.0f / 5.0f));
-            alphas[4] = packSNormToUNorm(lerp(a0, a1, 3.0f / 5.0f));
-            alphas[5] = packSNormToUNorm(lerp(a0, a1, 4.0f / 5.0f));
+            alphas[2] = scale635(4 * a0 +     a1);
+            alphas[3] = scale635(3 * a0 + 2 * a1);
+            alphas[4] = scale635(2 * a0 + 3 * a1);
+            alphas[5] = scale635(    a0 + 4 * a1);
         }
+        // @formatter:on
 
         long indices = block >>> 16;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
@@ -40,15 +40,15 @@ final class BC4SDecoder extends BlockDecoder {
         }
     }
 
-    private static byte packSNormToUNorm(float f) {
-        return (byte) Math.fma(f, 127.5f, 128.0f);
+    private static byte scale127(int i) {
+        return (byte) ((i * 129 + 16384) >> 7);
     }
 
-    private static float unpackSNorm(byte b) {
-        return Math.max(b, -127) * (1.0f / 127.0f);
+    private static byte scale889(int i) {
+        return (byte) ((i * 75193 + 67108864) >> 19);
     }
 
-    private static float lerp(float a, float b, float t) {
-        return Math.fma(t, b - a, a);
+    private static byte scale635(int i) {
+        return (byte) ((i * 13159 + 8388708) >> 16);
     }
 }

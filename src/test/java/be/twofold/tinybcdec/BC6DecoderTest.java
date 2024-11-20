@@ -42,4 +42,5 @@ class BC6DecoderTest {
             assertThat(actual).isEqualTo(expected);
         }
     }
+
 }

@@ -16,7 +16,11 @@ class BC5UDecoderTest {
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc5u.png");
 
-        assertThat(actual).isEqualTo(expected);
+        for (int i = 0; i < expected.length; i += 3) {
+            assertThat(actual[i + 0]).isEqualTo(expected[i + 0]);
+            assertThat(actual[i + 1]).isEqualTo(expected[i + 1]);
+            assertThat(actual[i + 2]).isZero();
+        }
     }
 
     @Test
@@ -28,13 +32,11 @@ class BC5UDecoderTest {
         byte[] expected = BCTestUtils.readPng("/bc5u_normalized.png");
 
         for (int i = 0; i < expected.length; i += 3) {
-            assertThat(actual[i + 0] & 0xFF).isEqualTo(expected[i + 0] & 0xFF);
-            assertThat(actual[i + 1] & 0xFF).isEqualTo(expected[i + 1] & 0xFF);
-            int za = actual[i + 2] & 0xFF;
-            int ze = expected[i + 2] & 0xFF;
-            if (ze != 0) {
+            assertThat(actual[i + 0]).isEqualTo(expected[i + 0]);
+            assertThat(actual[i + 1]).isEqualTo(expected[i + 1]);
+            if (expected[i + 2] != 0) {
                 // texconv sets the channel to 0 outside of range, while I clamp, so I need to do the same
-                assertThat(za).isEqualTo(ze);
+                assertThat(actual[i + 2]).isEqualTo(expected[i + 2]);
             }
         }
     }

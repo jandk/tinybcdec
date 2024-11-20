@@ -3,7 +3,7 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 final class BC6Decoder extends BPTCDecoder {
-    private static final int BYTES_PER_PIXEL16 = 8;
+    private static final int BPP = 6;
 
     private static final List<Mode> MODES = List.of(
         new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
@@ -25,7 +25,7 @@ final class BC6Decoder extends BPTCDecoder {
     private final boolean signed;
 
     BC6Decoder(BlockFormat format) {
-        super(format, 6);
+        super(format, BPP);
         this.signed = format == BlockFormat.BC6Signed;
     }
 
@@ -103,7 +103,7 @@ final class BC6Decoder extends BPTCDecoder {
                 int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
                 int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
-                int o = dstPos + x * bytesPerPixel;
+                int o = dstPos + x * BPP;
                 ByteArrays.setShort(dst, o + 0, (short) r);
                 ByteArrays.setShort(dst, o + 2, (short) g);
                 ByteArrays.setShort(dst, o + 4, (short) b);
@@ -218,7 +218,7 @@ final class BC6Decoder extends BPTCDecoder {
 
     private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            Arrays.fill(dst, dstPos, dstPos + 24, (byte) 0);
+            Arrays.fill(dst, dstPos, dstPos + (4 * BPP), (byte) 0);
             dstPos += bytesPerLine;
         }
     }

@@ -34,4 +34,5 @@ class BlockDecoderTest {
                 .decode(256, 0, null, 0))
             .withMessage("height must be greater than 0");
     }
+
 }

@@ -1,11 +1,13 @@
 package be.twofold.tinybcdec;
 
 final class BC5SDecoder extends BlockDecoder {
-    private final BC4SDecoder decoder = new BC4SDecoder(3);
+    private static final int BPP = 3;
+
+    private final BC4SDecoder decoder = new BC4SDecoder(BPP);
     private final boolean normalized;
 
     BC5SDecoder(BlockFormat format) {
-        super(format, 3);
+        super(format, BPP);
         this.normalized = format == BlockFormat.BC5SignedNormalized;
     }
 
@@ -15,7 +17,7 @@ final class BC5SDecoder extends BlockDecoder {
         decoder.decodeBlock(src, srcPos + 8, dst, dstPos + 1, stride);
 
         if (normalized) {
-            ReconstructZ.reconstruct(dst, dstPos, stride, bytesPerPixel);
+            ReconstructZ.reconstruct(dst, dstPos, stride, BPP);
         }
     }
 }
