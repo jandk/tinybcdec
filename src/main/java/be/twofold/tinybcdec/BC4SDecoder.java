@@ -10,8 +10,8 @@ final class BC4SDecoder extends BlockDecoder {
         long block = ByteArrays.getLong(src, srcPos);
 
         // @formatter:off
-        int a0 = (byte)  block;
-        int a1 = (byte) (block >>> 8);
+        int a0 = Math.max(-127, (byte)  block       );
+        int a1 = Math.max(-127, (byte) (block >>> 8));
 
         byte[] alphas = {scale127(a0), scale127(a1), 0, 0, 0, 0, 0, (byte) 0xFF};
         if (a0 > a1) {
@@ -32,8 +32,8 @@ final class BC4SDecoder extends BlockDecoder {
         long indices = block >>> 16;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int index = (int) (indices & 0x07);
-                dst[dstPos + x * bytesPerPixel] = alphas[index];
+                byte alpha = alphas[(int) (indices & 0x07)];
+                dst[dstPos + x * bytesPerPixel] = alpha;
                 indices >>>= 3;
             }
             dstPos += stride;
@@ -41,14 +41,14 @@ final class BC4SDecoder extends BlockDecoder {
     }
 
     private static byte scale127(int i) {
-        return (byte) ((i * 129 + 16384) >> 7);
+        return (byte) ((i * 129 + 16384) >>> 7);
     }
 
     private static byte scale889(int i) {
-        return (byte) ((i * 75193 + 67108864) >> 19);
+        return (byte) ((i * 75193 + 67108864) >>> 19);
     }
 
     private static byte scale635(int i) {
-        return (byte) ((i * 13159 + 8388708) >> 16);
+        return (byte) ((i * 13159 + 8388708) >>> 16);
     }
 }

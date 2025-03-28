@@ -20,8 +20,8 @@ final class BC2Decoder extends BlockDecoder {
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                byte value = (byte) ((alphas & 0x0F) * 0x11);
-                dst[dstPos + x * BPP] = value;
+                byte alpha = (byte) ((alphas & 0x0F) * 0x11);
+                dst[dstPos + x * BPP] = alpha;
                 alphas >>>= 4;
             }
             dstPos += stride;

@@ -6,9 +6,9 @@ import java.awt.image.*;
 import java.io.*;
 import java.nio.file.*;
 
-public final class GenerateTestImages {
-    public static final int WIDTH = 256;
-    public static final int HEIGHT = 256;
+final class GenerateTestImages {
+    private static final int WIDTH = 256;
+    private static final int HEIGHT = 256;
 
     public static void main(String[] args) throws IOException {
         Path target = Path.of(args[0]);

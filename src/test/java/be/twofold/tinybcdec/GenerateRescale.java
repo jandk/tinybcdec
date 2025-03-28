@@ -11,6 +11,7 @@ final class GenerateRescale {
         generateRescale(7 * 255, 255, false);
         generateRescale(5 * 255, 255, false);
 
+        generateRescale(127, 255, true);
         generateRescale(7 * 127, 255, true);
         generateRescale(5 * 127, 255, true);
 
@@ -35,7 +36,7 @@ final class GenerateRescale {
             for (int m = mul - 1; m <= mul + 2; m++) {
                 for (int a = 0; a < addMax; a++) {
                     if (test(srcMax, dstMax, m, a, shift, signed)) {
-                        printFunction(srcMax, m, a, shift);
+                        printFunction(srcMax, m, a, shift, signed);
                         return;
                     }
                 }
@@ -55,7 +56,7 @@ final class GenerateRescale {
         double factor = getFactor(srcMax, dstMax, signed);
         double offset = getOffset(dstMax, signed);
         for (int i = signed ? -srcMax : 0; i <= srcMax; i++) {
-            int expected = (int) (i * factor + offset + 0.5);
+            int expected = (int) Math.round(i * factor + offset);
             int actual = (i * m + a) >> shift;
 
             if (expected != actual) {
@@ -65,9 +66,9 @@ final class GenerateRescale {
         return true;
     }
 
-    private static void printFunction(int srcMax, int m, int a, int shift) {
-        System.out.println("private static byte scale" + srcMax + "(int i) {");
-        System.out.println("    return (byte) ((i * " + m + " + " + a + ") >> " + shift + ");");
-        System.out.println("}");
+    private static void printFunction(int srcMax, int m, int a, int shift, boolean signed) {
+        System.out.printf("private static byte scale%03d%s(int i) {%n", srcMax, signed ? "Signed" : "");
+        System.out.printf("    return (byte) ((i * %d + %d) >>> %d);%n", m, a, shift);
+        System.out.printf("}%n");
     }
 }
