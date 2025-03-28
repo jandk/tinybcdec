@@ -85,6 +85,6 @@ final class BC1Decoder extends BlockDecoder {
     }
 
     private static int scale126(int i) {
-        return (i * 259 + 66) >> 7;
+        return (i * 4145 + 1019) >> 11;
     }
 }
