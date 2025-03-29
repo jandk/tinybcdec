@@ -2,7 +2,7 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC6Decoder extends BPTCDecoder {
+final class BC6HDecoder extends BPTCDecoder {
     private static final int BPP = 6;
 
     private static final List<Mode> MODES = List.of(
@@ -24,9 +24,9 @@ final class BC6Decoder extends BPTCDecoder {
 
     private final boolean signed;
 
-    BC6Decoder(BlockFormat format) {
+    BC6HDecoder(BlockFormat format) {
         super(format, BPP);
-        this.signed = format == BlockFormat.BC6Signed;
+        this.signed = format == BlockFormat.BC6HS;
     }
 
     @Override
@@ -216,10 +216,10 @@ final class BC6Decoder extends BPTCDecoder {
         return signed ? extendSign(value, bits) : value;
     }
 
-    private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
+    private static void fillInvalidBlock(byte[] dst, int dstPos, int lineStride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             Arrays.fill(dst, dstPos, dstPos + (4 * BPP), (byte) 0);
-            dstPos += bytesPerLine;
+            dstPos += lineStride;
         }
     }
 

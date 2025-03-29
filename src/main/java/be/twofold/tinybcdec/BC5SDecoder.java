@@ -8,7 +8,7 @@ final class BC5SDecoder extends BlockDecoder {
 
     BC5SDecoder(BlockFormat format) {
         super(format, BPP);
-        this.normalized = format == BlockFormat.BC5SignedNormalized;
+        this.normalized = format == BlockFormat.BC5S_RECONSTRUCT_Z;
     }
 
     @Override

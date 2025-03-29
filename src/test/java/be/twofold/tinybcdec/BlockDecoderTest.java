@@ -12,7 +12,7 @@ class BlockDecoderTest {
     void testPartialBlock() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
 
-        byte[] actual = BlockDecoder.create(BlockFormat.BC4Unsigned)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC4U)
             .decode(157, 119, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
 

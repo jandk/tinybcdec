@@ -30,9 +30,7 @@ public interface Converter<T> {
     }
 
     private static int swapRB(int pixel) {
-        return pixel & 0xFF00FF00
-            | (pixel & 0x00FF0000) >> 16
-            | (pixel & 0x000000FF) << 16;
+        return Integer.rotateRight(Integer.reverseBytes(pixel), 8);
     }
 
     T convert(int width, int height, byte[] decoded, BlockFormat format);
@@ -40,7 +38,7 @@ public interface Converter<T> {
     final class AWT implements Converter<BufferedImage> {
         @Override
         public BufferedImage convert(int width, int height, byte[] decoded, BlockFormat format) {
-            if (format == BlockFormat.BC6Signed || format == BlockFormat.BC6Unsigned) {
+            if (format == BlockFormat.BC6HS || format == BlockFormat.BC6HU) {
                 ColorModel colorModel = new ComponentColorModel(
                     ColorSpace.getInstance(ColorSpace.CS_sRGB),
                     false,
@@ -57,7 +55,7 @@ public interface Converter<T> {
 
                 float[] rawImage = ((DataBufferFloat) image.getRaster().getDataBuffer()).getData();
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o += 3) {
-                    rawImage[o + 0] = float16ToFloat(ByteArrays.getShort(decoded, i + 0));
+                    rawImage[o + 0] = float16ToFloat(ByteArrays.getShort(decoded, i/**/));
                     rawImage[o + 1] = float16ToFloat(ByteArrays.getShort(decoded, i + 2));
                     rawImage[o + 2] = float16ToFloat(ByteArrays.getShort(decoded, i + 4));
                 }
@@ -68,8 +66,7 @@ public interface Converter<T> {
 
             int[] rawImage = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
             for (int i = 0, o = 0, len = decoded.length; i < len; i += 4, o++) {
-                int pixel = ByteArrays.getInt(decoded, i);
-                rawImage[o] = swapRB(pixel);
+                rawImage[o] = swapRB(ByteArrays.getInt(decoded, i));
             }
             return image;
         }
@@ -77,23 +74,22 @@ public interface Converter<T> {
 
     final class FX implements Converter<Image> {
         private static int clampAndPack(float value) {
-            return (int) Math.fma(Math.min(Math.max(value, 0.0f), 1.0f), 255.0f, 0.5f);
+            return (int) (Math.min(1.0f, Math.max(value, 0.0f)) * 255.0f + 0.5f);
         }
 
         @Override
         public Image convert(int width, int height, byte[] decoded, BlockFormat format) {
             IntBuffer buffer = IntBuffer.allocate(width * height);
-            if (format == BlockFormat.BC6Signed || format == BlockFormat.BC6Unsigned) {
+            if (format == BlockFormat.BC6HS || format == BlockFormat.BC6HU) {
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o++) {
-                    int r = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i + 0)));
+                    int r = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i/**/)));
                     int g = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i + 2)));
                     int b = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i + 4)));
                     buffer.put(0xFF000000 | r << 16 | g << 8 | b);
                 }
             } else {
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 4, o++) {
-                    int pixel = ByteArrays.getInt(decoded, i);
-                    buffer.put(swapRB(pixel));
+                    buffer.put(swapRB(ByteArrays.getInt(decoded, i)));
                 }
             }
             return new WritableImage(new PixelBuffer<>(width, height, buffer, PixelFormat.getIntArgbPreInstance()));

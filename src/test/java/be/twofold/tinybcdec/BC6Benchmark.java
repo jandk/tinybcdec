@@ -15,7 +15,7 @@ public class BC6Benchmark {
 
         public BC6State() {
             try {
-                decoder = BlockDecoder.create(BlockFormat.BC6Unsigned);
+                decoder = BlockDecoder.create(BlockFormat.BC6HU);
                 src = BCTestUtils.readResource("/bc6h_uf16.dds");
                 dst = new byte[256 * 256 * 6];
             } catch (IOException e) {

@@ -15,7 +15,7 @@ public class BC4UBenchmark {
 
         public BC4UState() {
             try {
-                decoder = BlockDecoder.create(BlockFormat.BC4Unsigned);
+                decoder = BlockDecoder.create(BlockFormat.BC4U);
                 src = BCTestUtils.readResource("/bc4u.dds");
                 dst = new byte[256 * 256];
             } catch (IOException e) {

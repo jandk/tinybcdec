@@ -160,13 +160,13 @@ final class BC7Decoder extends BPTCDecoder {
         }
     }
 
-    private static void fillInvalidBlock(byte[] dst, int dstPos, int bytesPerLine) {
+    private static void fillInvalidBlock(byte[] dst, int dstPos, int lineStride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 ByteArrays.setInt(dst, dstPos, 0);
                 dstPos += BPP;
             }
-            dstPos += bytesPerLine - BLOCK_WIDTH * BPP;
+            dstPos += lineStride - BLOCK_WIDTH * BPP;
         }
     }
 

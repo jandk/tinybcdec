@@ -11,7 +11,7 @@ class BC5SDecoderTest {
     @Test
     void testBC5S() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
-        byte[] actual = BlockDecoder.create(BlockFormat.BC5Signed)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC5S)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc5s.png");
 
@@ -25,7 +25,7 @@ class BC5SDecoderTest {
     @Test
     void testBC5SNormalized() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
-        byte[] actual = BlockDecoder.create(BlockFormat.BC5SignedNormalized)
+        byte[] actual = BlockDecoder.create(BlockFormat.BC5S_RECONSTRUCT_Z)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
 
         byte[] expected = BCTestUtils.readPng("/bc5s_normalized.png");

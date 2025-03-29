@@ -1,8 +1,8 @@
 package be.twofold.tinybcdec;
 
 final class BC4UDecoder extends BlockDecoder {
-    BC4UDecoder(int bytesPerPixel) {
-        super(BlockFormat.BC4Unsigned, bytesPerPixel);
+    BC4UDecoder(int pixelStride) {
+        super(BlockFormat.BC4U, pixelStride);
     }
 
     @Override
@@ -33,7 +33,7 @@ final class BC4UDecoder extends BlockDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 byte alpha = alphas[(int) (indices & 0x07)];
-                dst[dstPos + x * bytesPerPixel] = alpha;
+                dst[dstPos + x * pixelStride] = alpha;
                 indices >>>= 3;
             }
             dstPos += stride;

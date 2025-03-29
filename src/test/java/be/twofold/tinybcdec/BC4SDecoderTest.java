@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class BC4SDecoderTest {
 
-    private final BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC4Signed);
+    private final BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC4S);
 
     @Test
     void testBC4S() throws IOException {

@@ -17,11 +17,11 @@ public abstract class BlockDecoder {
     static final int BLOCK_HEIGHT = 4;
 
     private final BlockFormat format;
-    final int bytesPerPixel;
+    final int pixelStride;
 
-    BlockDecoder(BlockFormat format, int bytesPerPixel) {
+    BlockDecoder(BlockFormat format, int pixelStride) {
         this.format = format;
-        this.bytesPerPixel = bytesPerPixel;
+        this.pixelStride = pixelStride;
     }
 
     /**
@@ -33,24 +33,26 @@ public abstract class BlockDecoder {
     public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
+                return new BC1Decoder(true);
+            case BC1A:
                 return new BC1Decoder(false);
             case BC2:
                 return new BC2Decoder();
             case BC3:
                 return new BC3Decoder();
-            case BC4Unsigned:
+            case BC4U:
                 return new BC4UDecoder(1);
-            case BC4Signed:
+            case BC4S:
                 return new BC4SDecoder(1);
-            case BC5Unsigned:
-            case BC5UnsignedNormalized:
+            case BC5U:
+            case BC5U_RECONSTRUCT_Z:
                 return new BC5UDecoder(format);
-            case BC5Signed:
-            case BC5SignedNormalized:
+            case BC5S:
+            case BC5S_RECONSTRUCT_Z:
                 return new BC5SDecoder(format);
-            case BC6Unsigned:
-            case BC6Signed:
-                return new BC6Decoder(format);
+            case BC6HU:
+            case BC6HS:
+                return new BC6HDecoder(format);
             case BC7:
                 return new BC7Decoder();
             default:
@@ -85,9 +87,29 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If the source data is too small.
      */
     public byte[] decode(int width, int height, byte[] src, int srcPos) {
-        byte[] dst = new byte[width * height * bytesPerPixel];
+        byte[] dst = new byte[width * height * pixelStride];
         decode(width, height, src, srcPos, dst, 0);
         return dst;
+    }
+
+    /**
+     * Decode an entire image.
+     *
+     * @param width     The width of the image.
+     * @param height    The height of the image.
+     * @param src       The source data.
+     * @param srcPos    The position in the source data.
+     * @param converter The converter that's used to handle the result.
+     *                  Can be used to create a new AWT or JavaFX image.
+     * @return The newly allocated decoded and converted image.
+     * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
+     * @throws IndexOutOfBoundsException If the source data is too small.
+     * @see be.twofold.tinybcdec.Converter.AWT
+     * @see be.twofold.tinybcdec.Converter.FX
+     */
+    public <T> T decode(int width, int height, byte[] src, int srcPos, Converter<T> converter) {
+        byte[] decoded = decode(width, height, src, srcPos);
+        return converter.convert(width, height, decoded, format);
     }
 
     /**
@@ -111,45 +133,26 @@ public abstract class BlockDecoder {
             throw new IllegalArgumentException("height must be greater than 0");
         }
 
-        int bytesPerLine = width * bytesPerPixel;
+        int lineStride = width * pixelStride;
         Objects.checkFromIndexSize(srcPos, format.size(width, height), src.length);
-        Objects.checkFromIndexSize(dstPos, height * bytesPerLine, dst.length);
+        Objects.checkFromIndexSize(dstPos, height * lineStride, dst.length);
 
         for (int y = 0; y < height; y += BLOCK_HEIGHT) {
-            for (int x = 0; x < width; x += BLOCK_WIDTH, srcPos += format.bytesPerBlock()) {
-                int dstOffset = dstPos + y * bytesPerLine + x * bytesPerPixel;
-                if (height - y < BLOCK_HEIGHT || width - x < BLOCK_WIDTH) {
-                    partialBlock(width, height, src, srcPos, dst, dstOffset, x, y, bytesPerLine);
-                    continue;
+            int lineOffset = dstPos + y * lineStride;
+            for (int x = 0; x < width; x += BLOCK_WIDTH) {
+                int dstOffset = lineOffset + x * pixelStride;
+                if (y + BLOCK_HEIGHT <= height && x + BLOCK_WIDTH <= width) {
+                    decodeBlock(src, srcPos, dst, dstOffset, lineStride);
+                } else {
+                    partialBlock(width, height, src, srcPos, dst, dstOffset, x, y, lineStride);
                 }
-
-                decodeBlock(src, srcPos, dst, dstOffset, bytesPerLine);
+                srcPos += format.getBytesPerBlock();
             }
         }
     }
 
-    /**
-     * Decode an entire image.
-     *
-     * @param width     The width of the image.
-     * @param height    The height of the image.
-     * @param src       The source data.
-     * @param srcPos    The position in the source data.
-     * @param converter The converter that's used to handle the result.
-     *                  Can be used to create a new AWT or JavaFX image.
-     * @return The newly allocated decoded and converted image.
-     * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
-     * @throws IndexOutOfBoundsException If the source data is too small.
-     * @see be.twofold.tinybcdec.Converter.AWT
-     * @see be.twofold.tinybcdec.Converter.FX
-     */
-    public <T> T decode(int width, int height, byte[] src, int srcPos, Converter<T> converter) {
-        byte[] decoded = decode(width, height, src, srcPos);
-        return converter.convert(width, height, decoded, format);
-    }
-
-    private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int bytesPerLine) {
-        int blockStride = BLOCK_WIDTH * bytesPerPixel;
+    private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int lineStride) {
+        int blockStride = BLOCK_WIDTH * pixelStride;
         byte[] block = new byte[BLOCK_HEIGHT * blockStride];
         decodeBlock(src, srcPos, block, 0, blockStride);
 
@@ -158,8 +161,8 @@ public abstract class BlockDecoder {
         for (int yy = 0; yy < partialHeight; yy++) {
             System.arraycopy(
                 block, yy * blockStride,
-                dst, dstPos + yy * bytesPerLine,
-                partialWidth * bytesPerPixel
+                dst, yy * lineStride + dstPos,
+                partialWidth * pixelStride
             );
         }
     }

@@ -22,7 +22,7 @@ abstract class BPTCDecoder extends BlockDecoder {
         0xAAAA1414, 0xA05050A0, 0xA0A5A5A0, 0x96000000, 0x40804080, 0xA9A8A9A8, 0xAAAAAA44, 0x2A4A5254,
     };
 
-    static final int[] ANCHOR_11 = {
+    private static final int[] ANCHOR_11 = {
         15, 15, 15, 15, 15, 15, 15, 15,
         15, 15, 15, 15, 15, 15, 15, 15,
         15, +2, +8, +2, +2, +8, +8, 15,
@@ -65,28 +65,8 @@ abstract class BPTCDecoder extends BlockDecoder {
         0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64
     };
 
-    BPTCDecoder(BlockFormat format, int bytesPerPixel) {
-        super(format, bytesPerPixel);
-    }
-
-    static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {
-        long indexBits = bits.getLong(numIndexBits * 16 - numPartitions);
-        indexBits = insertZeroBit(indexBits, numIndexBits - 1);
-
-        if (numPartitions == 2) {
-            int anchor = ANCHOR_11[partition];
-            indexBits = insertZeroBit(indexBits, ((anchor + 1) * numIndexBits) - 1);
-        } else if (numPartitions == 3) {
-            int anchor1 = ANCHOR_21[partition];
-            int anchor2 = ANCHOR_22[partition];
-            indexBits = insertZeroBit(indexBits, ((Math.min(anchor1, anchor2) + 1) * numIndexBits) - 1);
-            indexBits = insertZeroBit(indexBits, ((Math.max(anchor1, anchor2) + 1) * numIndexBits) - 1);
-        }
-        return indexBits;
-    }
-
-    static int interpolate(int e0, int e1, int weight) {
-        return (e0 * (64 - weight) + e1 * weight + 32) >>> 6;
+    BPTCDecoder(BlockFormat format, int pixelStride) {
+        super(format, pixelStride);
     }
 
     static int partitionTable(int numPartitions, int partition) {
@@ -117,8 +97,28 @@ abstract class BPTCDecoder extends BlockDecoder {
         }
     }
 
+    static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {
+        long indexBits = bits.getLong(numIndexBits * 16 - numPartitions);
+        indexBits = insertZeroBit(indexBits, numIndexBits - 1);
+
+        if (numPartitions == 2) {
+            int anchor = ANCHOR_11[partition];
+            indexBits = insertZeroBit(indexBits, ((anchor + 1) * numIndexBits) - 1);
+        } else if (numPartitions == 3) {
+            int anchor1 = ANCHOR_21[partition];
+            int anchor2 = ANCHOR_22[partition];
+            indexBits = insertZeroBit(indexBits, ((Math.min(anchor1, anchor2) + 1) * numIndexBits) - 1);
+            indexBits = insertZeroBit(indexBits, ((Math.max(anchor1, anchor2) + 1) * numIndexBits) - 1);
+        }
+        return indexBits;
+    }
+
     private static long insertZeroBit(long value, int pos) {
         long topMask = ~0L << pos;
         return value + (value & topMask);
+    }
+
+    static int interpolate(int e0, int e1, int weight) {
+        return (e0 * (64 - weight) + e1 * weight + 32) >>> 6;
     }
 }
