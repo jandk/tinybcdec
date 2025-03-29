@@ -33,9 +33,9 @@ public abstract class BlockDecoder {
     public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder(true);
-            case BC1A:
                 return new BC1Decoder(false);
+            case BC1_NO_ALPHA:
+                return new BC1Decoder(true);
             case BC2:
                 return new BC2Decoder();
             case BC3:
@@ -45,14 +45,17 @@ public abstract class BlockDecoder {
             case BC4S:
                 return new BC4SDecoder(1);
             case BC5U:
+                return new BC5UDecoder(false);
             case BC5U_RECONSTRUCT_Z:
-                return new BC5UDecoder(format);
+                return new BC5UDecoder(true);
             case BC5S:
+                return new BC5SDecoder(false);
             case BC5S_RECONSTRUCT_Z:
-                return new BC5SDecoder(format);
+                return new BC5SDecoder(true);
             case BC6HU:
+                return new BC6HDecoder(false);
             case BC6HS:
-                return new BC6HDecoder(format);
+                return new BC6HDecoder(true);
             case BC7:
                 return new BC7Decoder();
             default:

@@ -4,11 +4,11 @@ final class BC5UDecoder extends BlockDecoder {
     private static final int BPP = 3;
 
     private final BC4UDecoder decoder = new BC4UDecoder(BPP);
-    private final boolean normalized;
+    private final boolean reconstructZ;
 
-    BC5UDecoder(BlockFormat format) {
-        super(format, BPP);
-        this.normalized = format == BlockFormat.BC5U_RECONSTRUCT_Z;
+    BC5UDecoder(boolean reconstructZ) {
+        super(reconstructZ ? BlockFormat.BC5U_RECONSTRUCT_Z : BlockFormat.BC5U, BPP);
+        this.reconstructZ = reconstructZ;
     }
 
     @Override
@@ -16,7 +16,7 @@ final class BC5UDecoder extends BlockDecoder {
         decoder.decodeBlock(src, srcPos, dst, dstPos, stride);
         decoder.decodeBlock(src, srcPos + 8, dst, dstPos + 1, stride);
 
-        if (normalized) {
+        if (reconstructZ) {
             ReconstructZ.reconstruct(dst, dstPos, stride, BPP);
         }
     }

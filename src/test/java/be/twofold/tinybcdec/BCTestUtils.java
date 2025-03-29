@@ -40,13 +40,13 @@ final class BCTestUtils {
         switch (type) {
             case BufferedImage.TYPE_3BYTE_BGR: {
                 for (int i = 0; i < image.length; i += 3) {
-                    swap(image, i + 0, i + 2);
+                    swap(image, i/**/, i + 2);
                 }
                 return image;
             }
             case BufferedImage.TYPE_4BYTE_ABGR: {
                 for (int i = 0; i < image.length; i += 4) {
-                    swap(image, i + 0, i + 3);
+                    swap(image, i/**/, i + 3);
                     swap(image, i + 1, i + 2);
                 }
                 return image;

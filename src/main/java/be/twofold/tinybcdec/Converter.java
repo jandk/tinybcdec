@@ -55,7 +55,7 @@ public interface Converter<T> {
 
                 float[] rawImage = ((DataBufferFloat) image.getRaster().getDataBuffer()).getData();
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o += 3) {
-                    rawImage[o + 0] = float16ToFloat(ByteArrays.getShort(decoded, i/**/));
+                    rawImage[o/**/] = float16ToFloat(ByteArrays.getShort(decoded, i/**/));
                     rawImage[o + 1] = float16ToFloat(ByteArrays.getShort(decoded, i + 2));
                     rawImage[o + 2] = float16ToFloat(ByteArrays.getShort(decoded, i + 4));
                 }

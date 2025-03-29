@@ -24,13 +24,12 @@ final class BC6HDecoder extends BPTCDecoder {
 
     private final boolean signed;
 
-    BC6HDecoder(BlockFormat format) {
-        super(format, BPP);
-        this.signed = format == BlockFormat.BC6HS;
+    BC6HDecoder(boolean signed) {
+        super(signed ? BlockFormat.BC6HS : BlockFormat.BC6HU, BPP);
+        this.signed = signed;
     }
 
     @Override
-    @SuppressWarnings("PointlessArithmeticExpression")
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
         int modeIndex = mode(bits);
@@ -67,7 +66,7 @@ final class BC6HDecoder extends BPTCDecoder {
 
         if (mode.te || signed) {
             for (int i = 3; i < numPartitions * 6; i += 3) {
-                colors[i + 0] = extendSign(colors[i + 0], mode.rb);
+                colors[i/**/] = extendSign(colors[i/**/], mode.rb);
                 colors[i + 1] = extendSign(colors[i + 1], mode.gb);
                 colors[i + 2] = extendSign(colors[i + 2], mode.bb);
             }
@@ -75,14 +74,14 @@ final class BC6HDecoder extends BPTCDecoder {
 
         if (mode.te) {
             for (int i = 3; i < numPartitions * 6; i += 3) {
-                colors[i + 0] = transformInverse(colors[i + 0], colors[0], endPointBits, signed);
+                colors[i/**/] = transformInverse(colors[i/**/], colors[0], endPointBits, signed);
                 colors[i + 1] = transformInverse(colors[i + 1], colors[1], endPointBits, signed);
                 colors[i + 2] = transformInverse(colors[i + 2], colors[2], endPointBits, signed);
             }
         }
 
         for (int i = 0; i < numPartitions * 6; i += 3) {
-            colors[i + 0] = unquantize(colors[i + 0], endPointBits, signed);
+            colors[i/**/] = unquantize(colors[i/**/], endPointBits, signed);
             colors[i + 1] = unquantize(colors[i + 1], endPointBits, signed);
             colors[i + 2] = unquantize(colors[i + 2], endPointBits, signed);
         }
@@ -99,12 +98,12 @@ final class BC6HDecoder extends BPTCDecoder {
                 partitionTable >>>= 2;
                 indexBits >>>= ib;
 
-                int r = finalUnquantize(interpolate(colors[pIndex * 6 + 0], colors[pIndex * 6 + 3], weight), signed);
+                int r = finalUnquantize(interpolate(colors[pIndex * 6/**/], colors[pIndex * 6 + 3], weight), signed);
                 int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
                 int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
 
                 int o = dstPos + x * BPP;
-                ByteArrays.setShort(dst, o + 0, (short) r);
+                ByteArrays.setShort(dst, o/**/, (short) r);
                 ByteArrays.setShort(dst, o + 2, (short) g);
                 ByteArrays.setShort(dst, o + 4, (short) b);
             }

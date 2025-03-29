@@ -21,7 +21,6 @@ final class BC7Decoder extends BPTCDecoder {
     }
 
     @Override
-    @SuppressWarnings("PointlessArithmeticExpression")
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
 
@@ -71,8 +70,8 @@ final class BC7Decoder extends BPTCDecoder {
             int sBit1 = bits.get1();
             int sBit2 = bits.get1();
             for (int c = 0; c < 4; c++) {
-                colors[0 * 4 + c] = (colors[0 * 4 + c] << 1) | sBit1;
-                colors[1 * 4 + c] = (colors[1 * 4 + c] << 1) | sBit1;
+                colors[/*    */c] = (colors[/*    */c] << 1) | sBit1;
+                colors[/**/4 + c] = (colors[/**/4 + c] << 1) | sBit1;
                 colors[2 * 4 + c] = (colors[2 * 4 + c] << 1) | sBit2;
                 colors[3 * 4 + c] = (colors[3 * 4 + c] << 1) | sBit2;
             }
@@ -83,7 +82,7 @@ final class BC7Decoder extends BPTCDecoder {
         int alphaBits = mode.ab + (mode.epb + mode.spb);
         for (int i = 0; i < numColors; i++) {
             if (colorBits < 8) {
-                colors[i * 4 + 0] = unpack(colors[i * 4 + 0], colorBits);
+                colors[i * 4/**/] = unpack(colors[i * 4/**/], colorBits);
                 colors[i * 4 + 1] = unpack(colors[i * 4 + 1], colorBits);
                 colors[i * 4 + 2] = unpack(colors[i * 4 + 2], colorBits);
             }
@@ -129,7 +128,7 @@ final class BC7Decoder extends BPTCDecoder {
 
                 int pIndex = partitionTable & 3;
                 partitionTable >>>= 2;
-                int r = interpolate(colors[pIndex * 8 + 0], colors[pIndex * 8 + 4], cWeight);
+                int r = interpolate(colors[pIndex * 8/**/], colors[pIndex * 8 + 4], cWeight);
                 int g = interpolate(colors[pIndex * 8 + 1], colors[pIndex * 8 + 5], cWeight);
                 int b = interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], cWeight);
                 int a = interpolate(colors[pIndex * 8 + 3], colors[pIndex * 8 + 7], aWeight);
