@@ -39,29 +39,21 @@ final class BC6HDecoder extends BPTCDecoder {
         }
 
         Mode mode = MODES.get(modeIndex);
-        int endPointBits = mode.epb;
-
         int[] colors = new int[12];
+
         for (short op : mode.ops) {
             readOp(bits, op, colors);
         }
 
-        int partition;
-        int numPartitions;
-        if (mode.pb == 0) {
-            partition = 0;
-            numPartitions = 1;
-        } else {
-            partition = bits.get(mode.pb);
-            numPartitions = 2;
-        }
+        int partition = bits.get(mode.pb);
+        int numPartitions = mode.pb == 0 ? 1 : 2;
 
         // The values in E0 are sign-extended to the implementation’s internal integer representation if
         // the format of the texture is signed
         if (signed) {
-            colors[0] = extendSign(colors[0], endPointBits);
-            colors[1] = extendSign(colors[1], endPointBits);
-            colors[2] = extendSign(colors[2], endPointBits);
+            colors[0] = extendSign(colors[0], mode.epb);
+            colors[1] = extendSign(colors[1], mode.epb);
+            colors[2] = extendSign(colors[2], mode.epb);
         }
 
         if (mode.te || signed) {
@@ -74,33 +66,33 @@ final class BC6HDecoder extends BPTCDecoder {
 
         if (mode.te) {
             for (int i = 3; i < numPartitions * 6; i += 3) {
-                colors[i/**/] = transformInverse(colors[i/**/], colors[0], endPointBits, signed);
-                colors[i + 1] = transformInverse(colors[i + 1], colors[1], endPointBits, signed);
-                colors[i + 2] = transformInverse(colors[i + 2], colors[2], endPointBits, signed);
+                colors[i/**/] = transformInverse(colors[i/**/], colors[0], mode.epb, signed);
+                colors[i + 1] = transformInverse(colors[i + 1], colors[1], mode.epb, signed);
+                colors[i + 2] = transformInverse(colors[i + 2], colors[2], mode.epb, signed);
             }
         }
 
         for (int i = 0; i < numPartitions * 6; i += 3) {
-            colors[i/**/] = unquantize(colors[i/**/], endPointBits, signed);
-            colors[i + 1] = unquantize(colors[i + 1], endPointBits, signed);
-            colors[i + 2] = unquantize(colors[i + 2], endPointBits, signed);
+            colors[i/**/] = unquantize(colors[i/**/], mode.epb, signed);
+            colors[i + 1] = unquantize(colors[i + 1], mode.epb, signed);
+            colors[i + 2] = unquantize(colors[i + 2], mode.epb, signed);
         }
 
         int ib = numPartitions == 1 ? 4 : 3;
-        int[] weights = weights(ib);
-        int partitionTable = partitionTable(numPartitions, partition);
+        int partitions = partitions(numPartitions, partition);
         long indexBits = indexBits(bits, ib, numPartitions, partition);
+        byte[] weights = weights(ib);
+        int mask = (1 << ib) - 1;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int pIndex = partitionTable & 3;
-                int index = (int) (indexBits & (1 << ib) - 1);
-                int weight = weights[index];
-                partitionTable >>>= 2;
+                int weight = weights[(int) (indexBits & mask)];
                 indexBits >>>= ib;
 
+                int pIndex = partitions & 3;
                 int r = finalUnquantize(interpolate(colors[pIndex * 6/**/], colors[pIndex * 6 + 3], weight), signed);
                 int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
                 int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
+                partitions >>>= 2;
 
                 int o = dstPos + x * BPP;
                 ByteArrays.setShort(dst, o/**/, (short) r);
@@ -112,7 +104,7 @@ final class BC6HDecoder extends BPTCDecoder {
     }
 
     private void readOp(Bits bits, short op, int[] colors) {
-        // index | shift << 4 | count << 8 | (reverse ? 1 : 0) << 12
+        // count | shift << 4 | index << 8 | (reverse ? 1 : 0) << 12
         int count = op & 0x0F;
         int shift = (op >>> 4) & 0x0F;
         int index = (op >>> 8) & 0x0F;
@@ -120,40 +112,17 @@ final class BC6HDecoder extends BPTCDecoder {
 
         int value = bits.get(count);
         if (reverse) {
-            switch (count) {
-                case 2: {
-                    int i = value;
-                    value = (i & 0x55) << 1 | (i >>> 1) & 0x55;
-                    break;
-                }
-                case 6: {
-                    int i = value;
-                    i = (i & 0x55) << 1 | (i >>> 1) & 0x55;
-                    i = (i & 0x33) << 2 | (i >>> 2) & 0x33;
-                    i = (i & 0x0F) << 4 | (i >>> 4) & 0x0F;
-                    value = i >>> 2;
-                    break;
-                }
-                default:
-                    throw new UnsupportedOperationException();
-            }
+            value = Integer.reverse(value) >>> (32 - count);
         }
         colors[index] |= value << shift;
     }
 
     private int mode(Bits bits) {
         int mode = bits.get(2);
-        switch (mode) {
-            case 0:
-            case 1:
-                return mode;
-            case 2:
-                return bits.get(3) + 2;
-            case 3:
-                return bits.get(3) + 10;
-            default:
-                throw new UnsupportedOperationException();
+        if (mode < 2) {
+            return mode;
         }
+        return bits.get(3) + (mode * 8 - 14);
     }
 
     private int unquantize(int value, int bits, boolean signed) {
@@ -171,7 +140,7 @@ final class BC6HDecoder extends BPTCDecoder {
         if (value == ((1 << bits) - 1)) {
             return 0xFFFF;
         }
-        return ((value << 15) + 0x4000) >> (bits - 1);
+        return ((value << 15) + 0x4000) >>> (bits - 1);
     }
 
     private static int unquantizeSigned(int value, int bits) {
@@ -215,29 +184,29 @@ final class BC6HDecoder extends BPTCDecoder {
         return signed ? extendSign(value, bits) : value;
     }
 
-    private static void fillInvalidBlock(byte[] dst, int dstPos, int lineStride) {
+    private static void fillInvalidBlock(byte[] dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            Arrays.fill(dst, dstPos, dstPos + (4 * BPP), (byte) 0);
-            dstPos += lineStride;
+            Arrays.fill(dst, dstPos, dstPos + 4 * BPP, (byte) 0);
+            dstPos += stride;
         }
     }
 
     private static final class Mode {
         private final boolean te;
-        private final int pb;
-        private final int epb;
-        private final int rb;
-        private final int gb;
-        private final int bb;
+        private final byte pb;
+        private final byte epb;
+        private final byte rb;
+        private final byte gb;
+        private final byte bb;
         private final short[] ops;
 
         private Mode(boolean te, int pb, int epb, int rb, int gb, int bb, short[] ops) {
             this.te = te;
-            this.pb = pb;
-            this.epb = epb;
-            this.rb = rb;
-            this.gb = gb;
-            this.bb = bb;
+            this.pb = (byte) pb;
+            this.epb = (byte) epb;
+            this.rb = (byte) rb;
+            this.gb = (byte) gb;
+            this.bb = (byte) bb;
             this.ops = ops;
         }
     }

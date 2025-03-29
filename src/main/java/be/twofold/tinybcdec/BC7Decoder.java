@@ -99,39 +99,36 @@ final class BC7Decoder extends BPTCDecoder {
         }
 
         // Let's try a new method
+        int partitions = partitions(mode.ns, partition);
         long indexBits1 = indexBits(bits, mode.ib1, mode.ns, partition);
         long indexBits2 = indexBits(bits, mode.ib2, mode.ns, partition);
-
-        int partitionTable = partitionTable(mode.ns, partition);
-
-        int[] weights1 = weights(mode.ib1);
-        int[] weights2 = weights(mode.ib2);
-
+        byte[] weights1 = weights(mode.ib1);
+        byte[] weights2 = weights(mode.ib2);
         int mask1 = (1 << mode.ib1) - 1;
         int mask2 = (1 << mode.ib2) - 1;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int index1 = (int) (indexBits1 & mask1);
-                int cWeight = weights1[index1];
-                int aWeight = weights1[index1];
+                int weight1 = weights1[(int) (indexBits1 & mask1)];
+                int cWeight = weight1;
+                int aWeight = weight1;
                 indexBits1 >>>= mode.ib1;
 
                 if (mode.ib2 != 0) {
-                    int index2 = (int) (indexBits2 & mask2);
+                    int weight2 = weights2[(int) (indexBits2 & mask2)];
                     if (selection) {
-                        cWeight = weights2[index2];
+                        cWeight = weight2;
                     } else {
-                        aWeight = weights2[index2];
+                        aWeight = weight2;
                     }
                     indexBits2 >>>= mode.ib2;
                 }
 
-                int pIndex = partitionTable & 3;
-                partitionTable >>>= 2;
+                int pIndex = partitions & 3;
                 int r = interpolate(colors[pIndex * 8/**/], colors[pIndex * 8 + 4], cWeight);
                 int g = interpolate(colors[pIndex * 8 + 1], colors[pIndex * 8 + 5], cWeight);
                 int b = interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], cWeight);
                 int a = interpolate(colors[pIndex * 8 + 3], colors[pIndex * 8 + 7], aWeight);
+                partitions >>>= 2;
 
                 if (rotation != 0) {
                     int t = a;
@@ -151,52 +148,47 @@ final class BC7Decoder extends BPTCDecoder {
                     }
                 }
 
-                int pixel = r | g << 8 | b << 16 | a << 24;
-                ByteArrays.setInt(dst, dstPos, pixel);
-                dstPos += BPP;
+                int rgba = r | g << 8 | b << 16 | a << 24;
+                ByteArrays.setInt(dst, dstPos + x * BPP, rgba);
             }
-            dstPos += stride - BLOCK_WIDTH * BPP;
+            dstPos += stride;
         }
     }
 
-    private static void fillInvalidBlock(byte[] dst, int dstPos, int lineStride) {
+    private static void fillInvalidBlock(byte[] dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                ByteArrays.setInt(dst, dstPos, 0);
-                dstPos += BPP;
-            }
-            dstPos += lineStride - BLOCK_WIDTH * BPP;
+            Arrays.fill(dst, dstPos, dstPos + 4 * BPP, (byte) 0);
+            dstPos += stride;
         }
     }
 
     private int unpack(int i, int n) {
-        assert n >= 4 && n <= 8;
-        return i << (8 - n) | i >> (2 * n - 8);
+        return i << (8 - n) | i >>> (2 * n - 8);
     }
 
     private static final class Mode {
-        private final int ns;
-        private final int pb;
-        private final int rb;
-        private final int isb;
-        private final int cb;
-        private final int ab;
-        private final int epb;
-        private final int spb;
-        private final int ib1;
-        private final int ib2;
+        private final byte ns;
+        private final byte pb;
+        private final byte rb;
+        private final byte isb;
+        private final byte cb;
+        private final byte ab;
+        private final byte epb;
+        private final byte spb;
+        private final byte ib1;
+        private final byte ib2;
 
         private Mode(int ns, int pb, int rb, int isb, int cb, int ab, int epb, int spb, int ib1, int ib2) {
-            this.ns = ns;
-            this.pb = pb;
-            this.rb = rb;
-            this.isb = isb;
-            this.cb = cb;
-            this.ab = ab;
-            this.epb = epb;
-            this.spb = spb;
-            this.ib1 = ib1;
-            this.ib2 = ib2;
+            this.ns = (byte) ns;
+            this.pb = (byte) pb;
+            this.rb = (byte) rb;
+            this.isb = (byte) isb;
+            this.cb = (byte) cb;
+            this.ab = (byte) ab;
+            this.epb = (byte) epb;
+            this.spb = (byte) spb;
+            this.ib1 = (byte) ib1;
+            this.ib2 = (byte) ib2;
         }
     }
 }
