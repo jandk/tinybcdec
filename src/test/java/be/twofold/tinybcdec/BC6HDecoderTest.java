@@ -31,7 +31,7 @@ class BC6HDecoderTest {
     }
 
     @Test
-    void testBC6InvalidBlock() {
+    void testBC6HInvalidBlock() {
         byte[] src = new byte[16];
         byte[] invalidModes = {0b10011, 0b10111, 0b11011, 0b11111};
         for (byte invalidMode : invalidModes) {

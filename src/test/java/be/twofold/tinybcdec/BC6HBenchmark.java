@@ -6,14 +6,14 @@ import org.openjdk.jmh.runner.options.*;
 
 import java.io.*;
 
-public class BC6Benchmark {
+public class BC6HBenchmark {
     @State(Scope.Thread)
-    public static class BC6State {
+    public static class BC6HState {
         private final BlockDecoder decoder;
         private final byte[] src;
         private final byte[] dst;
 
-        public BC6State() {
+        public BC6HState() {
             try {
                 decoder = BlockDecoder.create(BlockFormat.BC6HU);
                 src = BCTestUtils.readResource("/bc6h_uf16.dds");
@@ -27,13 +27,13 @@ public class BC6Benchmark {
     @Benchmark
     @Warmup(iterations = 2, time = 5)
     @Measurement(iterations = 2, time = 5)
-    public void benchmark(BC6State state) {
+    public void benchmark(BC6HState state) {
         state.decoder.decode(256, 256, state.src, BCTestUtils.DDS_HEADER_SIZE, state.dst, 0);
     }
 
     public static void main(String[] args) throws RunnerException {
         Options opt = new OptionsBuilder()
-            .include(BC6Benchmark.class.getSimpleName())
+            .include(BC6HBenchmark.class.getSimpleName())
             .forks(1)
             .build();
 
