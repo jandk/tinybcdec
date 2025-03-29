@@ -3,11 +3,13 @@ package be.twofold.tinybcdec;
 final class BC1Decoder extends BlockDecoder {
     private static final int BPP = 4;
 
-    private final boolean opaque;
+    private final boolean bc2Or3;
+    private final int color3;
 
-    BC1Decoder(boolean opaque) {
+    BC1Decoder(Mode mode) {
         super(BlockFormat.BC1, BPP);
-        this.opaque = opaque;
+        this.bc2Or3 = mode == Mode.BC2OR3;
+        this.color3 = mode == Mode.OPAQUE ? 0xFF000000 : 0;
     }
 
     @Override
@@ -30,9 +32,9 @@ final class BC1Decoder extends BlockDecoder {
         int[] colors = {
             rgb(scale031(r0), scale063(g0), scale031(b0)),
             rgb(scale031(r1), scale063(g1), scale031(b1)),
-            0, 0
+            0, color3
         };
-        if (c0 > c1 || opaque) {
+        if (c0 > c1 || bc2Or3) {
             int r2 = scale093(2 * r0 + r1);
             int g2 = scale189(2 * g0 + g1);
             int b2 = scale093(2 * b0 + b1);
@@ -86,5 +88,11 @@ final class BC1Decoder extends BlockDecoder {
 
     private static int scale126(int i) {
         return (i * 4145 + 1019) >>> 11;
+    }
+
+    enum Mode {
+        NORMAL,
+        BC2OR3,
+        OPAQUE,
     }
 }

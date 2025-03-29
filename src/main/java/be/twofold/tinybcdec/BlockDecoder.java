@@ -33,9 +33,9 @@ public abstract class BlockDecoder {
     public static BlockDecoder create(BlockFormat format) {
         switch (format) {
             case BC1:
-                return new BC1Decoder(false);
+                return new BC1Decoder(BC1Decoder.Mode.NORMAL);
             case BC1_NO_ALPHA:
-                return new BC1Decoder(true);
+                return new BC1Decoder(BC1Decoder.Mode.OPAQUE);
             case BC2:
                 return new BC2Decoder();
             case BC3:

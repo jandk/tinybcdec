@@ -14,7 +14,7 @@ public enum BlockFormat {
      */
     BC1(8),
     /**
-     * BC1: 8 bytes per block, 1 byte per value, 4 channels (RGBA)
+     * BC1: 8 bytes per block, 1 byte per value, 4 channels (RGB_)
      */
     BC1_NO_ALPHA(8),
     /**
