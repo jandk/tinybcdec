@@ -16,7 +16,7 @@ public interface Converter<T> {
     final class AWT implements Converter<BufferedImage> {
         @Override
         public BufferedImage convert(int width, int height, byte[] decoded, BlockFormat format) {
-            if (format == BlockFormat.BC6HS || format == BlockFormat.BC6HU) {
+            if (format == BlockFormat.BC6H_SF16 || format == BlockFormat.BC6H_UF16) {
                 ColorModel colorModel = new ComponentColorModel(
                     ColorSpace.getInstance(ColorSpace.CS_sRGB),
                     false,
@@ -58,7 +58,7 @@ public interface Converter<T> {
         @Override
         public Image convert(int width, int height, byte[] decoded, BlockFormat format) {
             IntBuffer buffer = IntBuffer.allocate(width * height);
-            if (format == BlockFormat.BC6HS || format == BlockFormat.BC6HU) {
+            if (format == BlockFormat.BC6H_SF16 || format == BlockFormat.BC6H_UF16) {
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o++) {
                     int r = clampAndPack(Platform.float16ToFloat(ByteArrays.getShort(decoded, i/**/)));
                     int g = clampAndPack(Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 2)));

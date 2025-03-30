@@ -52,11 +52,19 @@ public enum BlockFormat {
     /**
      * BC6 Unsigned: 16 bytes per block, 2 bytes per value, 3 channels (RGB)
      */
-    BC6HU(16),
+    BC6H_UF16(16),
     /**
      * BC6 Signed: 16 bytes per block, 2 bytes per value, 3 channels (RGB)
      */
-    BC6HS(16),
+    BC6H_SF16(16),
+    /**
+     * BC6 Unsigned: 16 bytes per block, 4 bytes per value, 3 channels (RGB)
+     */
+    BC6H_UF32(16),
+    /**
+     * BC6 Signed: 16 bytes per block, 4 bytes per value, 3 channels (RGB)
+     */
+    BC6H_SF32(16),
     /**
      * BC7: 16 bytes per block, 1 byte per value, 4 channels (RGBA)
      */

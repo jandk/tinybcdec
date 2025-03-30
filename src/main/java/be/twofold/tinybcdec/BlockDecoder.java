@@ -52,10 +52,14 @@ public abstract class BlockDecoder {
                 return new BC5SDecoder(false);
             case BC5S_RECONSTRUCT_Z:
                 return new BC5SDecoder(true);
-            case BC6HU:
-                return new BC6HDecoder(false);
-            case BC6HS:
-                return new BC6HDecoder(true);
+            case BC6H_UF16:
+                return new BC6HDecoder(false, false);
+            case BC6H_SF16:
+                return new BC6HDecoder(true, false);
+            case BC6H_UF32:
+                return new BC6HDecoder(false, true);
+            case BC6H_SF32:
+                return new BC6HDecoder(true, true);
             case BC7:
                 return new BC7Decoder();
             default:

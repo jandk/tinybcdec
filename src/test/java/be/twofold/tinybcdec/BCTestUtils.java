@@ -36,6 +36,16 @@ final class BCTestUtils {
         return result;
     }
 
+    static byte[] readDDSFP32(String path, int width, int height) throws IOException {
+        byte[] rawImage = Arrays.copyOfRange(readResource(path), DDS_HEADER_SIZE, DDS_HEADER_SIZE + width * height * 16);
+        byte[] result = new byte[rawImage.length * 12 / 16];
+
+        for (int i = 0, o = 0; i < rawImage.length; i += 16, o += 12) {
+            System.arraycopy(rawImage, i, result, o, 12);
+        }
+        return result;
+    }
+
     private static byte[] decodeImage(byte[] image, int type) {
         switch (type) {
             case BufferedImage.TYPE_3BYTE_BGR: {

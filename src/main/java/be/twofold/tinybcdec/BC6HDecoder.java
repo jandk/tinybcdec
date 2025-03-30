@@ -23,10 +23,12 @@ final class BC6HDecoder extends BPTCDecoder {
     );
 
     private final boolean signed;
+    private final PixelWriter writer;
 
-    BC6HDecoder(boolean signed) {
-        super(signed ? BlockFormat.BC6HS : BlockFormat.BC6HU, BPP);
+    BC6HDecoder(boolean signed, boolean asFloat) {
+        super(signed ? BlockFormat.BC6H_SF16 : BlockFormat.BC6H_UF16, asFloat ? 12 : 6);
         this.signed = signed;
+        this.writer = PixelWriter.create(asFloat);
     }
 
     @Override
@@ -89,15 +91,12 @@ final class BC6HDecoder extends BPTCDecoder {
                 indexBits >>>= ib;
 
                 int pIndex = partitions & 3;
-                int r = finalUnquantize(interpolate(colors[pIndex * 6/**/], colors[pIndex * 6 + 3], weight), signed);
-                int g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
-                int b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
+                short r = finalUnquantize(interpolate(colors[pIndex * 6/**/], colors[pIndex * 6 + 3], weight), signed);
+                short g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
+                short b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
                 partitions >>>= 2;
 
-                int o = dstPos + x * BPP;
-                ByteArrays.setShort(dst, o/**/, (short) r);
-                ByteArrays.setShort(dst, o + 2, (short) g);
-                ByteArrays.setShort(dst, o + 4, (short) b);
+                writer.write(dst, dstPos + x * pixelStride, r, g, b);
             }
             dstPos += stride;
         }
@@ -165,12 +164,12 @@ final class BC6HDecoder extends BPTCDecoder {
         return sign ? -unq : unq;
     }
 
-    private static int finalUnquantize(int i, boolean signed) {
+    private static short finalUnquantize(int i, boolean signed) {
         if (signed) {
             i = (short) i;
-            return i < 0 ? (((-i) * 31) >> 5) + 0x8000 : (i * 31) >> 5;
+            return (short) (i < 0 ? (((-i) * 31) >> 5) + 0x8000 : (i * 31) >> 5);
         } else {
-            return (i * 31) >> 6;
+            return (short) ((i * 31) >> 6);
         }
     }
 
@@ -208,6 +207,31 @@ final class BC6HDecoder extends BPTCDecoder {
             this.gb = (byte) gb;
             this.bb = (byte) bb;
             this.ops = ops;
+        }
+    }
+
+    @FunctionalInterface
+    private interface PixelWriter {
+        void write(byte[] dst, int dstOffset, short r, short g, short b);
+
+        static PixelWriter create(boolean asFloat) {
+            if (asFloat) {
+                return PixelWriter::writePixelF32;
+            } else {
+                return PixelWriter::writePixelF16;
+            }
+        }
+
+        private static void writePixelF32(byte[] dst, int dstPos, short r, short g, short b) {
+            ByteArrays.setFloat(dst, dstPos/**/, Platform.float16ToFloat(r));
+            ByteArrays.setFloat(dst, dstPos + 4, Platform.float16ToFloat(g));
+            ByteArrays.setFloat(dst, dstPos + 8, Platform.float16ToFloat(b));
+        }
+
+        private static void writePixelF16(byte[] dst, int dstPos, short r, short g, short b) {
+            ByteArrays.setShort(dst, dstPos/**/, r);
+            ByteArrays.setShort(dst, dstPos + 2, g);
+            ByteArrays.setShort(dst, dstPos + 4, b);
         }
     }
 }
