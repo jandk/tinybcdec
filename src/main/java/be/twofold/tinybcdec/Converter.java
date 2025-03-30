@@ -7,28 +7,6 @@ import java.awt.image.*;
 import java.nio.*;
 
 public interface Converter<T> {
-    private static float float16ToFloat(short half) {
-        // Extract the separate fields
-        int s = (half & 0x8000) << 16;
-        int e = (half >> 10) & 0x001F;
-        int m = half & 0x03FF;
-
-        // Zero and denormal numbers, copies the sign
-        if (e == 0) {
-            float sign = Float.intBitsToFloat(s | 0x3F800000);
-            return sign * (0x1p-24f * m); // Smallest denormal in float16
-        }
-
-        // Infinity and NaN, propagate the mantissa for signalling NaN
-        if (e == 31) {
-            return Float.intBitsToFloat(s | 0x7F800000 | m << 13);
-        }
-
-        // Adjust exponent, and put everything back together
-        e = e + (127 - 15);
-        return Float.intBitsToFloat(s | e << 23 | m << 13);
-    }
-
     private static int swapRB(int pixel) {
         return Integer.rotateRight(Integer.reverseBytes(pixel), 8);
     }
@@ -55,9 +33,9 @@ public interface Converter<T> {
 
                 float[] rawImage = ((DataBufferFloat) image.getRaster().getDataBuffer()).getData();
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o += 3) {
-                    rawImage[o/**/] = float16ToFloat(ByteArrays.getShort(decoded, i/**/));
-                    rawImage[o + 1] = float16ToFloat(ByteArrays.getShort(decoded, i + 2));
-                    rawImage[o + 2] = float16ToFloat(ByteArrays.getShort(decoded, i + 4));
+                    rawImage[o/**/] = Platform.float16ToFloat(ByteArrays.getShort(decoded, i/**/));
+                    rawImage[o + 1] = Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 2));
+                    rawImage[o + 2] = Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 4));
                 }
                 return image;
             }
@@ -82,9 +60,9 @@ public interface Converter<T> {
             IntBuffer buffer = IntBuffer.allocate(width * height);
             if (format == BlockFormat.BC6HS || format == BlockFormat.BC6HU) {
                 for (int i = 0, o = 0, len = decoded.length; i < len; i += 8, o++) {
-                    int r = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i/**/)));
-                    int g = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i + 2)));
-                    int b = clampAndPack(float16ToFloat(ByteArrays.getShort(decoded, i + 4)));
+                    int r = clampAndPack(Platform.float16ToFloat(ByteArrays.getShort(decoded, i/**/)));
+                    int g = clampAndPack(Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 2)));
+                    int b = clampAndPack(Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 4)));
                     buffer.put(0xFF000000 | r << 16 | g << 8 | b);
                 }
             } else {
