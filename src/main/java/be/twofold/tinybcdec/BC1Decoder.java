@@ -32,7 +32,7 @@ final class BC1Decoder extends BlockDecoder {
         int[] colors = {
             rgb(scale031(r0), scale063(g0), scale031(b0)),
             rgb(scale031(r1), scale063(g1), scale031(b1)),
-            0, color3
+            0, 0
         };
         if (c0 > c1 || bc2Or3) {
             int r2 = scale093(2 * r0 + r1);
@@ -49,6 +49,7 @@ final class BC1Decoder extends BlockDecoder {
             int g2 = scale126(g0 + g1);
             int b2 = scale062(b0 + b1);
             colors[2] = rgb(r2, g2, b2);
+            colors[3] = color3;
         }
 
         int indices = (int) (block >>> 32);
