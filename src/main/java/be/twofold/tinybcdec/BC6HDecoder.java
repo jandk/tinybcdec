@@ -6,20 +6,20 @@ final class BC6HDecoder extends BPTCDecoder {
     private static final int BPP = 6;
 
     private static final List<Mode> MODES = List.of(
-        new Mode(true, +5, 10, +5, +5, +5, new short[]{0x0741, 0x0841, 0x0B41, 0x000A, 0x010A, 0x020A, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
-        new Mode(true, +5, +7, +6, +6, +6, new short[]{0x0751, 0x0A41, 0x0A51, 0x0007, 0x0B01, 0x0B11, 0x0841, 0x0107, 0x0851, 0x0B21, 0x0741, 0x0207, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
-        new Mode(true, +5, 11, +5, +4, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0305, 0x00A1, 0x0704, 0x0404, 0x01A1, 0x0B01, 0x0A04, 0x0504, 0x02A1, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
-        new Mode(true, +5, 11, +4, +5, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0304, 0x00A1, 0x0A41, 0x0704, 0x0405, 0x01A1, 0x0A04, 0x0504, 0x02A1, 0x0B11, 0x0804, 0x0604, 0x0B01, 0x0B21, 0x0904, 0x0741, 0x0B31}),
-        new Mode(true, +5, 11, +4, +4, +5, new short[]{0x000A, 0x010A, 0x020A, 0x0304, 0x00A1, 0x0841, 0x0704, 0x0404, 0x01A1, 0x0B01, 0x0A04, 0x0505, 0x02A1, 0x0804, 0x0604, 0x0B11, 0x0B21, 0x0904, 0x0B41, 0x0B31}),
-        new Mode(true, +5, +9, +5, +5, +5, new short[]{0x0009, 0x0841, 0x0109, 0x0741, 0x0209, 0x0B41, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
-        new Mode(true, +5, +8, +6, +5, +5, new short[]{0x0008, 0x0A41, 0x0841, 0x0108, 0x0B21, 0x0741, 0x0208, 0x0B31, 0x0B41, 0x0306, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0606, 0x0906}),
-        new Mode(true, +5, +8, +5, +6, +5, new short[]{0x0008, 0x0B01, 0x0841, 0x0108, 0x0751, 0x0741, 0x0208, 0x0A51, 0x0B41, 0x0305, 0x0A41, 0x0704, 0x0406, 0x0A04, 0x0505, 0x0B11, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
-        new Mode(true, +5, +8, +5, +5, +6, new short[]{0x0008, 0x0B11, 0x0841, 0x0108, 0x0851, 0x0741, 0x0208, 0x0B51, 0x0B41, 0x0305, 0x0A41, 0x0704, 0x0405, 0x0B01, 0x0A04, 0x0506, 0x0804, 0x0605, 0x0B21, 0x0905, 0x0B31}),
-        new Mode(false, 5, +6, +6, +6, +6, new short[]{0x0006, 0x0A41, 0x0B01, 0x0B11, 0x0841, 0x0106, 0x0751, 0x0851, 0x0B21, 0x0741, 0x0206, 0x0A51, 0x0B31, 0x0B51, 0x0B41, 0x0306, 0x0704, 0x0406, 0x0A04, 0x0506, 0x0804, 0x0606, 0x0906}),
-        new Mode(false, 0, 10, 10, 10, 10, new short[]{0x000A, 0x010A, 0x020A, 0x030A, 0x040A, 0x050A}),
-        new Mode(true, +0, 11, +9, +9, +9, new short[]{0x000A, 0x010A, 0x020A, 0x0309, 0x00A1, 0x0409, 0x01A1, 0x0509, 0x02A1}),
-        new Mode(true, +0, 12, +8, +8, +8, new short[]{0x000A, 0x010A, 0x020A, 0x0308, 0x10A2, 0x0408, 0x11A2, 0x0508, 0x12A2}),
-        new Mode(true, +0, 16, +4, +4, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0304, 0x10A6, 0x0404, 0x11A6, 0x0504, 0x12A6})
+        new Mode(T, T, 10, +5, +5, +5, new short[]{0x0941, 0x0A41, 0x0E41, 0x000A, 0x010A, 0x020A, 0x0405, 0x0D41, 0x0904, 0x0505, 0x0E01, 0x0D04, 0x0605, 0x0E11, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
+        new Mode(T, T, +7, +6, +6, +6, new short[]{0x0951, 0x0D41, 0x0D51, 0x0007, 0x0E01, 0x0E11, 0x0A41, 0x0107, 0x0A51, 0x0E21, 0x0941, 0x0207, 0x0E31, 0x0E51, 0x0E41, 0x0406, 0x0904, 0x0506, 0x0D04, 0x0606, 0x0A04, 0x0806, 0x0C06}),
+        new Mode(T, T, 11, +5, +4, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0405, 0x00A1, 0x0904, 0x0504, 0x01A1, 0x0E01, 0x0D04, 0x0604, 0x02A1, 0x0E11, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
+        new Mode(T, T, 11, +4, +5, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0404, 0x00A1, 0x0D41, 0x0904, 0x0505, 0x01A1, 0x0D04, 0x0604, 0x02A1, 0x0E11, 0x0A04, 0x0804, 0x0E01, 0x0E21, 0x0C04, 0x0941, 0x0E31}),
+        new Mode(T, T, 11, +4, +4, +5, new short[]{0x000A, 0x010A, 0x020A, 0x0404, 0x00A1, 0x0A41, 0x0904, 0x0504, 0x01A1, 0x0E01, 0x0D04, 0x0605, 0x02A1, 0x0A04, 0x0804, 0x0E11, 0x0E21, 0x0C04, 0x0E41, 0x0E31}),
+        new Mode(T, T, +9, +5, +5, +5, new short[]{0x0009, 0x0A41, 0x0109, 0x0941, 0x0209, 0x0E41, 0x0405, 0x0D41, 0x0904, 0x0505, 0x0E01, 0x0D04, 0x0605, 0x0E11, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
+        new Mode(T, T, +8, +6, +5, +5, new short[]{0x0008, 0x0D41, 0x0A41, 0x0108, 0x0E21, 0x0941, 0x0208, 0x0E31, 0x0E41, 0x0406, 0x0904, 0x0505, 0x0E01, 0x0D04, 0x0605, 0x0E11, 0x0A04, 0x0806, 0x0C06}),
+        new Mode(T, T, +8, +5, +6, +5, new short[]{0x0008, 0x0E01, 0x0A41, 0x0108, 0x0951, 0x0941, 0x0208, 0x0D51, 0x0E41, 0x0405, 0x0D41, 0x0904, 0x0506, 0x0D04, 0x0605, 0x0E11, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
+        new Mode(T, T, +8, +5, +5, +6, new short[]{0x0008, 0x0E11, 0x0A41, 0x0108, 0x0A51, 0x0941, 0x0208, 0x0E51, 0x0E41, 0x0405, 0x0D41, 0x0904, 0x0505, 0x0E01, 0x0D04, 0x0606, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
+        new Mode(F, T, +6, +6, +6, +6, new short[]{0x0006, 0x0D41, 0x0E01, 0x0E11, 0x0A41, 0x0106, 0x0951, 0x0A51, 0x0E21, 0x0941, 0x0206, 0x0D51, 0x0E31, 0x0E51, 0x0E41, 0x0406, 0x0904, 0x0506, 0x0D04, 0x0606, 0x0A04, 0x0806, 0x0C06}),
+        new Mode(F, F, 10, 10, 10, 10, new short[]{0x000A, 0x010A, 0x020A, 0x040A, 0x050A, 0x060A}),
+        new Mode(T, F, 11, +9, +9, +9, new short[]{0x000A, 0x010A, 0x020A, 0x0409, 0x00A1, 0x0509, 0x01A1, 0x0609, 0x02A1}),
+        new Mode(T, F, 12, +8, +8, +8, new short[]{0x000A, 0x010A, 0x020A, 0x0408, 0x10A2, 0x0508, 0x11A2, 0x0608, 0x12A2}),
+        new Mode(T, F, 16, +4, +4, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0404, 0x10A6, 0x0504, 0x11A6, 0x0604, 0x12A6})
     );
 
     private final boolean signed;
@@ -34,21 +34,21 @@ final class BC6HDecoder extends BPTCDecoder {
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         Bits bits = Bits.from(src, srcPos);
+
         int modeIndex = mode(bits);
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride);
             return;
         }
-
         Mode mode = MODES.get(modeIndex);
-        int[] colors = new int[12];
 
+        int[] colors = new int[16];
         for (short op : mode.ops) {
             readOp(bits, op, colors);
         }
 
-        int partition = bits.get(mode.pb);
-        int numPartitions = mode.pb == 0 ? 1 : 2;
+        int partition = mode.pb ? bits.get(5) : 0;
+        int numPartitions = mode.pb ? 2 : 1;
 
         // The values in E0 are sign-extended to the implementation’s internal integer representation if
         // the format of the texture is signed
@@ -59,7 +59,7 @@ final class BC6HDecoder extends BPTCDecoder {
         }
 
         if (mode.te || signed) {
-            for (int i = 3; i < numPartitions * 6; i += 3) {
+            for (int i = 4; i < numPartitions * 8; i += 4) {
                 colors[i/**/] = extendSign(colors[i/**/], mode.rb);
                 colors[i + 1] = extendSign(colors[i + 1], mode.gb);
                 colors[i + 2] = extendSign(colors[i + 2], mode.bb);
@@ -67,20 +67,20 @@ final class BC6HDecoder extends BPTCDecoder {
         }
 
         if (mode.te) {
-            for (int i = 3; i < numPartitions * 6; i += 3) {
+            for (int i = 4; i < numPartitions * 8; i += 4) {
                 colors[i/**/] = transformInverse(colors[i/**/], colors[0], mode.epb, signed);
                 colors[i + 1] = transformInverse(colors[i + 1], colors[1], mode.epb, signed);
                 colors[i + 2] = transformInverse(colors[i + 2], colors[2], mode.epb, signed);
             }
         }
 
-        for (int i = 0; i < numPartitions * 6; i += 3) {
+        for (int i = 0; i < numPartitions * 8; i += 4) {
             colors[i/**/] = unquantize(colors[i/**/], mode.epb, signed);
             colors[i + 1] = unquantize(colors[i + 1], mode.epb, signed);
             colors[i + 2] = unquantize(colors[i + 2], mode.epb, signed);
         }
 
-        int ib = numPartitions == 1 ? 4 : 3;
+        int ib = mode.pb ? 3 : 4;
         int partitions = partitions(numPartitions, partition);
         long indexBits = indexBits(bits, ib, numPartitions, partition);
         byte[] weights = weights(ib);
@@ -91,9 +91,9 @@ final class BC6HDecoder extends BPTCDecoder {
                 indexBits >>>= ib;
 
                 int pIndex = partitions & 3;
-                short r = finalUnquantize(interpolate(colors[pIndex * 6/**/], colors[pIndex * 6 + 3], weight), signed);
-                short g = finalUnquantize(interpolate(colors[pIndex * 6 + 1], colors[pIndex * 6 + 4], weight), signed);
-                short b = finalUnquantize(interpolate(colors[pIndex * 6 + 2], colors[pIndex * 6 + 5], weight), signed);
+                short r = finalUnquantize(interpolate(colors[pIndex * 8/**/], colors[pIndex * 8 + 4], weight), signed);
+                short g = finalUnquantize(interpolate(colors[pIndex * 8 + 1], colors[pIndex * 8 + 5], weight), signed);
+                short b = finalUnquantize(interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], weight), signed);
                 partitions >>>= 2;
 
                 writer.write(dst, dstPos + x * pixelStride, r, g, b);
@@ -192,16 +192,16 @@ final class BC6HDecoder extends BPTCDecoder {
 
     private static final class Mode {
         private final boolean te;
-        private final byte pb;
+        private final boolean pb;
         private final byte epb;
         private final byte rb;
         private final byte gb;
         private final byte bb;
         private final short[] ops;
 
-        private Mode(boolean te, int pb, int epb, int rb, int gb, int bb, short[] ops) {
+        private Mode(boolean te, boolean pb, int epb, int rb, int gb, int bb, short[] ops) {
             this.te = te;
-            this.pb = (byte) pb;
+            this.pb = pb;
             this.epb = (byte) epb;
             this.rb = (byte) rb;
             this.gb = (byte) gb;

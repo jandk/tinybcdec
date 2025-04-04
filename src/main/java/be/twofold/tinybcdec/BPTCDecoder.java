@@ -36,6 +36,7 @@ abstract class BPTCDecoder extends BlockDecoder {
         +6, +2, +6, +8, 15, 15, +2, +2,
         15, 15, 15, 15, 15, +2, +2, 15,
     };
+
     private static final byte[] ANCHOR_21 = {
         +3, +3, 15, 15, +8, +3, 15, 15,
         +8, +8, +6, +6, +6, +5, +3, +3,
@@ -46,6 +47,7 @@ abstract class BPTCDecoder extends BlockDecoder {
         +3, 15, +5, +5, +5, +8, +5, 10,
         +5, 10, +8, 13, 15, 12, +3, +3,
     };
+
     private static final byte[] ANCHOR_22 = {
         15, +8, +8, +3, 15, 15, +3, +8,
         15, 15, 15, 15, 15, 15, 15, +8,
@@ -64,6 +66,9 @@ abstract class BPTCDecoder extends BlockDecoder {
         {0, 9, 18, 27, 37, 46, 55, 64},
         {0, 4, 9, 13, 17, 21, 26, 30, 34, 38, 43, 47, 51, 55, 60, 64},
     };
+
+    static final boolean T = true;
+    static final boolean F = false;
 
     BPTCDecoder(BlockFormat format, int pixelStride) {
         super(format, pixelStride);

@@ -6,14 +6,14 @@ final class BC7Decoder extends BPTCDecoder {
     private static final int BPP = 4;
 
     private static final List<Mode> MODES = List.of(
-        new Mode(3, 4, 0, 0, 4, 0, 1, 0, 3, 0),
-        new Mode(2, 6, 0, 0, 6, 0, 0, 1, 3, 0),
-        new Mode(3, 6, 0, 0, 5, 0, 0, 0, 2, 0),
-        new Mode(2, 6, 0, 0, 7, 0, 1, 0, 2, 0),
-        new Mode(1, 0, 2, 1, 5, 6, 0, 0, 2, 3),
-        new Mode(1, 0, 2, 0, 7, 8, 0, 0, 2, 2),
-        new Mode(1, 0, 0, 0, 7, 7, 1, 0, 4, 0),
-        new Mode(2, 6, 0, 0, 5, 5, 1, 0, 2, 0)
+        new Mode(3, 4, F, F, 4, 0, T, F, 3, 0),
+        new Mode(2, 6, F, F, 6, 0, F, T, 3, 0),
+        new Mode(3, 6, F, F, 5, 0, F, F, 2, 0),
+        new Mode(2, 6, F, F, 7, 0, T, F, 2, 0),
+        new Mode(1, 0, T, T, 5, 6, F, F, 2, 3),
+        new Mode(1, 0, T, F, 7, 8, F, F, 2, 2),
+        new Mode(1, 0, F, F, 7, 7, T, F, 4, 0),
+        new Mode(2, 6, F, F, 5, 5, T, F, 2, 0)
     );
 
     BC7Decoder() {
@@ -22,26 +22,23 @@ final class BC7Decoder extends BPTCDecoder {
 
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        Bits bits = Bits.from(src, srcPos);
-
         int modeIndex = Integer.numberOfTrailingZeros(src[srcPos]);
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride);
             return;
         }
 
+        Bits bits = Bits.from(src, srcPos);
         bits.get(modeIndex + 1); // Skip mode bits
         Mode mode = MODES.get(modeIndex);
-        int partition = bits.get(mode.pb);
-        int rotation = bits.get(mode.rb);
-        boolean selection = bits.get(mode.isb) != 0;
+        int partition = mode.pb != 0 ? bits.get(mode.pb) : 0;
+        int rotation = mode.rb ? bits.get(2) : 0;
+        boolean selection = mode.isb && bits.get1() != 0;
 
-        // Great, switching from an int[][] to an int[], increased perf by 40%.
-        // I'll take the small readability hit.
-        int numColors = mode.ns * 2;
-        int[] colors = new int[numColors * 4];
+        int[] colors = new int[6 * 4];
 
         // Read colors
+        int numColors = mode.ns * 2;
         for (int c = 0; c < 3; c++) {
             for (int i = 0; i < numColors; i++) {
                 colors[i * 4 + c] = bits.get(mode.cb);
@@ -56,7 +53,7 @@ final class BC7Decoder extends BPTCDecoder {
         }
 
         // Read endpoint p-bits
-        if (mode.epb != 0) {
+        if (mode.epb) {
             for (int i = 0; i < numColors; i++) {
                 int pBit = bits.get1();
                 for (int c = 0; c < 4; c++) {
@@ -66,7 +63,7 @@ final class BC7Decoder extends BPTCDecoder {
         }
 
         // Read shared p-bits
-        if (mode.spb != 0) {
+        if (mode.spb) {
             int sBit1 = bits.get1();
             int sBit2 = bits.get1();
             for (int c = 0; c < 4; c++) {
@@ -78,8 +75,9 @@ final class BC7Decoder extends BPTCDecoder {
         }
 
         // Unpack colors
-        int colorBits = mode.cb + (mode.epb + mode.spb);
-        int alphaBits = mode.ab + (mode.epb + mode.spb);
+        int extraBits = (mode.epb ? 1 : 0) + (mode.spb ? 1 : 0);
+        int colorBits = mode.cb + extraBits;
+        int alphaBits = mode.ab + extraBits;
         for (int i = 0; i < numColors; i++) {
             if (colorBits < 8) {
                 colors[i * 4/**/] = unpack(colors[i * 4/**/], colorBits);
@@ -169,24 +167,24 @@ final class BC7Decoder extends BPTCDecoder {
     private static final class Mode {
         private final byte ns;
         private final byte pb;
-        private final byte rb;
-        private final byte isb;
+        private final boolean rb;
+        private final boolean isb;
         private final byte cb;
         private final byte ab;
-        private final byte epb;
-        private final byte spb;
+        private final boolean epb;
+        private final boolean spb;
         private final byte ib1;
         private final byte ib2;
 
-        private Mode(int ns, int pb, int rb, int isb, int cb, int ab, int epb, int spb, int ib1, int ib2) {
+        private Mode(int ns, int pb, boolean rb, boolean isb, int cb, int ab, boolean epb, boolean spb, int ib1, int ib2) {
             this.ns = (byte) ns;
             this.pb = (byte) pb;
-            this.rb = (byte) rb;
-            this.isb = (byte) isb;
+            this.rb = rb;
+            this.isb = isb;
             this.cb = (byte) cb;
             this.ab = (byte) ab;
-            this.epb = (byte) epb;
-            this.spb = (byte) spb;
+            this.epb = epb;
+            this.spb = spb;
             this.ib1 = (byte) ib1;
             this.ib2 = (byte) ib2;
         }

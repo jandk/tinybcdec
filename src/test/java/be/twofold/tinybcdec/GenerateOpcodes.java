@@ -27,7 +27,7 @@ final class GenerateOpcodes {
                 if (s.startsWith("M") || s.startsWith("PB")) {
                     continue;
                 }
-                int index = COLORS.get(s.charAt(0)) + 3 * (s.charAt(1) - '0');
+                int index = COLORS.get(s.charAt(0)) + 4 * (s.charAt(1) - '0');
                 String[] range = s.split("\\.\\.");
                 int range1 = Integer.parseInt(range[0].substring(2));
                 int range2 = range.length == 2 ? Integer.parseInt(range[1]) : range1;
