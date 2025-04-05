@@ -133,27 +133,56 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If the source or destination data is too small.
      */
     public void decode(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos) {
-        if (width <= 0) {
-            throw new IllegalArgumentException("width must be greater than 0");
+        decode(src, srcPos, width, height, dst, dstPos, width, height);
+    }
+
+    /**
+     * Decode an entire image, using an existing byte array as the destination.
+     * <p>
+     * The destination data must have enough room to store the entire image.
+     *
+     * @param src       The source data.
+     * @param srcPos    The position in the source data.
+     * @param srcWidth  The width of the source data.
+     * @param srcHeight The height of the source data.
+     * @param dst       The destination data.
+     * @param dstPos    The position in the destination data.
+     * @param dstWidth  The dstWidth of the image.
+     * @param dstHeight The dstHeight of the image.
+     * @throws IllegalArgumentException  If the dstWidth or dstHeight is less than or equal to 0.
+     * @throws IndexOutOfBoundsException If the source or destination data is too small.
+     */
+    public void decode(byte[] src, int srcPos, int srcWidth, int srcHeight, byte[] dst, int dstPos, int dstWidth, int dstHeight) {
+        if (srcWidth <= 0) {
+            throw new IllegalArgumentException("srcWidth must be greater than 0");
         }
-        if (height <= 0) {
-            throw new IllegalArgumentException("height must be greater than 0");
+        if (srcHeight <= 0) {
+            throw new IllegalArgumentException("srcHeight must be greater than 0");
+        }
+        if (dstWidth <= 0 || dstWidth > srcWidth) {
+            throw new IllegalArgumentException("dstWidth must be greater than 0 and not greater than srcWidth");
+        }
+        if (dstHeight <= 0 || dstHeight > srcHeight) {
+            throw new IllegalArgumentException("dstHeight must be greater than 0 and not greater than srcHeight");
         }
 
-        int lineStride = width * pixelStride;
-        Objects.checkFromIndexSize(srcPos, format.size(width, height), src.length);
-        Objects.checkFromIndexSize(dstPos, height * lineStride, dst.length);
+        int lineStride = dstWidth * pixelStride;
+        Objects.checkFromIndexSize(srcPos, format.size(srcWidth, srcHeight), src.length);
+        Objects.checkFromIndexSize(dstPos, dstHeight * lineStride, dst.length);
 
-        for (int y = 0; y < height; y += BLOCK_HEIGHT) {
+        int bpb = format.getBytesPerBlock();
+        for (int y = 0; y < dstHeight; y += BLOCK_HEIGHT) {
             int lineOffset = dstPos + y * lineStride;
-            for (int x = 0; x < width; x += BLOCK_WIDTH) {
+            for (int x = 0; x < srcWidth; x += BLOCK_WIDTH, srcPos += bpb) {
+                if (x >= dstWidth) {
+                    continue;
+                }
                 int dstOffset = lineOffset + x * pixelStride;
-                if (y + BLOCK_HEIGHT <= height && x + BLOCK_WIDTH <= width) {
+                if (y + BLOCK_HEIGHT <= dstHeight && x + BLOCK_WIDTH <= dstWidth) {
                     decodeBlock(src, srcPos, dst, dstOffset, lineStride);
                 } else {
-                    partialBlock(width, height, src, srcPos, dst, dstOffset, x, y, lineStride);
+                    partialBlock(dstWidth, dstHeight, src, srcPos, dst, dstOffset, x, y, lineStride);
                 }
-                srcPos += format.getBytesPerBlock();
             }
         }
     }
