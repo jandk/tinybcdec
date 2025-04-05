@@ -37,9 +37,6 @@ class BlockDecoderTest {
 
                 for (int y = 0; y < h; y++) {
                     for (int x = 0; x < w; x++) {
-                        if (dst[y * w + x + dstOffset] != expected[y * srcWidth + x]) {
-                            System.out.println("Fail");
-                        }
                         assertThat(dst[y * w + x + dstOffset]).isEqualTo(expected[y * srcWidth + x]);
                     }
                 }
