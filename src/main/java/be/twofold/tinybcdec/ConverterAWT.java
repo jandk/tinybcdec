@@ -1,15 +1,14 @@
-package be.twofold.tinybcdec.converter;
+package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.*;
 import be.twofold.tinybcdec.utils.*;
 
 import java.awt.color.*;
 import java.awt.image.*;
 import java.nio.*;
 
-public final class AWTConverter extends Converter<BufferedImage> {
+final class ConverterAWT extends Converter<BufferedImage> {
     @Override
-    protected BufferedImage convert(int width, int height, byte[] decoded, int pixelStride) {
+    BufferedImage convert(int width, int height, byte[] decoded, int pixelStride) {
         if (pixelStride == 1) {
             return convertStride1(width, height, decoded);
         } else if (pixelStride == 3) {

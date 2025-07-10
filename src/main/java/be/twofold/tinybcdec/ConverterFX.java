@@ -1,14 +1,13 @@
-package be.twofold.tinybcdec.converter;
+package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.*;
 import be.twofold.tinybcdec.utils.*;
 import javafx.scene.image.*;
 
 import java.nio.*;
 
-public final class FXConverter extends Converter<Image> {
+final class ConverterFX extends Converter<Image> {
     @Override
-    protected Image convert(int width, int height, byte[] decoded, int pixelStride) {
+    Image convert(int width, int height, byte[] decoded, int pixelStride) {
         ByteBuffer in = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN);
         IntBuffer out = IntBuffer.allocate(width * height);
         switch (pixelStride) {
