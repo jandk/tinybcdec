@@ -1,6 +1,6 @@
 package be.twofold.tinybcdec;
 
-abstract class BPTCDecoder extends BlockDecoder {
+abstract class BPTC extends BlockDecoder {
     private static final int[][] PARTITIONS = {
         {},
         {0},
@@ -70,7 +70,7 @@ abstract class BPTCDecoder extends BlockDecoder {
     static final boolean T = true;
     static final boolean F = false;
 
-    BPTCDecoder(BlockFormat format, int pixelStride) {
+    BPTC(BlockFormat format, int pixelStride) {
         super(format, pixelStride);
     }
 

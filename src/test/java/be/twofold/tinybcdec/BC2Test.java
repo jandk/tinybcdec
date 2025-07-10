@@ -6,16 +6,16 @@ import java.io.*;
 
 import static org.assertj.core.api.Assertions.*;
 
-class BC4UDecoderTest {
+class BC2Test {
 
-    private final BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC4U);
+    private final BlockDecoder decoder = BlockDecoder.bc2();
 
     @Test
-    void testBC4U() throws IOException {
-        byte[] src = BCTestUtils.readResource("/bc4u.dds");
+    void testBC2() throws IOException {
+        byte[] src = BCTestUtils.readResource("/bc2.dds");
 
         byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
-        byte[] expected = BCTestUtils.readPng("/bc4u.png");
+        byte[] expected = BCTestUtils.readPng("/bc2.png");
 
         assertThat(actual).isEqualTo(expected);
     }

@@ -1,10 +1,12 @@
 package be.twofold.tinybcdec;
 
-final class BC2Decoder extends BlockDecoder {
-    private static final int BPP = 4;
-    private static final BC1Decoder COLOR_DECODER = new BC1Decoder(BC1Decoder.Mode.BC2OR3);
+final class BC2 extends BlockDecoder {
+    static final BC2 INSTANCE = new BC2();
 
-    BC2Decoder() {
+    private static final int BPP = 4;
+    private static final BC1 COLOR_DECODER = new BC1(BC1.Mode.BC2OR3);
+
+    private BC2() {
         super(BlockFormat.BC2, BPP);
     }
 

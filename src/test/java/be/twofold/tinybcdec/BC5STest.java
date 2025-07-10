@@ -6,12 +6,12 @@ import java.io.*;
 
 import static org.assertj.core.api.Assertions.*;
 
-class BC5SDecoderTest {
+class BC5STest {
 
     @Test
     void testBC5S() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
-        byte[] actual = BlockDecoder.create(BlockFormat.BC5S)
+        byte[] actual = BlockDecoder.bc5(true, false)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc5s.png");
 
@@ -25,7 +25,7 @@ class BC5SDecoderTest {
     @Test
     void testBC5SReconstructZ() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
-        byte[] actual = BlockDecoder.create(BlockFormat.BC5S_RECONSTRUCT_Z)
+        byte[] actual = BlockDecoder.bc5(true, true)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
 
         byte[] expected = BCTestUtils.readPng("/bc5s_reconstructed.png");

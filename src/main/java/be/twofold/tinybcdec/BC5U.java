@@ -1,13 +1,13 @@
 package be.twofold.tinybcdec;
 
-final class BC5SDecoder extends BlockDecoder {
+final class BC5U extends BlockDecoder {
     private static final int BPP = 3;
-    private static final BC4SDecoder DECODER = new BC4SDecoder(BPP);
+    private static final BC4U DECODER = new BC4U(BPP);
 
     private final boolean reconstructZ;
 
-    BC5SDecoder(boolean reconstructZ) {
-        super(reconstructZ ? BlockFormat.BC5S_RECONSTRUCT_Z : BlockFormat.BC5S, BPP);
+    BC5U(boolean reconstructZ) {
+        super(reconstructZ ? BlockFormat.BC5U_RECONSTRUCT_Z : BlockFormat.BC5U, BPP);
         this.reconstructZ = reconstructZ;
     }
 

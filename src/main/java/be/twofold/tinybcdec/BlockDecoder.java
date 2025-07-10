@@ -5,7 +5,7 @@ import java.util.*;
 /**
  * This is the main class for decoding block compressed textures.
  * <p>
- * To create a new instance, use the {@link #create(BlockFormat)} method.
+ * To create a new instance, use one of the static factory methods starting with {@code bc}.
  * <p>
  * To decode an entire image, use the {@link #decode(int, int, byte[], int)} or {@link #decode(int, int, byte[], int, byte[], int)} method.
  * Depending on if you want to allocate a new byte array or use an existing one.
@@ -25,46 +25,72 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Creates a new block decoder for the given format and order.
+     * Returns a block decoder for BC1.
      *
-     * @param format The block format.
+     * @param opaque Whether to decode the image as opaque or not.
      * @return The block decoder.
      */
-    public static BlockDecoder create(BlockFormat format) {
-        switch (format) {
-            case BC1:
-                return new BC1Decoder(BC1Decoder.Mode.NORMAL);
-            case BC1_NO_ALPHA:
-                return new BC1Decoder(BC1Decoder.Mode.OPAQUE);
-            case BC2:
-                return new BC2Decoder();
-            case BC3:
-                return new BC3Decoder();
-            case BC4U:
-                return new BC4UDecoder(1);
-            case BC4S:
-                return new BC4SDecoder(1);
-            case BC5U:
-                return new BC5UDecoder(false);
-            case BC5U_RECONSTRUCT_Z:
-                return new BC5UDecoder(true);
-            case BC5S:
-                return new BC5SDecoder(false);
-            case BC5S_RECONSTRUCT_Z:
-                return new BC5SDecoder(true);
-            case BC6H_UF16:
-                return new BC6HDecoder(false, false);
-            case BC6H_SF16:
-                return new BC6HDecoder(true, false);
-            case BC6H_UF32:
-                return new BC6HDecoder(false, true);
-            case BC6H_SF32:
-                return new BC6HDecoder(true, true);
-            case BC7:
-                return new BC7Decoder();
-            default:
-                throw new IllegalArgumentException("Unsupported format: " + format);
-        }
+    public static BlockDecoder bc1(boolean opaque) {
+        return new BC1(opaque ? BC1.Mode.OPAQUE : BC1.Mode.NORMAL);
+    }
+
+    /**
+     * Returns a block decoder for BC2.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc2() {
+        return BC2.INSTANCE;
+    }
+
+    /**
+     * Returns a block decoder for BC3.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc3() {
+        return BC3.INSTANCE;
+    }
+
+    /**
+     * Returns a block decoder for BC4.
+     *
+     * @param signed Whether to interpret the data as signed or unsigned.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc4(boolean signed) {
+        return signed ? new BC4S(1) : new BC4U(1);
+    }
+
+    /**
+     * Returns a block decoder for BC5.
+     *
+     * @param signed       Whether to interpret the data as signed or unsigned.
+     * @param reconstructZ Whether to reconstruct the Z component or not.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc5(boolean signed, boolean reconstructZ) {
+        return signed ? new BC5S(reconstructZ) : new BC5U(reconstructZ);
+    }
+
+    /**
+     * Returns a block decoder for BC6H.
+     *
+     * @param signed  Whether to interpret the data as signed or unsigned.
+     * @param asFloat Whether to interpret the data as float or half float.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc6h(boolean signed, boolean asFloat) {
+        return new BC6H(signed, asFloat);
+    }
+
+    /**
+     * Returns a block decoder for BC7.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc7() {
+        return BC7.INSTANCE;
     }
 
     /**

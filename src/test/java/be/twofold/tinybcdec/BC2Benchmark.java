@@ -15,7 +15,7 @@ public class BC2Benchmark {
 
         public BC2State() {
             try {
-                decoder = BlockDecoder.create(BlockFormat.BC2);
+                decoder = BlockDecoder.bc2();
                 src = BCTestUtils.readResource("/bc2.dds");
                 dst = new byte[256 * 256 * 4];
             } catch (IOException e) {

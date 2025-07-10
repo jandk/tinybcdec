@@ -15,7 +15,7 @@ public class BC3Benchmark {
 
         public BC3State() {
             try {
-                decoder = BlockDecoder.create(BlockFormat.BC3);
+                decoder = BlockDecoder.bc3();
                 src = BCTestUtils.readResource("/bc3.dds");
                 dst = new byte[256 * 256 * 4];
             } catch (IOException e) {

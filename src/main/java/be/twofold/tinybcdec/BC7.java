@@ -2,7 +2,9 @@ package be.twofold.tinybcdec;
 
 import java.util.*;
 
-final class BC7Decoder extends BPTCDecoder {
+final class BC7 extends BPTC {
+    static final BC7 INSTANCE = new BC7();
+
     private static final int BPP = 4;
 
     private static final List<Mode> MODES = List.of(
@@ -16,7 +18,7 @@ final class BC7Decoder extends BPTCDecoder {
         new Mode(2, 6, F, F, 5, 5, T, F, 2, 0)
     );
 
-    BC7Decoder() {
+    private BC7() {
         super(BlockFormat.BC7, BPP);
     }
 

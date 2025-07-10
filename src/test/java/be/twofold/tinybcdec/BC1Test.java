@@ -6,9 +6,9 @@ import java.io.*;
 
 import static org.assertj.core.api.Assertions.*;
 
-class BC1DecoderTest {
+class BC1Test {
 
-    private final BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1);
+    private final BlockDecoder decoder = BlockDecoder.bc1(false);
 
     @Test
     void testBC1() throws IOException {

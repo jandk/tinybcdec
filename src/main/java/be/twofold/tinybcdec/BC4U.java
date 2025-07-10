@@ -1,7 +1,7 @@
 package be.twofold.tinybcdec;
 
-final class BC4UDecoder extends BlockDecoder {
-    BC4UDecoder(int pixelStride) {
+final class BC4U extends BlockDecoder {
+    BC4U(int pixelStride) {
         super(BlockFormat.BC4U, pixelStride);
     }
 

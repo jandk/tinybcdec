@@ -15,7 +15,7 @@ public class BC7Benchmark {
 
         public BC7State() {
             try {
-                decoder = BlockDecoder.create(BlockFormat.BC7);
+                decoder = BlockDecoder.bc7();
                 src = BCTestUtils.readResource("/bc7.dds");
                 dst = new byte[256 * 256 * 4];
             } catch (IOException e) {
