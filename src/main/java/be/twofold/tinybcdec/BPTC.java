@@ -70,8 +70,8 @@ abstract class BPTC extends BlockDecoder {
     static final boolean T = true;
     static final boolean F = false;
 
-    BPTC(BlockFormat format, int pixelStride) {
-        super(format, pixelStride);
+    BPTC(int pixelStride) {
+        super(pixelStride, 16);
     }
 
     static int partitions(int numPartitions, int partitionIndex) {

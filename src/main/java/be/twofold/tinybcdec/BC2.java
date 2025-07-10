@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import be.twofold.tinybcdec.utils.*;
+
 final class BC2 extends BlockDecoder {
     static final BC2 INSTANCE = new BC2();
 
@@ -7,7 +9,7 @@ final class BC2 extends BlockDecoder {
     private static final BC1 COLOR_DECODER = new BC1(BC1.Mode.BC2OR3);
 
     private BC2() {
-        super(BlockFormat.BC2, BPP);
+        super(BPP, 16);
     }
 
     @Override

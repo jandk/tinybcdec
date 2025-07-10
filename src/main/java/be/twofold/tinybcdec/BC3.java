@@ -8,7 +8,7 @@ final class BC3 extends BlockDecoder {
     private static final BC4U ALPHA_DECODER = new BC4U(BPP);
 
     private BC3() {
-        super(BlockFormat.BC3, BPP);
+        super(BPP, 16);
     }
 
     @Override

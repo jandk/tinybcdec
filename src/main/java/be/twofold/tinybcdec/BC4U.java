@@ -1,8 +1,10 @@
 package be.twofold.tinybcdec;
 
+import be.twofold.tinybcdec.utils.*;
+
 final class BC4U extends BlockDecoder {
     BC4U(int pixelStride) {
-        super(BlockFormat.BC4U, pixelStride);
+        super(pixelStride, 8);
     }
 
     @Override

@@ -16,12 +16,12 @@ public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
     static final int BLOCK_HEIGHT = 4;
 
-    private final BlockFormat format;
     final int pixelStride;
+    final int bytesPerBlock;
 
-    BlockDecoder(BlockFormat format, int pixelStride) {
-        this.format = format;
+    BlockDecoder(int pixelStride, int bytesPerBlock) {
         this.pixelStride = pixelStride;
+        this.bytesPerBlock = bytesPerBlock;
     }
 
     /**
@@ -137,12 +137,10 @@ public abstract class BlockDecoder {
      * @return The newly allocated decoded and converted image.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
      * @throws IndexOutOfBoundsException If the source data is too small.
-     * @see be.twofold.tinybcdec.Converter.AWT
-     * @see be.twofold.tinybcdec.Converter.FX
      */
     public <T> T decode(int width, int height, byte[] src, int srcPos, Converter<T> converter) {
         byte[] decoded = decode(width, height, src, srcPos);
-        return converter.convert(width, height, decoded, format);
+        return converter.convert(width, height, decoded, pixelStride);
     }
 
     /**
@@ -193,13 +191,12 @@ public abstract class BlockDecoder {
         }
 
         int lineStride = dstWidth * pixelStride;
-        Objects.checkFromIndexSize(srcPos, format.size(srcWidth, srcHeight), src.length);
+        Objects.checkFromIndexSize(srcPos, byteSize(srcWidth, srcHeight), src.length);
         Objects.checkFromIndexSize(dstPos, dstHeight * lineStride, dst.length);
 
-        int bpb = format.getBytesPerBlock();
         for (int y = 0; y < dstHeight; y += BLOCK_HEIGHT) {
             int lineOffset = dstPos + y * lineStride;
-            for (int x = 0; x < srcWidth; x += BLOCK_WIDTH, srcPos += bpb) {
+            for (int x = 0; x < srcWidth; x += BLOCK_WIDTH, srcPos += bytesPerBlock) {
                 if (x >= dstWidth) {
                     continue;
                 }
@@ -211,6 +208,19 @@ public abstract class BlockDecoder {
                 }
             }
         }
+    }
+
+    /**
+     * Returns the size in bytes that is required to store an image with the given width and height.
+     *
+     * @param width  the width of the image
+     * @param height the height of the image
+     * @return the size in bytes that is required to store an image with the given width and height
+     */
+    public int byteSize(int width, int height) {
+        int widthInBlocks = (width + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
+        int heightInBlocks = (height + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
+        return widthInBlocks * heightInBlocks * bytesPerBlock;
     }
 
     private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int lineStride) {

@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import be.twofold.tinybcdec.utils.*;
+
 import java.util.*;
 
 final class BC6H extends BPTC {
@@ -26,7 +28,7 @@ final class BC6H extends BPTC {
     private final PixelWriter writer;
 
     BC6H(boolean signed, boolean asFloat) {
-        super(signed ? BlockFormat.BC6H_SF16 : BlockFormat.BC6H_UF16, asFloat ? 12 : 6);
+        super(asFloat ? 12 : 6);
         this.signed = signed;
         this.writer = PixelWriter.create(asFloat);
     }

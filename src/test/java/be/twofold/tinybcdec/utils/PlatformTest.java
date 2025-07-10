@@ -1,5 +1,6 @@
-package be.twofold.tinybcdec;
+package be.twofold.tinybcdec.utils;
 
+import be.twofold.tinybcdec.*;
 import org.junit.jupiter.api.*;
 
 import java.io.*;

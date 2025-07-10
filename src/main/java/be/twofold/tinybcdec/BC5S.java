@@ -7,7 +7,7 @@ final class BC5S extends BlockDecoder {
     private final boolean reconstructZ;
 
     BC5S(boolean reconstructZ) {
-        super(reconstructZ ? BlockFormat.BC5S_RECONSTRUCT_Z : BlockFormat.BC5S, BPP);
+        super(BPP, 16);
         this.reconstructZ = reconstructZ;
     }
 

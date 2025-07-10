@@ -1,9 +1,9 @@
-package be.twofold.tinybcdec;
+package be.twofold.tinybcdec.utils;
 
 import java.lang.invoke.*;
 import java.nio.*;
 
-final class ByteArrays {
+public final class ByteArrays {
     private static final VarHandle ShortVarHandle =
         MethodHandles.byteArrayViewVarHandle(short[].class, ByteOrder.LITTLE_ENDIAN);
     private static final VarHandle IntVarHandle =
@@ -16,27 +16,31 @@ final class ByteArrays {
     private ByteArrays() {
     }
 
-    static void setShort(byte[] array, int index, short value) {
+    public static void setShort(byte[] array, int index, short value) {
         ShortVarHandle.set(array, index, value);
     }
 
-    static void setInt(byte[] array, int index, int value) {
+    public static void setInt(byte[] array, int index, int value) {
         IntVarHandle.set(array, index, value);
     }
 
-    static void setFloat(byte[] array, int index, float value) {
+    public static void setFloat(byte[] array, int index, float value) {
         FloatVarHandle.set(array, index, value);
     }
 
-    static short getShort(byte[] array, int index) {
+    public static short getShort(byte[] array, int index) {
         return (short) ShortVarHandle.get(array, index);
     }
 
-    static int getInt(byte[] array, int index) {
+    public static int getInt(byte[] array, int index) {
         return (int) IntVarHandle.get(array, index);
     }
 
-    static long getLong(byte[] array, int index) {
+    public static long getLong(byte[] array, int index) {
         return (long) LongVarHandle.get(array, index);
+    }
+
+    public static float getFloat(byte[] array, int index) {
+        return (float) FloatVarHandle.get(array, index);
     }
 }

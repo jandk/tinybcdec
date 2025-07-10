@@ -5,13 +5,13 @@ import java.awt.image.*;
 import java.io.*;
 import java.util.*;
 
-final class BCTestUtils {
+public final class BCTestUtils {
     public static final int DDS_HEADER_SIZE = 148;
 
     private BCTestUtils() {
     }
 
-    static byte[] readResource(String path) throws IOException {
+    public static byte[] readResource(String path) throws IOException {
         try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
             return in.readAllBytes();
         }

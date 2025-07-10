@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import be.twofold.tinybcdec.utils.*;
+
 import java.util.*;
 
 final class BC7 extends BPTC {
@@ -19,7 +21,7 @@ final class BC7 extends BPTC {
     );
 
     private BC7() {
-        super(BlockFormat.BC7, BPP);
+        super(BPP);
     }
 
     @Override

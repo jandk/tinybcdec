@@ -1,8 +1,8 @@
-package be.twofold.tinybcdec;
+package be.twofold.tinybcdec.utils;
 
 import java.lang.invoke.*;
 
-final class Platform {
+public final class Platform {
     private static MethodHandle Float16ToFloatHandle;
 
     static {
