@@ -24,7 +24,7 @@ directly AWT, JavaFX, or even OpenGL or Vulkan.
 
 ## Usage
 
-Using the library is very easy, all you need is the compressed data, and the format of the data.
+Using the library is straightforward, all you need is the compressed data, and the format of the data.
 
 The following features are present:
 
@@ -71,9 +71,9 @@ Some quick benchmarks, tested on a Ryzen 5950X:
 - BC6: ~130MP/s
 - BC7: ~150MP/s
 
-These numbers are just a rough estimate, and can vary depending on the hardware and the JVM.
+These numbers are just an estimate, and can vary depending on the hardware and the JVM.
 
-To give you an idea, this means about 30ms to decode a 4K texture in BC1, and about 120ms for BC6 or BC7.
+To give you an idea, this means about 30 ms to decode a 4K texture in BC1, and about 120 ms for BC6 or BC7.
 
 ## Accuracy
 

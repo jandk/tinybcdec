@@ -42,7 +42,7 @@ final class Platform {
             return sign * (0x1p-24f * m); // Smallest denormal in float16
         }
 
-        // Infinity and NaN, propagate the mantissa for signalling NaN
+        // Infinity and NaN, propagate the mantissa for signaling NaN
         if (e == 31) {
             return Float.intBitsToFloat(s | 0x7F800000 | m << 13);
         }
