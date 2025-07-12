@@ -1,7 +1,5 @@
 package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.utils.*;
-
 final class BC1 extends BlockDecoder {
     private static final int BPP = 4;
 

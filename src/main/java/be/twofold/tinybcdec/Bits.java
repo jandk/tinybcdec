@@ -1,7 +1,5 @@
 package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.utils.*;
-
 final class Bits {
     private long lo;
     private long hi;

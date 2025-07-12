@@ -1,7 +1,5 @@
 package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.utils.*;
-
 import java.awt.color.*;
 import java.awt.image.*;
 import java.nio.*;

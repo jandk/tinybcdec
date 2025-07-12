@@ -1,7 +1,5 @@
 package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.utils.*;
-
 final class BC2 extends BlockDecoder {
     static final BC2 INSTANCE = new BC2();
 

@@ -1,8 +1,8 @@
-package be.twofold.tinybcdec.utils;
+package be.twofold.tinybcdec;
 
 import java.lang.invoke.*;
 
-public final class Platform {
+final class Platform {
     private static MethodHandle Float16ToFloatHandle;
 
     static {
@@ -22,7 +22,7 @@ public final class Platform {
     private Platform() {
     }
 
-    public static float float16ToFloat(short floatBinary16) {
+    static float float16ToFloat(short floatBinary16) {
         try {
             return (float) Float16ToFloatHandle.invokeExact(floatBinary16);
         } catch (Throwable e) {
@@ -47,7 +47,7 @@ public final class Platform {
             return Float.intBitsToFloat(s | 0x7F800000 | m << 13);
         }
 
-        // Adjust exponent, and put everything back together
+        // Adjust exponent and put everything back together
         e += (127 - 15);
         return Float.intBitsToFloat(s | e << 23 | m << 13);
     }

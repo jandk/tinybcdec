@@ -1,6 +1,5 @@
 package be.twofold.tinybcdec;
 
-import be.twofold.tinybcdec.utils.*;
 import javafx.scene.image.*;
 
 import java.nio.*;
