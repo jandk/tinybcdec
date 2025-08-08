@@ -7,7 +7,6 @@ import java.nio.*;
 final class ConverterFX extends Converter<Image> {
     @Override
     Image convert(int width, int height, byte[] decoded, int pixelStride) {
-        ByteBuffer in = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN);
         IntBuffer out = IntBuffer.allocate(width * height);
         switch (pixelStride) {
             case 1:
@@ -17,10 +16,10 @@ final class ConverterFX extends Converter<Image> {
                 convertStride3(decoded, out);
                 break;
             case 4:
-                convertStride4(in, out);
+                convertStride4(decoded, out);
                 break;
             case 6:
-                convertStride6(in, out);
+                convertStride6(decoded, out);
                 break;
             default:
                 throw new UnsupportedOperationException();
@@ -44,19 +43,17 @@ final class ConverterFX extends Converter<Image> {
         }
     }
 
-    private void convertStride4(ByteBuffer in, IntBuffer out) {
-        IntBuffer ints = in.asIntBuffer();
-        for (int i = 0, len = ints.remaining(); i < len; i++) {
-            out.put(i, swapRB(ints.get(i)));
+    private void convertStride4(byte[] decoded, IntBuffer out) {
+        for (int i = 0, o = 0; i < decoded.length; i += 4, o++) {
+            out.put(o, swapRB(ByteArrays.getInt(decoded, i)));
         }
     }
 
-    private void convertStride6(ByteBuffer in, IntBuffer out) {
-        ShortBuffer shorts = in.asShortBuffer();
-        for (int i = 0, o = 0, len = in.remaining(); i < len; i += 3, o++) {
-            int r = floatToSRGB(Platform.float16ToFloat(shorts.get(i/**/)));
-            int g = floatToSRGB(Platform.float16ToFloat(shorts.get(i + 1)));
-            int b = floatToSRGB(Platform.float16ToFloat(shorts.get(i + 2)));
+    private void convertStride6(byte[] decoded, IntBuffer out) {
+        for (int i = 0, o = 0; i < decoded.length; i += 6, o++) {
+            int r = floatToSRGB(Platform.float16ToFloat(ByteArrays.getShort(decoded, i/**/)));
+            int g = floatToSRGB(Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 2)));
+            int b = floatToSRGB(Platform.float16ToFloat(ByteArrays.getShort(decoded, i + 4)));
             out.put(o, 0xFF000000 | r << 16 | g << 8 | b);
         }
     }

@@ -2,7 +2,6 @@ package be.twofold.tinybcdec;
 
 import java.awt.color.*;
 import java.awt.image.*;
-import java.nio.*;
 
 final class ConverterAWT extends Converter<BufferedImage> {
     @Override
@@ -21,18 +20,17 @@ final class ConverterAWT extends Converter<BufferedImage> {
         }
     }
 
-    private static BufferedImage convertStride1(int width, int height, byte[] decoded) {
+    private BufferedImage convertStride1(int width, int height, byte[] decoded) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_BYTE_GRAY);
         image.getRaster().setDataElements(0, 0, width, height, decoded);
         return image;
     }
 
-
     private BufferedImage convertStride3(int width, int height, byte[] decoded) {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_RGB);
         int[] rawImage = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-        for (int i = 0, o = 0, len = decoded.length; i < len; i += 3, o++) {
+        for (int i = 0, o = 0; i < decoded.length; i += 3, o++) {
             int r = Byte.toUnsignedInt(decoded[i/**/]);
             int g = Byte.toUnsignedInt(decoded[i + 1]);
             int b = Byte.toUnsignedInt(decoded[i + 2]);
@@ -45,13 +43,13 @@ final class ConverterAWT extends Converter<BufferedImage> {
         BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
         int[] rawImage = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
 
-        for (int i = 0, o = 0, len = decoded.length; i < len; i += 4, o++) {
+        for (int i = 0, o = 0; i < decoded.length; i += 4, o++) {
             rawImage[o] = swapRB(ByteArrays.getInt(decoded, i));
         }
         return image;
     }
 
-    private static BufferedImage convertStride6(int width, int height, byte[] decoded) {
+    private BufferedImage convertStride6(int width, int height, byte[] decoded) {
         ColorModel colorModel = new ComponentColorModel(
             ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB),
             false,
@@ -66,12 +64,9 @@ final class ConverterAWT extends Converter<BufferedImage> {
             null
         );
 
-        ByteBuffer buffer = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN);
         float[] rawImage = ((DataBufferFloat) image.getRaster().getDataBuffer()).getData();
-
-        ShortBuffer shorts = buffer.asShortBuffer();
-        for (int i = 0, len = shorts.capacity(); i < len; i++) {
-            rawImage[i] = Platform.float16ToFloat(shorts.get(i));
+        for (int i = 0, o = 0; i < decoded.length; i += 2, o++) {
+            rawImage[o] = Platform.float16ToFloat(ByteArrays.getShort(decoded, i));
         }
         return image;
     }

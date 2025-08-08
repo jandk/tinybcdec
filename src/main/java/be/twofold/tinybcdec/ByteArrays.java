@@ -10,8 +10,6 @@ final class ByteArrays {
         MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.LITTLE_ENDIAN);
     private static final VarHandle LongVarHandle =
         MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
-    private static final VarHandle FloatVarHandle =
-        MethodHandles.byteArrayViewVarHandle(float[].class, ByteOrder.LITTLE_ENDIAN);
 
     private ByteArrays() {
     }
@@ -24,8 +22,8 @@ final class ByteArrays {
         IntVarHandle.set(array, index, value);
     }
 
-    static void setFloat(byte[] array, int index, float value) {
-        FloatVarHandle.set(array, index, value);
+    static short getShort(byte[] array, int index) {
+        return (short) LongVarHandle.get(array, index);
     }
 
     static int getInt(byte[] array, int index) {
