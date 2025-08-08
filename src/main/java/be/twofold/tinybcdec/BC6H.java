@@ -23,12 +23,10 @@ final class BC6H extends BPTC {
     );
 
     private final boolean signed;
-    private final PixelWriter writer;
 
-    BC6H(boolean signed, boolean asFloat) {
-        super(asFloat ? 12 : 6);
+    BC6H(boolean signed) {
+        super(BPP);
         this.signed = signed;
-        this.writer = PixelWriter.create(asFloat);
     }
 
     @Override
@@ -96,7 +94,10 @@ final class BC6H extends BPTC {
                 short b = finalUnquantize(interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], weight), signed);
                 partitions >>>= 2;
 
-                writer.write(dst, dstPos + x * pixelStride, r, g, b);
+                int o = dstPos + x * BPP;
+                ByteArrays.setShort(dst, o/**/, r);
+                ByteArrays.setShort(dst, o + 2, g);
+                ByteArrays.setShort(dst, o + 4, b);
             }
             dstPos += stride;
         }
@@ -207,31 +208,6 @@ final class BC6H extends BPTC {
             this.gb = (byte) gb;
             this.bb = (byte) bb;
             this.ops = ops;
-        }
-    }
-
-    @FunctionalInterface
-    private interface PixelWriter {
-        void write(byte[] dst, int dstOffset, short r, short g, short b);
-
-        static PixelWriter create(boolean asFloat) {
-            if (asFloat) {
-                return PixelWriter::writePixelF32;
-            } else {
-                return PixelWriter::writePixelF16;
-            }
-        }
-
-        private static void writePixelF32(byte[] dst, int dstPos, short r, short g, short b) {
-            ByteArrays.setFloat(dst, dstPos/**/, Platform.float16ToFloat(r));
-            ByteArrays.setFloat(dst, dstPos + 4, Platform.float16ToFloat(g));
-            ByteArrays.setFloat(dst, dstPos + 8, Platform.float16ToFloat(b));
-        }
-
-        private static void writePixelF16(byte[] dst, int dstPos, short r, short g, short b) {
-            ByteArrays.setShort(dst, dstPos/**/, r);
-            ByteArrays.setShort(dst, dstPos + 2, g);
-            ByteArrays.setShort(dst, dstPos + 4, b);
         }
     }
 }

@@ -22,9 +22,6 @@ final class ConverterFX extends Converter<Image> {
             case 6:
                 convertStride6(in, out);
                 break;
-            case 12:
-                convertStride12(in, out);
-                break;
             default:
                 throw new UnsupportedOperationException();
         }
@@ -60,16 +57,6 @@ final class ConverterFX extends Converter<Image> {
             int r = floatToSRGB(Platform.float16ToFloat(shorts.get(i/**/)));
             int g = floatToSRGB(Platform.float16ToFloat(shorts.get(i + 1)));
             int b = floatToSRGB(Platform.float16ToFloat(shorts.get(i + 2)));
-            out.put(o, 0xFF000000 | r << 16 | g << 8 | b);
-        }
-    }
-
-    private void convertStride12(ByteBuffer in, IntBuffer out) {
-        FloatBuffer floats = in.asFloatBuffer();
-        for (int i = 0, o = 0, len = in.remaining(); i < len; i += 3, o++) {
-            int r = floatToSRGB(floats.get(i/**/));
-            int g = floatToSRGB(floats.get(i + 1));
-            int b = floatToSRGB(floats.get(i + 2));
             out.put(o, 0xFF000000 | r << 16 | g << 8 | b);
         }
     }

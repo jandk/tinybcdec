@@ -15,7 +15,7 @@ public class BC6HBenchmark {
 
         public BC6HState() {
             try {
-                decoder = BlockDecoder.bc6h(false, false);
+                decoder = BlockDecoder.bc6h(false);
                 src = BCTestUtils.readResource("/bc6h_uf16.dds");
                 dst = new byte[256 * 256 * 6];
             } catch (IOException e) {

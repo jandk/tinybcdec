@@ -77,11 +77,10 @@ public abstract class BlockDecoder {
      * Returns a block decoder for BC6H.
      *
      * @param signed  Whether to interpret the data as signed or unsigned.
-     * @param asFloat Whether to interpret the data as float or half float.
      * @return The block decoder.
      */
-    public static BlockDecoder bc6h(boolean signed, boolean asFloat) {
-        return new BC6H(signed, asFloat);
+    public static BlockDecoder bc6h(boolean signed) {
+        return new BC6H(signed);
     }
 
     /**

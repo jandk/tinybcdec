@@ -7,16 +7,17 @@ import java.nio.*;
 final class ConverterAWT extends Converter<BufferedImage> {
     @Override
     BufferedImage convert(int width, int height, byte[] decoded, int pixelStride) {
-        if (pixelStride == 1) {
-            return convertStride1(width, height, decoded);
-        } else if (pixelStride == 3) {
-            return convertStride3(width, height, decoded);
-        } else if (pixelStride == 4) {
-            return convertStride4(width, height, decoded);
-        } else if (pixelStride >= 6) {
-            return convertStride6Plus(width, height, decoded, pixelStride);
-        } else {
-            throw new UnsupportedOperationException();
+        switch (pixelStride) {
+            case 1:
+                return convertStride1(width, height, decoded);
+            case 3:
+                return convertStride3(width, height, decoded);
+            case 4:
+                return convertStride4(width, height, decoded);
+            case 6:
+                return convertStride6(width, height, decoded);
+            default:
+                throw new UnsupportedOperationException();
         }
     }
 
@@ -50,7 +51,7 @@ final class ConverterAWT extends Converter<BufferedImage> {
         return image;
     }
 
-    private static BufferedImage convertStride6Plus(int width, int height, byte[] decoded, int pixelStride) {
+    private static BufferedImage convertStride6(int width, int height, byte[] decoded) {
         ColorModel colorModel = new ComponentColorModel(
             ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB),
             false,
@@ -68,15 +69,9 @@ final class ConverterAWT extends Converter<BufferedImage> {
         ByteBuffer buffer = ByteBuffer.wrap(decoded).order(ByteOrder.LITTLE_ENDIAN);
         float[] rawImage = ((DataBufferFloat) image.getRaster().getDataBuffer()).getData();
 
-        if (pixelStride == 6) {
-            ShortBuffer shorts = buffer.asShortBuffer();
-            for (int i = 0, len = shorts.capacity(); i < len; i++) {
-                rawImage[i] = Platform.float16ToFloat(shorts.get(i));
-            }
-        } else if (pixelStride == 12) {
-            buffer.asFloatBuffer().get(rawImage);
-        } else {
-            throw new UnsupportedOperationException();
+        ShortBuffer shorts = buffer.asShortBuffer();
+        for (int i = 0, len = shorts.capacity(); i < len; i++) {
+            rawImage[i] = Platform.float16ToFloat(shorts.get(i));
         }
         return image;
     }
