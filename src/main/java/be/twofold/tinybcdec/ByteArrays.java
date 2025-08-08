@@ -23,7 +23,7 @@ final class ByteArrays {
     }
 
     static short getShort(byte[] array, int index) {
-        return (short) LongVarHandle.get(array, index);
+        return (short) ShortVarHandle.get(array, index);
     }
 
     static int getInt(byte[] array, int index) {

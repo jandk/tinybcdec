@@ -3,8 +3,6 @@ package be.twofold.tinybcdec;
 import java.util.*;
 
 final class BC7 extends BPTC {
-    static final BC7 INSTANCE = new BC7();
-
     private static final int BPP = 4;
 
     private static final List<Mode> MODES = List.of(
@@ -17,6 +15,8 @@ final class BC7 extends BPTC {
         new Mode(1, 0, F, F, 7, 7, T, F, 4, 0),
         new Mode(2, 6, F, F, 5, 5, T, F, 2, 0)
     );
+
+    static final BC7 INSTANCE = new BC7();
 
     private BC7() {
         super(BPP);
@@ -163,7 +163,8 @@ final class BC7 extends BPTC {
     }
 
     private int unpack(int i, int n) {
-        return i << (8 - n) | i >>> (2 * n - 8);
+        i = i << (8 - n);
+        return i | i >>> n;
     }
 
     private static final class Mode {

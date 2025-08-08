@@ -15,7 +15,7 @@ public class BC5UBenchmark {
 
         public BC5UState() {
             try {
-                decoder = BlockDecoder.bc5(false, false);
+                decoder = BlockDecoder.bc5(false);
                 src = BCTestUtils.readResource("/bc5u.dds");
                 dst = new byte[256 * 256 * 3];
             } catch (IOException e) {

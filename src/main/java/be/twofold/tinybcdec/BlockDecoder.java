@@ -66,11 +66,10 @@ public abstract class BlockDecoder {
      * Returns a block decoder for BC5.
      *
      * @param signed       Whether to interpret the data as signed or unsigned.
-     * @param reconstructZ Whether to reconstruct the Z component or not.
      * @return The block decoder.
      */
-    public static BlockDecoder bc5(boolean signed, boolean reconstructZ) {
-        return signed ? new BC5S(reconstructZ) : new BC5U(reconstructZ);
+    public static BlockDecoder bc5(boolean signed) {
+        return signed ? BC5S.INSTANCE : BC5U.INSTANCE;
     }
 
     /**
@@ -140,7 +139,7 @@ public abstract class BlockDecoder {
      */
     public <T> T decode(int width, int height, byte[] src, int srcPos, Converter<T> converter) {
         byte[] decoded = decode(width, height, src, srcPos);
-        return converter.convert(width, height, decoded, pixelStride);
+        return converter.convert(decoded, width, height, pixelStride);
     }
 
     /**
