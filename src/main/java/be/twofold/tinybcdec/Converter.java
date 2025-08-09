@@ -36,6 +36,7 @@ public abstract class Converter<T> {
     /**
      * Returns a converter for AWT BufferedImage.
      *
+     * @param reconstructZ Whether to reconstruct the Z component of the image or not.
      * @return A converter for AWT BufferedImage
      */
     public static Converter<BufferedImage> awt(boolean reconstructZ) {
@@ -45,6 +46,7 @@ public abstract class Converter<T> {
     /**
      * Returns a converter for JavaFX Image.
      *
+     * @param reconstructZ Whether to reconstruct the Z component of the image or not.
      * @return A converter for JavaFX Image
      */
     public static Converter<Image> fx(boolean reconstructZ) {
