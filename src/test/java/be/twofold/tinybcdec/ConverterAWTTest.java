@@ -33,6 +33,26 @@ class ConverterAWTTest {
     }
 
     @Test
+    void testConvertStride2() {
+        byte[] decoded = {0, 0, -1, 0, 0, -1, -1, -1};
+        int width = 2;
+        int height = 2;
+
+        BufferedImage result = converter.convert(decoded, width, height, 2);
+
+        assertThat(result).isNotNull();
+        assertThat(result.getWidth()).isEqualTo(width);
+        assertThat(result.getHeight()).isEqualTo(height);
+        assertThat(result.getType()).isEqualTo(BufferedImage.TYPE_INT_RGB);
+
+        int[] resultData = ((DataBufferInt) result.getRaster().getDataBuffer()).getData();
+        assertThat(resultData[0]).isEqualTo(0xFF000000);
+        assertThat(resultData[1]).isEqualTo(0xFFFF0000);
+        assertThat(resultData[2]).isEqualTo(0xFF00FF00);
+        assertThat(resultData[3]).isEqualTo(0xFFFFFF00);
+    }
+
+    @Test
     void testConvertStride3() {
         byte[] decoded = {
             (byte) 255, 0, 0,
