@@ -13,7 +13,7 @@ class BlockDecoderTest {
         byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
 
         byte[] actual = BlockDecoder.bc4(Signedness.UNSIGNED)
-            .decode(157, 119, src, BCTestUtils.DDS_HEADER_SIZE);
+            .decode(src, BCTestUtils.DDS_HEADER_SIZE, 157, 119);
         byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
 
         assertThat(actual).isEqualTo(expected);
@@ -48,12 +48,12 @@ class BlockDecoderTest {
     void testValidation() {
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(Opacity.OPAQUE)
-                .decode(0, 256, null, 0))
+                .decode(null, 0, 0, 256))
             .withMessage("srcWidth must be greater than 0");
 
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(Opacity.OPAQUE)
-                .decode(256, 0, null, 0))
+                .decode(null, 0, 256, 0))
             .withMessage("srcHeight must be greater than 0");
     }
 

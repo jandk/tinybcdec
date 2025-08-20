@@ -14,7 +14,7 @@ class BC1Test {
     void testBC1() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc1a.dds");
 
-        byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
+        byte[] actual = decoder.decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc1a.png");
 
         assertThat(actual).isEqualTo(expected);
@@ -24,7 +24,7 @@ class BC1Test {
     void testBC1NoAlpha() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc1.dds");
 
-        byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
+        byte[] actual = decoder.decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc1.png");
 
         assertThat(actual).isEqualTo(expected);

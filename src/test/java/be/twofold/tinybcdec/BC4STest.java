@@ -14,7 +14,7 @@ class BC4STest {
     void testBC4S() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc4s.dds");
 
-        byte[] actual = decoder.decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
+        byte[] actual = decoder.decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc4s.png");
 
         assertThat(actual).isEqualTo(expected);

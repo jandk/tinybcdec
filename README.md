@@ -46,16 +46,18 @@ texture.
 ```java
 import be.twofold.tinybcdec.*;
 
-BlockDecoder decoder = BlockDecoder.create(BlockFormat.BC1);
-byte[] result = decoder.decode(256, 256, src, srcPos);
+BlockDecoder decoder = BlockDecoder.bc1(Opacity.OPAQUE);
+byte[] result = decoder.decode(src, srcPos, 256, 256);
 ```
 
 If you want to pass an existing buffer, you can pass it as the last two arguments `dst` and `dstPos`. There will be no
 return value.
 
 ```java
-decoder.decode(256, 256, src, srcPos, dst, dstPos);
+decoder.decode(src, srcPos, 256,256,dst, dstPos);
 ```
+
+If you want to decode a partial image,
 
 ## Performance
 

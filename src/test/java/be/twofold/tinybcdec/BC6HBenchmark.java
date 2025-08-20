@@ -28,7 +28,7 @@ public class BC6HBenchmark {
     @Warmup(iterations = 2, time = 5)
     @Measurement(iterations = 2, time = 5)
     public void benchmark(BC6HState state) {
-        state.decoder.decode(256, 256, state.src, BCTestUtils.DDS_HEADER_SIZE, state.dst, 0);
+        state.decoder.decode(state.src, BCTestUtils.DDS_HEADER_SIZE, 256, 256, state.dst, 0);
     }
 
     public static void main(String[] args) throws RunnerException {

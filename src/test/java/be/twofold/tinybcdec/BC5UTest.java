@@ -13,7 +13,7 @@ class BC5UTest {
         byte[] src = BCTestUtils.readResource("/bc5u.dds");
 
         byte[] actual = BlockDecoder.bc5(Signedness.UNSIGNED)
-            .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
+            .decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc5u.png");
 
         for (int i = 0, o = 0; i < expected.length; i += 3, o += 2) {

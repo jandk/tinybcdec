@@ -12,7 +12,7 @@ class BC5STest {
     void testBC5S() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
         byte[] actual = BlockDecoder.bc5(Signedness.SIGNED)
-            .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
+            .decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc5s.png");
 
         for (int i = 0, o = 0; i < expected.length; i += 3, o += 2) {
