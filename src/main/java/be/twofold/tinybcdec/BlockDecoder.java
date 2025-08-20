@@ -27,11 +27,11 @@ public abstract class BlockDecoder {
     /**
      * Returns a block decoder for BC1.
      *
-     * @param opaque Whether to decode the image as opaque or not.
+     * @param opacity How to handle the alpha channel.
      * @return The block decoder.
      */
-    public static BlockDecoder bc1(boolean opaque) {
-        return new BC1(opaque ? BC1.Mode.OPAQUE : BC1.Mode.NORMAL);
+    public static BlockDecoder bc1(Opacity opacity) {
+        return new BC1(opacity == Opacity.OPAQUE ? BC1.Mode.OPAQUE : BC1.Mode.NORMAL);
     }
 
     /**
@@ -55,31 +55,31 @@ public abstract class BlockDecoder {
     /**
      * Returns a block decoder for BC4.
      *
-     * @param signed Whether to interpret the data as signed or unsigned.
+     * @param signedness Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
      */
-    public static BlockDecoder bc4(boolean signed) {
-        return signed ? new BC4S(1) : new BC4U(1);
+    public static BlockDecoder bc4(Signedness signedness) {
+        return signedness == Signedness.SIGNED ? new BC4S(1) : new BC4U(1);
     }
 
     /**
      * Returns a block decoder for BC5.
      *
-     * @param signed       Whether to interpret the data as signed or unsigned.
+     * @param signedness Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
      */
-    public static BlockDecoder bc5(boolean signed) {
-        return signed ? BC5S.INSTANCE : BC5U.INSTANCE;
+    public static BlockDecoder bc5(Signedness signedness) {
+        return signedness == Signedness.SIGNED ? BC5S.INSTANCE : BC5U.INSTANCE;
     }
 
     /**
      * Returns a block decoder for BC6H.
      *
-     * @param signed  Whether to interpret the data as signed or unsigned.
+     * @param signedness Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
      */
-    public static BlockDecoder bc6h(boolean signed) {
-        return new BC6H(signed);
+    public static BlockDecoder bc6h(Signedness signedness) {
+        return new BC6H(signedness == Signedness.SIGNED);
     }
 
     /**

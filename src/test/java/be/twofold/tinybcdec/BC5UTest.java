@@ -12,7 +12,7 @@ class BC5UTest {
     void testBC5U() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5u.dds");
 
-        byte[] actual = BlockDecoder.bc5(false)
+        byte[] actual = BlockDecoder.bc5(Signedness.UNSIGNED)
             .decode(256, 256, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc5u.png");
 

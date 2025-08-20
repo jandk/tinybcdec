@@ -12,7 +12,7 @@ class BlockDecoderTest {
     void testPartialBlock() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
 
-        byte[] actual = BlockDecoder.bc4(false)
+        byte[] actual = BlockDecoder.bc4(Signedness.UNSIGNED)
             .decode(157, 119, src, BCTestUtils.DDS_HEADER_SIZE);
         byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
 
@@ -30,7 +30,7 @@ class BlockDecoderTest {
         int dstOffset = 31;
 
         byte[] dst = new byte[8 * 8 + dstOffset];
-        var decoder = BlockDecoder.bc4(false);
+        var decoder = BlockDecoder.bc4(Signedness.UNSIGNED);
         for (int h = 1; h <= 8; h++) {
             for (int w = 1; w <= 8; w++) {
                 decoder.decode(src, BCTestUtils.DDS_HEADER_SIZE, srcWidth, srcHeight, dst, dstOffset, w, h);
@@ -47,12 +47,12 @@ class BlockDecoderTest {
     @Test
     void testValidation() {
         assertThatIllegalArgumentException()
-            .isThrownBy(() -> BlockDecoder.bc1(false)
+            .isThrownBy(() -> BlockDecoder.bc1(Opacity.OPAQUE)
                 .decode(0, 256, null, 0))
             .withMessage("srcWidth must be greater than 0");
 
         assertThatIllegalArgumentException()
-            .isThrownBy(() -> BlockDecoder.bc1(false)
+            .isThrownBy(() -> BlockDecoder.bc1(Opacity.OPAQUE)
                 .decode(256, 0, null, 0))
             .withMessage("srcHeight must be greater than 0");
     }

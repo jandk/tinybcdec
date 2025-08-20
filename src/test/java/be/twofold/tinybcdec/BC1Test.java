@@ -8,7 +8,7 @@ import static org.assertj.core.api.Assertions.*;
 
 class BC1Test {
 
-    private final BlockDecoder decoder = BlockDecoder.bc1(false);
+    private final BlockDecoder decoder = BlockDecoder.bc1(Opacity.TRANSPARENT);
 
     @Test
     void testBC1() throws IOException {
