@@ -19,8 +19,12 @@ Currently, the following formats are supported:
 - BC6H
 - BC7
 
-For ease of use, the library provides functionality to reorder the output channels, so the decoded data can be used
-directly AWT, JavaFX, or even OpenGL or Vulkan.
+## Output format
+
+- BC1, BC2, BC3 and BC7 are decoded as RGBA (4 bytes per pixel).
+- BC4 is decoded as R (1 byte per pixel).
+- BC5 is decoded as RG (2 bytes per pixel).
+- BC6H is decoded as RGB in little endian half-float (6 bytes per pixel).
 
 ## Usage
 
@@ -28,17 +32,14 @@ Using the library is straightforward, all you need is the compressed data, and t
 
 The following features are present:
 
-- Pixel order with alpha filling: If the pixel order contains an alpha channel, and the source does not, the alpha
-  channel will be set to `255` or `1.0` in the case of BC6H.
-- Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case).
-- Z reconstruction ("Blue" normal maps): BC5 uses two channels to store a normal map, the library can reconstruct the Z
-  value from the two channels. Clamping is done to prevent negative values or values above 255.
-- BC6H: BC6H is decoded to a Little-Endian Half-Float buffer. The library does not provide a way to convert this to
+- Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case). The output
+  width and height can be smaller than the input, and the library will handle this.
+- BC6H: BC6H is decoded to a little endian half-float buffer. The library does not provide a way to convert this to
   full float. This can be done with `Float.float16toFloat` in Java 21, or with a library. This also means that the
   output buffer is twice as big.
 
-The library provides the `BlockDecoder` class, which can be used to decode, by specifying the format and the pixel
-order. You can let the library create a new buffer, or pass an existing one to save allocations.
+The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
+static factory methods. You can let the library create a new buffer, or pass an existing one to save allocations.
 
 Given `src` is the compressed data, starting at offset `srcPos`, the following code snippet shows how to decode a BC1
 texture.
@@ -63,26 +64,28 @@ If you want to decode a partial image,
 
 I've done some performance testing, and the library is quite fast. I've run some benchmarks on my machine (AMD 7840U).
 
-Some quick benchmarks, tested on a Ryzen 5950X:
+Some quick benchmarks, tested on a Ryzen 7840U with Oracle Java 21 (MP/s stands for megapixels per second):
 
 - BC1: ~1050MP/s
-- BC2: ~650MP/s
-- BC3: ~500MP/s
-- BC4: ~550MP/s
-- BC5: ~425MP/s
-- BC6: ~130MP/s
-- BC7: ~150MP/s
+- BC2: ~750MP/s
+- BC3: ~550MP/s
+- BC4: ~1000MP/s
+- BC5: ~550MP/s
+- BC6: ~155MP/s
+- BC7: ~175MP/s
 
 These numbers are just an estimate, and can vary depending on the hardware and the JVM.
 
-To give you an idea, this means about 30 ms to decode a 4K texture in BC1, and about 120 ms for BC6 or BC7.
+To give you an idea, this means about 20 ms to decode a 4K texture in BC1, and about 100 ms for BC6 or BC7.
 
 ## Accuracy
 
 A final note on accuracy, the library is tested against the output of DirectXTex. I generated images, encoded them,
-decoded them again and compared the output. The output is identical, except when reconstructing Z in BC5, where the
-library uses a different method.
+decoded them again and compared the output. The output is identical, except for signed BC4 and BC5, which are
+different by a small amount. This is due to the way they are handled in DirectXTex, which is different from the
+unsigned code path. As far as I can test, the values are correct on my side. A bug has been filed.
 
-This is done by doing a full float implementation of BC1 (and by extension BC2 and BC3). The other formats have
-bit-exact implementations. Z reconstruction uses a lookup table that is generated at runtime, and is also full float
-accurate.
+This is done by using fixed point arithmetic for BC1 through 5. Check out
+[GenerateRescale.java](https://github.com/jandk/tinybcdec/blob/main/src/test/java/be/twofold/tinybcdec/GenerateRescale.java)
+for how these scale factors are calculated. My unsigned results all line up with what
+[bcdec](https://github.com/iOrange/bcdec/) does.
