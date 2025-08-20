@@ -54,7 +54,7 @@ If you want to pass an existing buffer, you can pass it as the last two argument
 return value.
 
 ```java
-decoder.decode(src, srcPos, 256,256,dst, dstPos);
+decoder.decode(src, srcPos, 256, 256, dst, dstPos);
 ```
 
 If you want to decode a partial image,
