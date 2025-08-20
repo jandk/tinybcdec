@@ -42,14 +42,6 @@
     </properties>
 
     <dependencies>
-        <!-- Optional, for Converter.FX -->
-        <dependency>
-            <groupId>org.openjfx</groupId>
-            <artifactId>javafx-graphics</artifactId>
-            <version>13</version> <!-- Oldest with PixelBuffer -->
-            <optional>true</optional>
-        </dependency>
-
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>

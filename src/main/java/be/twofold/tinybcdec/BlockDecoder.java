@@ -124,25 +124,6 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Decode an entire image.
-     *
-     * @param width     The width of the image.
-     * @param height    The height of the image.
-     * @param src       The source data.
-     * @param srcPos    The position in the source data.
-     * @param converter The converter that's used to handle the result.
-     *                  Can be used to create a new AWT or JavaFX image.
-     * @param <T>       The type of the output to convert to.
-     * @return The newly allocated decoded and converted image.
-     * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
-     * @throws IndexOutOfBoundsException If the source data is too small.
-     */
-    public <T> T decode(int width, int height, byte[] src, int srcPos, Converter<T> converter) {
-        byte[] decoded = decode(width, height, src, srcPos);
-        return converter.convert(decoded, width, height, pixelStride);
-    }
-
-    /**
      * Decode an entire image, using an existing byte array as the destination.
      *
      * @param width  The width of the image.

@@ -13,9 +13,8 @@
  * </ul>
  */
 module be.twofold.tinybcdec {
-    // Optional, for Converter
+    // For testing
     requires static java.desktop;
-    requires static javafx.graphics;
 
     exports be.twofold.tinybcdec;
 }
