@@ -11,7 +11,7 @@ class BC5STest {
     @Test
     void testBC5S() throws IOException {
         byte[] src = BCTestUtils.readResource("/bc5s.dds");
-        byte[] actual = BlockDecoder.bc5(Signedness.SIGNED)
+        byte[] actual = BlockDecoder.bc5(BlockDecoder.Signedness.SIGNED)
             .decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
         byte[] expected = BCTestUtils.readPng("/bc5s.png");
 

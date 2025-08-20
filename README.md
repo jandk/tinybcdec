@@ -46,7 +46,7 @@ texture.
 ```java
 import be.twofold.tinybcdec.*;
 
-BlockDecoder decoder = BlockDecoder.bc1(Opacity.OPAQUE);
+BlockDecoder decoder = BlockDecoder.bc1(BlockDecoder.Opacity.OPAQUE);
 byte[] result = decoder.decode(src, srcPos, 256, 256);
 ```
 
