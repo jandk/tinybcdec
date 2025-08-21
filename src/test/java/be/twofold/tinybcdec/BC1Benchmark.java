@@ -15,7 +15,7 @@ public class BC1Benchmark {
 
         public BC1State() {
             try {
-                decoder = BlockDecoder.bc1(BlockDecoder.Opacity.OPAQUE);
+                decoder = BlockDecoder.bc1(true);
                 src = BCTestUtils.readResource("/bc1.dds");
                 dst = new byte[256 * 256 * 4];
             } catch (IOException e) {

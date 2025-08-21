@@ -47,8 +47,8 @@ texture.
 ```java
 import be.twofold.tinybcdec.*;
 
-BlockDecoder decoder = BlockDecoder.bc1(BlockDecoder.Opacity.OPAQUE);
-byte[] result = decoder.decode(src, srcPos, 256, 256);
+BlockDecoder decoder = BlockDecoder.bc1(true);
+byte[] result = decoder.decode(256, 256, src, srcPos);
 ```
 
 If you want to pass an existing buffer, you can pass it as the last two arguments `dst` and `dstPos`. There will be no
