@@ -45,16 +45,48 @@ class BlockDecoderTest {
     }
 
     @Test
+    void testPartialBlockCropExtra() throws IOException {
+        byte[] src = BCTestUtils.readResource("/bc4u-part.dds");
+        byte[] expected = BCTestUtils.readPng("/bc4u-part.png");
+
+        int srcWidth = 157;
+        int srcHeight = 119;
+        int dstOffset = 31;
+
+        byte[] dst = new byte[8 * 8 + dstOffset];
+        var decoder = BlockDecoder.bc4(false);
+
+        // Test all offsets between 0 and 8
+        for (int srcY = 1; srcY < 8; srcY++) {
+            for (int srcX = 1; srcX < 8; srcX++) {
+                int w = 8;
+                int h = 8;
+                decoder.decode(
+                    src, BCTestUtils.DDS_HEADER_SIZE, srcX, srcY, srcWidth, srcHeight,
+                    dst, dstOffset, 0, 0, w, h,
+                    w, h
+                );
+
+                for (int y = 0; y < h; y++) {
+                    for (int x = 0; x < w; x++) {
+                        assertThat(dst[y * w + x + dstOffset]).isEqualTo(expected[(srcY + y) * srcWidth + (srcX + x)]);
+                    }
+                }
+            }
+        }
+    }
+
+    @Test
     void testValidation() {
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(false)
                 .decode(null, 0, 0, 256))
-            .withMessage("srcWidth must be greater than 0");
+            .withMessage("src width (0) or height (256) is not positive");
 
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(false)
                 .decode(null, 0, 256, 0))
-            .withMessage("srcHeight must be greater than 0");
+            .withMessage("src width (256) or height (0) is not positive");
     }
 
 }

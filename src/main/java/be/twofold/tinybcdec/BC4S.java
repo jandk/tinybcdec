@@ -33,7 +33,7 @@ final class BC4S extends BlockDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 byte alpha = alphas[(int) (indices & 0x07)];
-                dst[dstPos + x * pixelStride] = alpha;
+                dst[dstPos + x * bytesPerPixel] = alpha;
                 indices >>>= 3;
             }
             dstPos += stride;

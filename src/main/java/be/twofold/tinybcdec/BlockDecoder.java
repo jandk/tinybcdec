@@ -16,11 +16,12 @@ public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
     static final int BLOCK_HEIGHT = 4;
 
-    final int pixelStride;
+    final int bytesPerPixel;
     final int bytesPerBlock;
+    private byte[] scratch;
 
-    BlockDecoder(int pixelStride, int bytesPerBlock) {
-        this.pixelStride = pixelStride;
+    BlockDecoder(int bytesPerPixel, int bytesPerBlock) {
+        this.bytesPerPixel = bytesPerPixel;
         this.bytesPerBlock = bytesPerBlock;
     }
 
@@ -118,7 +119,7 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If the source data is too small.
      */
     public byte[] decode(byte[] src, int srcPos, int srcWidth, int srcHeight) {
-        byte[] dst = new byte[srcWidth * srcHeight * pixelStride];
+        byte[] dst = new byte[srcWidth * srcHeight * bytesPerPixel];
         decode(src, srcPos, srcWidth, srcHeight, dst, 0);
         return dst;
     }
@@ -158,36 +159,74 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If the source or destination data is too small.
      */
     public void decode(byte[] src, int srcPos, int srcWidth, int srcHeight, byte[] dst, int dstPos, int dstWidth, int dstHeight) {
-        if (srcWidth <= 0) {
-            throw new IllegalArgumentException("srcWidth must be greater than 0");
-        }
-        if (srcHeight <= 0) {
-            throw new IllegalArgumentException("srcHeight must be greater than 0");
-        }
-        if (dstWidth <= 0 || dstWidth > srcWidth) {
-            throw new IllegalArgumentException("dstWidth must be greater than 0 and not greater than srcWidth");
-        }
-        if (dstHeight <= 0 || dstHeight > srcHeight) {
-            throw new IllegalArgumentException("dstHeight must be greater than 0 and not greater than srcHeight");
-        }
+        decode(
+            src, srcPos, 0, 0, srcWidth, srcHeight,
+            dst, dstPos, 0, 0, dstWidth, dstHeight,
+            dstWidth, dstHeight
+        );
+    }
 
-        int lineStride = dstWidth * pixelStride;
-        Objects.checkFromIndexSize(srcPos, byteSize(srcWidth, srcHeight), src.length);
-        Objects.checkFromIndexSize(dstPos, dstHeight * lineStride, dst.length);
+    /**
+     * Decodes a region of image data from a source buffer to a destination buffer.
+     * Both source and destination buffers must be pre-allocated with sufficient space
+     * to contain the required data for the specified regions.
+     *
+     * @param src       The source byte array containing the encoded image data.
+     * @param srcPos    The starting position in the source byte array.
+     * @param srcX      The x-coordinate of the source region to decode.
+     * @param srcY      The y-coordinate of the source region to decode.
+     * @param srcWidth  The width of the source region to decode.
+     * @param srcHeight The height of the source region to decode.
+     * @param dst       The destination byte array where the decoded image data will be stored.
+     * @param dstPos    The starting position in the destination byte array.
+     * @param dstX      The x-coordinate of the destination region where decoded data will be placed.
+     * @param dstY      The y-coordinate of the destination region where decoded data will be placed.
+     * @param dstWidth  The width of the destination region.
+     * @param dstHeight The height of the destination region.
+     * @param width     The target width of the region to decode.
+     * @param height    The target height of the region to decode.
+     * @throws IllegalArgumentException  If the specified regions are invalid or if dimensions are out of bounds.
+     * @throws IndexOutOfBoundsException If the source or destination buffer is too small for the specified regions.
+     */
+    public void decode(
+        byte[] src, int srcPos, int srcX, int srcY, int srcWidth, int srcHeight,
+        byte[] dst, int dstPos, int dstX, int dstY, int dstWidth, int dstHeight,
+        int width, int height
+    ) {
+        validateRegion("src", srcX, srcY, srcWidth, srcHeight, width, height);
+        validateRegion("dst", dstX, dstY, dstWidth, dstHeight, width, height);
 
-        for (int y = 0; y < dstHeight; y += BLOCK_HEIGHT) {
-            int lineOffset = dstPos + y * lineStride;
-            for (int x = 0; x < srcWidth; x += BLOCK_WIDTH, srcPos += bytesPerBlock) {
-                if (x >= dstWidth) {
-                    continue;
-                }
-                int dstOffset = lineOffset + x * pixelStride;
-                if (y + BLOCK_HEIGHT <= dstHeight && x + BLOCK_WIDTH <= dstWidth) {
-                    decodeBlock(src, srcPos, dst, dstOffset, lineStride);
+        int srcBlocksW = (srcWidth + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
+        int srcBlocksH = (srcHeight + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
+        Objects.checkFromIndexSize(srcPos, srcBlocksW * srcBlocksH * bytesPerBlock, src.length);
+        Objects.checkFromIndexSize(dstPos, dstWidth * dstHeight * bytesPerPixel, dst.length);
+
+        int srcLineStride = srcBlocksW * bytesPerBlock;
+        int dstLineStride = dstWidth * bytesPerPixel;
+
+        for (int y = 0; y < height; ) {
+            int srcRowStart = srcPos + ((srcY + y) / BLOCK_HEIGHT * srcLineStride);
+            int dstRowStart = dstPos + ((dstY + y) * dstLineStride);
+            int blockY = (srcY + y) % BLOCK_HEIGHT;
+            int blockH = Math.min(BLOCK_HEIGHT - blockY, height - y);
+
+            for (int x = 0; x < width; ) {
+                int srcPosStart = srcRowStart + ((srcX + x) / BLOCK_WIDTH * bytesPerBlock);
+                int dstPosStart = dstRowStart + ((dstX + x) * bytesPerPixel);
+                int blockX = (srcX + x) % BLOCK_WIDTH;
+                int blockW = Math.min(BLOCK_WIDTH - blockX, width - x);
+
+                if (blockX == 0 && x + BLOCK_WIDTH <= width && blockY == 0 && y + BLOCK_HEIGHT <= height) {
+                    decodeBlock(src, srcPosStart, dst, dstPosStart, dstLineStride);
+                    x += BLOCK_WIDTH;
                 } else {
-                    partialBlock(dstWidth, dstHeight, src, srcPos, dst, dstOffset, x, y, lineStride);
+                    partialBlock(
+                        src, srcPosStart, dst, dstPosStart, dstLineStride,
+                        blockX, blockY, blockW, blockH);
+                    x += blockW;
                 }
             }
+            y += blockH;
         }
     }
 
@@ -204,18 +243,36 @@ public abstract class BlockDecoder {
         return widthInBlocks * heightInBlocks * bytesPerBlock;
     }
 
-    private void partialBlock(int width, int height, byte[] src, int srcPos, byte[] dst, int dstPos, int x, int y, int lineStride) {
-        int blockStride = BLOCK_WIDTH * pixelStride;
-        byte[] block = new byte[BLOCK_HEIGHT * blockStride];
-        decodeBlock(src, srcPos, block, 0, blockStride);
+    private void validateRegion(String label, int x, int y, int w, int h, int width, int height) {
+        if (x < 0 || y < 0) {
+            throw new IndexOutOfBoundsException(label + " x (" + x + ") or y (" + y + ") is not positive or zero");
+        }
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException(label + " width (" + width + ") or height (" + height + ") is not positive");
+        }
+        if (x + width > w || y + height > h) {
+            throw new IndexOutOfBoundsException(label + " region (" + x + ", " + y + ", " + width + ", " + height + ") is outside of the region (" + w + ", " + h + ")");
+        }
+    }
 
-        int partialWidth = Math.min(width - x, BLOCK_WIDTH);
-        int partialHeight = Math.min(height - y, BLOCK_HEIGHT);
-        for (int yy = 0; yy < partialHeight; yy++) {
+    private void partialBlock(
+        byte[] src, int srcPos,
+        byte[] dst, int dstPos, int lineStride,
+        int blockX, int blockY, int blockW, int blockH
+    ) {
+        if (this.scratch == null) {
+            this.scratch = new byte[BLOCK_WIDTH * BLOCK_HEIGHT * bytesPerPixel];
+        }
+        byte[] scratch = this.scratch;
+        int stride = BLOCK_WIDTH * bytesPerPixel;
+        decodeBlock(src, srcPos, scratch, 0, stride);
+
+        int offset = blockY * stride + blockX * bytesPerPixel;
+        for (int row = 0; row < blockH; row++) {
             System.arraycopy(
-                block, yy * blockStride,
-                dst, yy * lineStride + dstPos,
-                partialWidth * pixelStride
+                scratch, offset + (row * stride),
+                dst, dstPos + (row * lineStride),
+                blockW * bytesPerPixel
             );
         }
     }
