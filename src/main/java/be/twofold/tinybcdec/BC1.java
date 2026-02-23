@@ -6,28 +6,26 @@ final class BC1 extends BlockDecoder {
     private final boolean bc2Or3;
     private final int color3;
 
-    BC1(Mode mode) {
+    BC1(BC1Mode mode) {
         super(BPP, 8);
-        this.bc2Or3 = mode == Mode.BC2OR3;
-        this.color3 = mode == Mode.OPAQUE ? 0xFF000000 : 0;
+        this.bc2Or3 = mode == BC1Mode.BC2OR3;
+        this.color3 = mode == BC1Mode.OPAQUE ? 0xFF000000 : 0;
     }
 
     @Override
     public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
-        // @formatter:off
-        int c0 = (int)  block         & 0xFFFF;
+        int c0 = (int) (block/*   */) & 0xFFFF;
         int c1 = (int) (block >>> 16) & 0xFFFF;
 
         int r0 = (c0 >>> 11) & 0x1F;
-        int g0 = (c0 >>>  5) & 0x3F;
-        int b0 =  c0         & 0x1F;
+        int g0 = (c0 >>> +5) & 0x3F;
+        int b0 = (c0/*   */) & 0x1F;
 
         int r1 = (c1 >>> 11) & 0x1F;
-        int g1 = (c1 >>>  5) & 0x3F;
-        int b1 =  c1         & 0x1F;
-        // @formatter:on
+        int g1 = (c1 >>> +5) & 0x3F;
+        int b1 = (c1/*   */) & 0x1F;
 
         int[] colors = {
             rgb(scale031(r0), scale063(g0), scale031(b0)),
@@ -91,9 +89,4 @@ final class BC1 extends BlockDecoder {
         return (i * 4145 + 1019) >>> 11;
     }
 
-    enum Mode {
-        NORMAL,
-        BC2OR3,
-        OPAQUE,
-    }
 }
