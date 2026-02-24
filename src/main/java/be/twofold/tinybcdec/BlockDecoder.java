@@ -32,7 +32,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc1(boolean opaque) {
-        return new BC1(opaque ? BC1.Mode.OPAQUE : BC1.Mode.NORMAL);
+        return new BC1(opaque ? BC1Mode.OPAQUE : BC1Mode.NORMAL);
     }
 
     /**
