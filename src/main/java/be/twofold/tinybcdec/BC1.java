@@ -5,6 +5,7 @@ import java.nio.*;
 final class BC1 extends BlockDecoder {
     private static final int BPP = 4;
 
+    private final int[] colors = new int[4];
     private final boolean bc2Or3;
     private final int color3;
 
@@ -29,11 +30,10 @@ final class BC1 extends BlockDecoder {
         int g1 = (c1 >>> +5) & 0x3F;
         int b1 = (c1/*   */) & 0x1F;
 
-        int[] colors = {
-            rgb(scale031(r0), scale063(g0), scale031(b0)),
-            rgb(scale031(r1), scale063(g1), scale031(b1)),
-            0, 0
-        };
+        int[] colors = this.colors;
+        colors[0] = rgb(scale031(r0), scale063(g0), scale031(b0));
+        colors[1] = rgb(scale031(r1), scale063(g1), scale031(b1));
+
         if (c0 > c1 || bc2Or3) {
             int r2 = scale093(2 * r0 + r1);
             int g2 = scale189(2 * g0 + g1);
