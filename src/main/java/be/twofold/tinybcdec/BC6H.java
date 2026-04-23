@@ -36,7 +36,7 @@ final class BC6H extends BPTC {
 
         int modeIndex = mode(bits);
         if (modeIndex >= MODES.size()) {
-            fillInvalidBlock(dst, dstPos, stride);
+            fillInvalidBlock(dst, dstPos, stride, BPP);
             return;
         }
         Mode mode = MODES.get(modeIndex);
@@ -183,13 +183,6 @@ final class BC6H extends BPTC {
     private int transformInverse(int value, int value0, int bits, boolean signed) {
         value = (value + value0) & ((1 << bits) - 1);
         return signed ? extendSign(value, bits) : value;
-    }
-
-    private static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride) {
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            ByteIO.fill(dst, dstPos, BLOCK_WIDTH * BPP, (byte) 0);
-            dstPos += stride;
-        }
     }
 
     private static final class Mode {

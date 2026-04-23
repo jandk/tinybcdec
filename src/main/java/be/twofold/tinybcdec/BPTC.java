@@ -76,8 +76,8 @@ abstract class BPTC extends BlockDecoder {
         super(pixelStride, 16);
     }
 
-    static int partitions(int numPartitions, int partitionIndex) {
-        return PARTITIONS[numPartitions][partitionIndex];
+    static int partitions(int numPartitions, int partition) {
+        return PARTITIONS[numPartitions][partition];
     }
 
     static byte[] weights(int numIndexBits) {
@@ -106,6 +106,13 @@ abstract class BPTC extends BlockDecoder {
 
     static int interpolate(int e0, int e1, int weight) {
         return (e0 * (64 - weight) + e1 * weight + 32) >>> 6;
+    }
+
+    static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride, int bpp) {
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            ByteIO.fill(dst, dstPos, BLOCK_WIDTH * bpp, (byte) 0);
+            dstPos += stride;
+        }
     }
 
     static final class Bits {
