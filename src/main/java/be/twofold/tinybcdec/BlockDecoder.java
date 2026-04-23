@@ -41,7 +41,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc2() {
-        return BC2.INSTANCE;
+        return new BC2();
     }
 
     /**
@@ -50,7 +50,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc3() {
-        return BC3.INSTANCE;
+        return new BC3();
     }
 
     /**
@@ -70,7 +70,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc5(boolean signed) {
-        return signed ? BC5S.INSTANCE : BC5U.INSTANCE;
+        return signed ? new BC5S() : new BC5U();
     }
 
     /**
@@ -201,8 +201,12 @@ public abstract class BlockDecoder {
         int srcLineStride = srcBlocksW * bytesPerBlock;
         int dstLineStride = dstWidth * bytesPerPixel;
 
-        var srcBuf = src.slice().order(ByteOrder.LITTLE_ENDIAN);
-        var dstBuf = dst.slice().order(ByteOrder.LITTLE_ENDIAN);
+        int srcBase = src.position();
+        int dstBase = dst.position();
+        ByteOrder srcOrder = src.order();
+        ByteOrder dstOrder = dst.order();
+        src.order(ByteOrder.LITTLE_ENDIAN);
+        dst.order(ByteOrder.LITTLE_ENDIAN);
         for (int y = 0; y < height; ) {
             int srcRowStart = ((srcY + y) / BLOCK_HEIGHT * srcLineStride);
             int dstRowStart = ((dstY + y) * dstLineStride);
@@ -210,23 +214,25 @@ public abstract class BlockDecoder {
             int blockH = Math.min(BLOCK_HEIGHT - blockY, height - y);
 
             for (int x = 0; x < width; ) {
-                int srcPosStart = srcRowStart + ((srcX + x) / BLOCK_WIDTH * bytesPerBlock);
-                int dstPosStart = dstRowStart + ((dstX + x) * bytesPerPixel);
+                int srcPosStart = srcBase + srcRowStart + ((srcX + x) / BLOCK_WIDTH * bytesPerBlock);
+                int dstPosStart = dstBase + dstRowStart + ((dstX + x) * bytesPerPixel);
                 int blockX = (srcX + x) % BLOCK_WIDTH;
                 int blockW = Math.min(BLOCK_WIDTH - blockX, width - x);
 
                 if (blockX == 0 && x + BLOCK_WIDTH <= width && blockY == 0 && y + BLOCK_HEIGHT <= height) {
-                    decodeBlock(srcBuf, srcPosStart, dstBuf, dstPosStart, dstLineStride);
+                    decodeBlock(src, srcPosStart, dst, dstPosStart, dstLineStride);
                     x += BLOCK_WIDTH;
                 } else {
                     partialBlock(
-                        srcBuf, srcPosStart, dstBuf, dstPosStart, dstLineStride,
+                        src, srcPosStart, dst, dstPosStart, dstLineStride,
                         blockX, blockY, blockW, blockH);
                     x += blockW;
                 }
             }
             y += blockH;
         }
+        src.order(srcOrder);
+        dst.order(dstOrder);
     }
 
     /**
