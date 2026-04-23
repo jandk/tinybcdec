@@ -41,6 +41,10 @@ The following features are present:
 The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
 static factory methods. You can let the library create a new buffer, or pass an existing one to save allocations.
 
+After construction, decoders produce no heap allocations during decoding. Internal working state is pre-allocated and
+reused across calls. Note that this also means instances are **not thread-safe**: each thread must use its own decoder
+instance.
+
 Given `src` is the compressed data, starting at offset `srcPos`, the following code snippet shows how to decode a BC1
 texture.
 
