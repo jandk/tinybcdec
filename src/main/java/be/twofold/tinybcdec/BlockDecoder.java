@@ -89,7 +89,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc7() {
-        return BC7.INSTANCE;
+        return new BC7();
     }
 
     /**

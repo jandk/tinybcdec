@@ -23,6 +23,8 @@ final class BC6H extends BPTC {
         new Mode(T, F, 16, +4, +4, +4, new short[]{0x000A, 0x010A, 0x020A, 0x0404, 0x10A6, 0x0504, 0x11A6, 0x0604, 0x12A6})
     );
 
+    private final Bits bits = new Bits();
+    private final int[] colors = new int[16];
     private final boolean signed;
 
     BC6H(boolean signed) {
@@ -32,7 +34,8 @@ final class BC6H extends BPTC {
 
     @Override
     public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        Bits bits = Bits.from(src, srcPos);
+        Bits bits = this.bits;
+        bits.read(src, srcPos);
 
         int modeIndex = mode(bits);
         if (modeIndex >= MODES.size()) {
@@ -41,7 +44,8 @@ final class BC6H extends BPTC {
         }
         Mode mode = MODES.get(modeIndex);
 
-        int[] colors = new int[16];
+        int[] colors = this.colors;
+        Arrays.fill(colors, 0);
         for (short op : mode.ops) {
             readOp(bits, op, colors);
         }
@@ -89,10 +93,10 @@ final class BC6H extends BPTC {
                 int weight = weights[(int) (indexBits & mask)];
                 indexBits >>>= ib;
 
-                int pIndex = partitions & 3;
-                short r = finalUnquantize(interpolate(colors[pIndex * 8/**/], colors[pIndex * 8 + 4], weight), signed);
-                short g = finalUnquantize(interpolate(colors[pIndex * 8 + 1], colors[pIndex * 8 + 5], weight), signed);
-                short b = finalUnquantize(interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], weight), signed);
+                int index = (partitions & 3) * 8;
+                short r = finalUnquantize(interpolate(colors[index/**/], colors[index + 4], weight), signed);
+                short g = finalUnquantize(interpolate(colors[index + 1], colors[index + 5], weight), signed);
+                short b = finalUnquantize(interpolate(colors[index + 2], colors[index + 6], weight), signed);
                 partitions >>>= 2;
 
                 int o = dstPos + x * BPP;

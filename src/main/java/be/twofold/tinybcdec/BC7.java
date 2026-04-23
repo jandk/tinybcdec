@@ -17,9 +17,10 @@ final class BC7 extends BPTC {
         new Mode(2, 6, F, F, 5, 5, T, F, 2, 0)
     );
 
-    static final BC7 INSTANCE = new BC7();
+    private final Bits bits = new Bits();
+    private final int[] colors = new int[3 * 2 * 4];
 
-    private BC7() {
+    BC7() {
         super(BPP);
     }
 
@@ -31,14 +32,16 @@ final class BC7 extends BPTC {
             return;
         }
 
-        Bits bits = Bits.from(src, srcPos);
+        Bits bits = this.bits;
+        bits.read(src, srcPos);
+
         bits.get(modeIndex + 1); // Skip mode bits
         Mode mode = MODES.get(modeIndex);
         int partition = mode.pb != 0 ? bits.get(mode.pb) : 0;
         int rotation = mode.rb ? bits.get(2) : 0;
         boolean selection = mode.isb && bits.get1() != 0;
 
-        int[] colors = new int[6 * 4];
+        int[] colors = this.colors;
 
         // Read colors
         int numColors = mode.ns * 2;
