@@ -199,16 +199,17 @@ public abstract class BlockDecoder {
             throw new IndexOutOfBoundsException("Not enough data in dst buffer");
         }
 
+        ByteOrder srcOrder = src.order();
+        ByteOrder dstOrder = dst.order();
+        src.order(ByteOrder.LITTLE_ENDIAN);
+        dst.order(ByteOrder.LITTLE_ENDIAN);
+
         int srcBlocksW = (srcWidth + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
         int srcLineStride = srcBlocksW * bytesPerBlock;
         int dstLineStride = dstWidth * bytesPerPixel;
 
         int srcBase = src.position();
         int dstBase = dst.position();
-        ByteOrder srcOrder = src.order();
-        ByteOrder dstOrder = dst.order();
-        src.order(ByteOrder.LITTLE_ENDIAN);
-        dst.order(ByteOrder.LITTLE_ENDIAN);
         for (int y = 0; y < height; ) {
             int srcRowStart = ((srcY + y) / BLOCK_HEIGHT * srcLineStride);
             int dstRowStart = ((dstY + y) * dstLineStride);
