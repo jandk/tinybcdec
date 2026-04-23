@@ -11,6 +11,8 @@ import java.nio.*;
  * Depending on if you want to allocate a new byte array or use an existing one.
  * <p>
  * To decode a single block, use the {@link #decodeBlock(ByteBuffer, int, ByteBuffer, int, int)} method.
+ * <p>
+ * <b>Thread safety:</b> instances are not thread-safe. Each thread should use its own decoder instance.
  */
 public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
