@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import java.nio.*;
+
 abstract class BPTC extends BlockDecoder {
     private static final int[][] PARTITIONS = {
         {},
@@ -115,9 +117,9 @@ abstract class BPTC extends BlockDecoder {
             this.hi = hi;
         }
 
-        static Bits from(byte[] array, int index) {
-            long lo = ByteArrays.getLong(array, index);
-            long hi = ByteArrays.getLong(array, index + 8);
+        static Bits from(ByteBuffer buffer, int index) {
+            long lo = ByteArrays.getLong(buffer, index);
+            long hi = ByteArrays.getLong(buffer, index + 8);
             return new Bits(lo, hi);
         }
 

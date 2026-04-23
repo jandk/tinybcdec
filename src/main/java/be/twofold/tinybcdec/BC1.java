@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import java.nio.*;
+
 final class BC1 extends BlockDecoder {
     private static final int BPP = 4;
 
@@ -13,7 +15,7 @@ final class BC1 extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
         int c0 = (int) (block/*   */) & 0xFFFF;

@@ -16,8 +16,10 @@ class PlatformTest {
 
     @Test
     void testFloat16ToFloat0() throws IOException {
-        byte[] bytes = BCTestUtils.readResource("/float16ToFloat.bin");
-        var buffer = ByteBuffer.wrap(bytes).order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer();
+        FloatBuffer buffer = BCTestUtils
+            .readResource("/float16ToFloat.bin")
+            .order(ByteOrder.LITTLE_ENDIAN)
+            .asFloatBuffer();
 
         for (int i = Short.MIN_VALUE; i <= Short.MAX_VALUE; i++) {
             float actual = Platform.float16ToFloat0((short) i);

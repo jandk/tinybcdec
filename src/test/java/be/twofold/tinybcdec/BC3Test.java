@@ -3,6 +3,7 @@ package be.twofold.tinybcdec;
 import org.junit.jupiter.api.*;
 
 import java.io.*;
+import java.nio.*;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -12,10 +13,10 @@ class BC3Test {
 
     @Test
     void testBC3() throws IOException {
-        byte[] src = BCTestUtils.readResource("/bc3.dds");
+        ByteBuffer src = BCTestUtils.readResource("/bc3.dds");
 
-        byte[] actual = decoder.decode(src, BCTestUtils.DDS_HEADER_SIZE, 256, 256);
-        byte[] expected = BCTestUtils.readPng("/bc3.png");
+        ByteBuffer actual = decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
+        ByteBuffer expected = BCTestUtils.readPng("/bc3.png");
 
         assertThat(actual).isEqualTo(expected);
     }

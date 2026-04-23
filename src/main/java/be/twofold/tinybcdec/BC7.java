@@ -1,5 +1,6 @@
 package be.twofold.tinybcdec;
 
+import java.nio.*;
 import java.util.*;
 
 final class BC7 extends BPTC {
@@ -23,8 +24,8 @@ final class BC7 extends BPTC {
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
-        int modeIndex = Integer.numberOfTrailingZeros(src[srcPos]);
+    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+        int modeIndex = Integer.numberOfTrailingZeros(src.get(srcPos));
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride);
             return;
@@ -155,9 +156,11 @@ final class BC7 extends BPTC {
         }
     }
 
-    private static void fillInvalidBlock(byte[] dst, int dstPos, int stride) {
+    private static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            Arrays.fill(dst, dstPos, dstPos + BLOCK_WIDTH * BPP, (byte) 0);
+            for (int i = 0; i < BLOCK_WIDTH * BPP; i++) {
+                dst.put(dstPos + i, (byte) 0);
+            }
             dstPos += stride;
         }
     }
