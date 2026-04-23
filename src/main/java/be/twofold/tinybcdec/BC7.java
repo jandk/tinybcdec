@@ -25,7 +25,7 @@ final class BC7 extends BPTC {
 
     @Override
     public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        int modeIndex = Integer.numberOfTrailingZeros(src.get(srcPos));
+        int modeIndex = Integer.numberOfTrailingZeros(ByteIO.getByte(src, srcPos));
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride);
             return;
@@ -150,7 +150,7 @@ final class BC7 extends BPTC {
                 }
 
                 int rgba = r | g << 8 | b << 16 | a << 24;
-                ByteArrays.setInt(dst, dstPos + x * BPP, rgba);
+                ByteIO.setInt(dst, dstPos + x * BPP, rgba);
             }
             dstPos += stride;
         }
@@ -159,7 +159,7 @@ final class BC7 extends BPTC {
     private static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int i = 0; i < BLOCK_WIDTH * BPP; i++) {
-                dst.put(dstPos + i, (byte) 0);
+                ByteIO.setByte(dst, dstPos + i, (byte) 0);
             }
             dstPos += stride;
         }

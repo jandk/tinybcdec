@@ -16,7 +16,7 @@ final class BC1 extends BlockDecoder {
 
     @Override
     public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        long block = ByteArrays.getLong(src, srcPos);
+        long block = ByteIO.getLong(src, srcPos);
 
         int c0 = (int) (block/*   */) & 0xFFFF;
         int c1 = (int) (block >>> 16) & 0xFFFF;
@@ -56,7 +56,7 @@ final class BC1 extends BlockDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int color = colors[indices & 0x03];
-                ByteArrays.setInt(dst, dstPos + x * BPP, color);
+                ByteIO.setInt(dst, dstPos + x * BPP, color);
                 indices >>>= 2;
             }
             dstPos += stride;

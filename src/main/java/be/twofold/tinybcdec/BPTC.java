@@ -118,8 +118,8 @@ abstract class BPTC extends BlockDecoder {
         }
 
         static Bits from(ByteBuffer buffer, int index) {
-            long lo = ByteArrays.getLong(buffer, index);
-            long hi = ByteArrays.getLong(buffer, index + 8);
+            long lo = ByteIO.getLong(buffer, index);
+            long hi = ByteIO.getLong(buffer, index + 8);
             return new Bits(lo, hi);
         }
 
