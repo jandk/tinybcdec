@@ -1,12 +1,14 @@
 package be.twofold.tinybcdec;
 
+import java.nio.*;
+
 final class BC4S extends BlockDecoder {
     BC4S(int pixelStride) {
         super(pixelStride, 8);
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteArrays.getLong(src, srcPos);
 
         int a0 = Math.max(-127, (byte) (block/*  */));
@@ -31,7 +33,7 @@ final class BC4S extends BlockDecoder {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 byte alpha = alphas[(int) (indices & 0x07)];
-                dst[dstPos + x * bytesPerPixel] = alpha;
+                ByteArrays.setByte(dst, dstPos + x * bytesPerPixel, alpha);
                 indices >>>= 3;
             }
             dstPos += stride;

@@ -3,7 +3,7 @@ package be.twofold.tinybcdec;
 import javax.imageio.*;
 import java.awt.image.*;
 import java.io.*;
-import java.util.*;
+import java.nio.*;
 
 public final class BCTestUtils {
     public static final int DDS_HEADER_SIZE = 148;
@@ -11,37 +11,32 @@ public final class BCTestUtils {
     private BCTestUtils() {
     }
 
-    public static byte[] readResource(String path) throws IOException {
+    public static ByteBuffer readResource(String path) throws IOException {
         try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
-            return in.readAllBytes();
+            return ByteBuffer.wrap(in.readAllBytes());
         }
     }
 
-    static byte[] readPng(String path) throws IOException {
+    static ByteBuffer readPng(String path) throws IOException {
         try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
             BufferedImage image = ImageIO.read(in);
             byte[] rawImage = ((DataBufferByte) image.getRaster().getDataBuffer()).getData();
 
-            return decodeImage(rawImage, image.getType());
+            return ByteBuffer.wrap(decodeImage(rawImage, image.getType()));
         }
     }
 
-    static byte[] readDDSFP16(String path, int width, int height) throws IOException {
-        byte[] rawImage = Arrays.copyOfRange(readResource(path), DDS_HEADER_SIZE, DDS_HEADER_SIZE + width * height * 8);
-        byte[] result = new byte[rawImage.length * 6 / 8];
+    static ByteBuffer readDDSFP16(String path, int width, int height) throws IOException {
+        ByteBuffer rawImage = readResource(path)
+            .position(DDS_HEADER_SIZE)
+            .limit(DDS_HEADER_SIZE + width * height * 8)
+            .slice();
+        ByteBuffer result = ByteBuffer.allocate(rawImage.remaining() * 6 / 8);
 
-        for (int i = 0, o = 0; i < rawImage.length; i += 8, o += 6) {
-            System.arraycopy(rawImage, i, result, o, 6);
-        }
-        return result;
-    }
-
-    static byte[] readDDSFP32(String path, int width, int height) throws IOException {
-        byte[] rawImage = Arrays.copyOfRange(readResource(path), DDS_HEADER_SIZE, DDS_HEADER_SIZE + width * height * 16);
-        byte[] result = new byte[rawImage.length * 12 / 16];
-
-        for (int i = 0, o = 0; i < rawImage.length; i += 16, o += 12) {
-            System.arraycopy(rawImage, i, result, o, 12);
+        for (int i = 0, o = 0; i < rawImage.remaining(); i += 8, o += 6) {
+            for (int j = 0; j < 6; j++) {
+                result.put(o + j, rawImage.get(i + j));
+            }
         }
         return result;
     }

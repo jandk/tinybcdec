@@ -1,16 +1,16 @@
 package be.twofold.tinybcdec;
 
-import java.util.*;
+import java.nio.*;
 
 /**
  * This is the main class for decoding block compressed textures.
  * <p>
  * To create a new instance, use one of the static factory methods starting with {@code bc}.
  * <p>
- * To decode an entire image, use the {@link #decode(byte[], int, int, int)} or {@link #decode(byte[], int, int, int, byte[], int)} method.
+ * To decode an entire image, use the {@link #decode(ByteBuffer, int, int)} or {@link #decode(ByteBuffer, int, int, ByteBuffer)} method.
  * Depending on if you want to allocate a new byte array or use an existing one.
  * <p>
- * To decode a single block, use the {@link #decodeBlock(byte[], int, byte[], int, int)} method.
+ * To decode a single block, use the {@link #decodeBlock(ByteBuffer, int, ByteBuffer, int, int)} method.
  */
 public abstract class BlockDecoder {
     static final int BLOCK_WIDTH = 4;
@@ -18,7 +18,7 @@ public abstract class BlockDecoder {
 
     final int bytesPerPixel;
     final int bytesPerBlock;
-    private byte[] scratch;
+    private ByteBuffer scratch;
 
     BlockDecoder(int bytesPerPixel, int bytesPerBlock) {
         this.bytesPerPixel = bytesPerPixel;
@@ -105,22 +105,22 @@ public abstract class BlockDecoder {
      * @param dstPos The position in the destination data.
      * @param stride The number of bytes per line in the destination data.
      */
-    public abstract void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride);
+    public abstract void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride);
 
     /**
      * Decode an entire image, allocating a new byte array as the destination.
      *
      * @param src       The source data.
-     * @param srcPos    The position in the source data.
      * @param srcWidth  The width of the image.
      * @param srcHeight The height of the image.
      * @return The newly allocated decoded image.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
      * @throws IndexOutOfBoundsException If the source data is too small.
      */
-    public byte[] decode(byte[] src, int srcPos, int srcWidth, int srcHeight) {
-        byte[] dst = new byte[srcWidth * srcHeight * bytesPerPixel];
-        decode(src, srcPos, srcWidth, srcHeight, dst, 0);
+    public ByteBuffer decode(ByteBuffer src, int srcWidth, int srcHeight) {
+        ByteBuffer dst = ByteBuffer
+            .allocate(srcWidth * srcHeight * bytesPerPixel);
+        decode(src, srcWidth, srcHeight, dst);
         return dst;
     }
 
@@ -128,17 +128,15 @@ public abstract class BlockDecoder {
      * Decode an entire image, using an existing byte array as the destination.
      *
      * @param src       The source data.
-     * @param srcPos    The position in the source data.
      * @param srcWidth  The width of the source image.
      * @param srcHeight The height of the source image.
      * @param dst       The destination data.
-     * @param dstPos    The position in the destination data.
      *                  The destination data must have enough room to store the entire image.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
      * @throws IndexOutOfBoundsException If the source or destination data is too small.
      */
-    public void decode(byte[] src, int srcPos, int srcWidth, int srcHeight, byte[] dst, int dstPos) {
-        decode(src, srcPos, srcWidth, srcHeight, dst, dstPos, srcWidth, srcHeight);
+    public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst) {
+        decode(src, srcWidth, srcHeight, dst, srcWidth, srcHeight);
     }
 
     /**
@@ -147,21 +145,19 @@ public abstract class BlockDecoder {
      * The destination data must have enough room to store the entire image.
      *
      * @param src       The source data.
-     * @param srcPos    The position in the source data.
      * @param srcWidth  The width of the source data.
      * @param srcHeight The height of the source data.
      * @param dst       The destination data.
-     * @param dstPos    The position in the destination data.
      * @param dstWidth  The width of the destination image.
      * @param dstHeight The height of the destination image.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0,
      *                                   or if the destination width or height is less than the source width or height.
      * @throws IndexOutOfBoundsException If the source or destination data is too small.
      */
-    public void decode(byte[] src, int srcPos, int srcWidth, int srcHeight, byte[] dst, int dstPos, int dstWidth, int dstHeight) {
+    public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst, int dstWidth, int dstHeight) {
         decode(
-            src, srcPos, 0, 0, srcWidth, srcHeight,
-            dst, dstPos, 0, 0, dstWidth, dstHeight,
+            src, 0, 0, srcWidth, srcHeight,
+            dst, 0, 0, dstWidth, dstHeight,
             dstWidth, dstHeight
         );
     }
@@ -172,13 +168,11 @@ public abstract class BlockDecoder {
      * to contain the required data for the specified regions.
      *
      * @param src       The source byte array containing the encoded image data.
-     * @param srcPos    The starting position in the source byte array.
      * @param srcX      The x-coordinate of the source region to decode.
      * @param srcY      The y-coordinate of the source region to decode.
      * @param srcWidth  The width of the source region to decode.
      * @param srcHeight The height of the source region to decode.
      * @param dst       The destination byte array where the decoded image data will be stored.
-     * @param dstPos    The starting position in the destination byte array.
      * @param dstX      The x-coordinate of the destination region where decoded data will be placed.
      * @param dstY      The y-coordinate of the destination region where decoded data will be placed.
      * @param dstWidth  The width of the destination region.
@@ -189,24 +183,29 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If the source or destination buffer is too small for the specified regions.
      */
     public void decode(
-        byte[] src, int srcPos, int srcX, int srcY, int srcWidth, int srcHeight,
-        byte[] dst, int dstPos, int dstX, int dstY, int dstWidth, int dstHeight,
+        ByteBuffer src, int srcX, int srcY, int srcWidth, int srcHeight,
+        ByteBuffer dst, int dstX, int dstY, int dstWidth, int dstHeight,
         int width, int height
     ) {
         validateRegion("src", srcX, srcY, srcWidth, srcHeight, width, height);
         validateRegion("dst", dstX, dstY, dstWidth, dstHeight, width, height);
 
-        int srcBlocksW = (srcWidth + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
-        int srcBlocksH = (srcHeight + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
-        Objects.checkFromIndexSize(srcPos, srcBlocksW * srcBlocksH * bytesPerBlock, src.length);
-        Objects.checkFromIndexSize(dstPos, dstWidth * dstHeight * bytesPerPixel, dst.length);
+        if (src.remaining() < byteSize(srcWidth, srcHeight)) {
+            throw new IndexOutOfBoundsException("Not enough data in src buffer");
+        }
+        if (dst.remaining() < dstWidth * dstHeight * bytesPerPixel) {
+            throw new IndexOutOfBoundsException("Not enough data in dst buffer");
+        }
 
+        int srcBlocksW = (srcWidth + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
         int srcLineStride = srcBlocksW * bytesPerBlock;
         int dstLineStride = dstWidth * bytesPerPixel;
 
+        var srcBuf = src.slice().order(ByteOrder.LITTLE_ENDIAN);
+        var dstBuf = dst.slice().order(ByteOrder.LITTLE_ENDIAN);
         for (int y = 0; y < height; ) {
-            int srcRowStart = srcPos + ((srcY + y) / BLOCK_HEIGHT * srcLineStride);
-            int dstRowStart = dstPos + ((dstY + y) * dstLineStride);
+            int srcRowStart = ((srcY + y) / BLOCK_HEIGHT * srcLineStride);
+            int dstRowStart = ((dstY + y) * dstLineStride);
             int blockY = (srcY + y) % BLOCK_HEIGHT;
             int blockH = Math.min(BLOCK_HEIGHT - blockY, height - y);
 
@@ -217,11 +216,11 @@ public abstract class BlockDecoder {
                 int blockW = Math.min(BLOCK_WIDTH - blockX, width - x);
 
                 if (blockX == 0 && x + BLOCK_WIDTH <= width && blockY == 0 && y + BLOCK_HEIGHT <= height) {
-                    decodeBlock(src, srcPosStart, dst, dstPosStart, dstLineStride);
+                    decodeBlock(srcBuf, srcPosStart, dstBuf, dstPosStart, dstLineStride);
                     x += BLOCK_WIDTH;
                 } else {
                     partialBlock(
-                        src, srcPosStart, dst, dstPosStart, dstLineStride,
+                        srcBuf, srcPosStart, dstBuf, dstPosStart, dstLineStride,
                         blockX, blockY, blockW, blockH);
                     x += blockW;
                 }
@@ -256,24 +255,25 @@ public abstract class BlockDecoder {
     }
 
     private void partialBlock(
-        byte[] src, int srcPos,
-        byte[] dst, int dstPos, int lineStride,
+        ByteBuffer src, int srcPos,
+        ByteBuffer dst, int dstPos, int lineStride,
         int blockX, int blockY, int blockW, int blockH
     ) {
         if (this.scratch == null) {
-            this.scratch = new byte[BLOCK_WIDTH * BLOCK_HEIGHT * bytesPerPixel];
+            this.scratch = ByteBuffer
+                .allocate(BLOCK_WIDTH * BLOCK_HEIGHT * bytesPerPixel);
         }
-        byte[] scratch = this.scratch;
+        ByteBuffer scratch = this.scratch;
         int stride = BLOCK_WIDTH * bytesPerPixel;
         decodeBlock(src, srcPos, scratch, 0, stride);
 
         int offset = blockY * stride + blockX * bytesPerPixel;
         for (int row = 0; row < blockH; row++) {
-            System.arraycopy(
-                scratch, offset + (row * stride),
-                dst, dstPos + (row * lineStride),
-                blockW * bytesPerPixel
-            );
+            var srcOff = offset + (row * stride);
+            var dstOff = dstPos + (row * lineStride);
+            for (int i = 0; i < blockW * bytesPerPixel; i++) {
+                dst.put(dstOff + i, scratch.get(srcOff + i));
+            }
         }
     }
 }

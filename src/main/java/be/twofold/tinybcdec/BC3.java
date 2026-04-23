@@ -1,5 +1,7 @@
 package be.twofold.tinybcdec;
 
+import java.nio.*;
+
 final class BC3 extends BlockDecoder {
     private static final int BPP = 4;
     private static final BC1 COLOR_DECODER = new BC1(BC1Mode.BC2OR3);
@@ -12,7 +14,7 @@ final class BC3 extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(byte[] src, int srcPos, byte[] dst, int dstPos, int stride) {
+    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         COLOR_DECODER.decodeBlock(src, srcPos + 8, dst, dstPos/**/, stride);
         ALPHA_DECODER.decodeBlock(src, srcPos/**/, dst, dstPos + 3, stride);
     }

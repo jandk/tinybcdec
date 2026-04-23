@@ -16,27 +16,31 @@ final class ByteArrays {
     private ByteArrays() {
     }
 
-    static short getShort(byte[] array, int index) {
-        return (short) ShortVarHandle.get(array, index);
+    static void setByte(ByteBuffer buffer, int index, byte value) {
+        buffer.put(index, value);
     }
 
-    static void setShort(byte[] array, int index, short value) {
-        ShortVarHandle.set(array, index, value);
+    static short getShort(ByteBuffer buffer, int index) {
+        return buffer.getShort(index);
     }
 
-    static int getInt(byte[] array, int index) {
-        return (int) IntVarHandle.get(array, index);
+    static void setShort(ByteBuffer buffer, int index, short value) {
+        buffer.putShort(index, value);
     }
 
-    static void setInt(byte[] array, int index, int value) {
-        IntVarHandle.set(array, index, value);
+    static int getInt(ByteBuffer buffer, int index) {
+        return buffer.getInt(index);
     }
 
-    static long getLong(byte[] array, int index) {
-        return (long) LongVarHandle.get(array, index);
+    static void setInt(ByteBuffer buffer, int index, int value) {
+        buffer.putInt(index, value);
     }
 
-    static void setFloat(byte[] array, int index, float value) {
-        FloatVarHandle.set(array, index, value);
+    static long getLong(ByteBuffer buffer, int index) {
+        return buffer.getLong(index);
+    }
+
+    static void setFloat(ByteBuffer buffer, int index, float value) {
+        buffer.putFloat(index, value);
     }
 }
