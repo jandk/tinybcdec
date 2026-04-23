@@ -31,7 +31,7 @@ class BlockDecoderTest {
         int dstOffset = 31;
 
         ByteBuffer dst = ByteBuffer.allocate(8 * 8 + dstOffset);
-        var decoder = BlockDecoder.bc4(false);
+        BlockDecoder decoder = BlockDecoder.bc4(false);
         for (int h = 1; h <= 8; h++) {
             for (int w = 1; w <= 8; w++) {
                 decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), srcWidth, srcHeight, dst.position(dstOffset), w, h);
@@ -55,7 +55,7 @@ class BlockDecoderTest {
         int dstOffset = 31;
 
         ByteBuffer dst = ByteBuffer.allocate(8 * 8 + dstOffset);
-        var decoder = BlockDecoder.bc4(false);
+        BlockDecoder decoder = BlockDecoder.bc4(false);
 
         // Test all offsets between 0 and 8
         for (int srcY = 1; srcY < 8; srcY++) {

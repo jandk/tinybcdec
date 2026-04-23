@@ -269,8 +269,8 @@ public abstract class BlockDecoder {
 
         int offset = blockY * stride + blockX * bytesPerPixel;
         for (int row = 0; row < blockH; row++) {
-            var srcOff = offset + (row * stride);
-            var dstOff = dstPos + (row * lineStride);
+            int srcOff = offset + (row * stride);
+            int dstOff = dstPos + (row * lineStride);
             ByteIO.copy(scratch, srcOff, dst, dstOff, blockW * bytesPerPixel);
         }
     }
