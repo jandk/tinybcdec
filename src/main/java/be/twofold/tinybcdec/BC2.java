@@ -19,12 +19,12 @@ final class BC2 extends BlockDecoder {
     }
 
     private void decodeAlpha(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        long alphas = ByteArrays.getLong(src, srcPos);
+        long alphas = ByteIO.getLong(src, srcPos);
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 byte alpha = (byte) ((alphas & 15) * 17);
-                ByteArrays.setByte(dst, dstPos + x * BPP, alpha);
+                ByteIO.setByte(dst, dstPos + x * BPP, alpha);
                 alphas >>>= 4;
             }
             dstPos += stride;

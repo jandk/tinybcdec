@@ -96,9 +96,9 @@ final class BC6H extends BPTC {
                 partitions >>>= 2;
 
                 int o = dstPos + x * BPP;
-                ByteArrays.setShort(dst, o/**/, r);
-                ByteArrays.setShort(dst, o + 2, g);
-                ByteArrays.setShort(dst, o + 4, b);
+                ByteIO.setShort(dst, o/**/, r);
+                ByteIO.setShort(dst, o + 2, g);
+                ByteIO.setShort(dst, o + 4, b);
             }
             dstPos += stride;
         }
@@ -188,7 +188,7 @@ final class BC6H extends BPTC {
     private static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int i = 0; i < BLOCK_WIDTH * BPP; i++) {
-                dst.put(dstPos + i, (byte) 0);
+                ByteIO.setByte(dst, dstPos + i, (byte) 0);
             }
             dstPos += stride;
         }

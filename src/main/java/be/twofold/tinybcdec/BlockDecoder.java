@@ -272,7 +272,7 @@ public abstract class BlockDecoder {
             var srcOff = offset + (row * stride);
             var dstOff = dstPos + (row * lineStride);
             for (int i = 0; i < blockW * bytesPerPixel; i++) {
-                dst.put(dstOff + i, scratch.get(srcOff + i));
+                ByteIO.setByte(dst, dstOff + i, ByteIO.getByte(scratch, srcOff + i));
             }
         }
     }
