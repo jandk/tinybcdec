@@ -158,9 +158,7 @@ final class BC7 extends BPTC {
 
     private static void fillInvalidBlock(ByteBuffer dst, int dstPos, int stride) {
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int i = 0; i < BLOCK_WIDTH * BPP; i++) {
-                ByteIO.setByte(dst, dstPos + i, (byte) 0);
-            }
+            ByteIO.fill(dst, dstPos, BLOCK_WIDTH * BPP, (byte) 0);
             dstPos += stride;
         }
     }
