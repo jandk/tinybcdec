@@ -119,15 +119,12 @@ abstract class BPTC extends BlockDecoder {
         private long lo;
         private long hi;
 
-        private Bits(long lo, long hi) {
-            this.lo = lo;
-            this.hi = hi;
+        Bits() {
         }
 
-        static Bits from(ByteBuffer buffer, int index) {
-            long lo = ByteIO.getLong(buffer, index);
-            long hi = ByteIO.getLong(buffer, index + 8);
-            return new Bits(lo, hi);
+        void read(ByteBuffer buffer, int index) {
+            lo = ByteIO.getLong(buffer, index);
+            hi = ByteIO.getLong(buffer, index + 8);
         }
 
         int get(int count) {
