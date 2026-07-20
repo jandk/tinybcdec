@@ -10,7 +10,7 @@ final class BC4U extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteIO.getLong(src, srcPos);
 
         int a0 = (int) (block/*  */) & 0xFF;

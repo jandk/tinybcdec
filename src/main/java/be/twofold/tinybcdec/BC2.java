@@ -12,7 +12,7 @@ final class BC2 extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         colorDecoder.decodeBlock(src, srcPos + 8, dst, dstPos, stride);
         decodeAlpha(src, srcPos, dst, dstPos + 3, stride);
     }

@@ -33,7 +33,7 @@ final class BC6H extends BPTC {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         Bits bits = this.bits;
         bits.read(src, srcPos);
 

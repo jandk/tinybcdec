@@ -25,7 +25,7 @@ final class BC7 extends BPTC {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         int modeIndex = Integer.numberOfTrailingZeros(ByteIO.getByte(src, srcPos));
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride, BPP);

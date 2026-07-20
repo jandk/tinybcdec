@@ -8,9 +8,11 @@ import java.nio.*;
  * To create a new instance, use one of the static factory methods starting with {@code bc}.
  * <p>
  * To decode an entire image, use the {@link #decode(ByteBuffer, int, int)} or {@link #decode(ByteBuffer, int, int, ByteBuffer)} method.
- * Depending on if you want to allocate a new byte array or use an existing one.
+ * Depending on if you want to allocate a new buffer or use an existing one.
  * <p>
- * To decode a single block, use the {@link #decodeBlock(ByteBuffer, int, ByteBuffer, int, int)} method.
+ * Buffers are accessed by absolute index, starting at their current position, so decoding reads and
+ * writes without ever advancing a position. Block data is little-endian, so both buffers are switched
+ * to {@link ByteOrder#LITTLE_ENDIAN} while decoding and set back to their original order afterwards.
  * <p>
  * <b>Thread safety:</b> instances are not thread-safe. Each thread should use its own decoder instance.
  */
@@ -95,27 +97,27 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Decodes a single block of data.
-     * The source data is expected to be in the format of the block format.
-     * The destination data is expected to be in the format of the channel order.
+     * Decodes a single {@value #BLOCK_WIDTH}x{@value #BLOCK_HEIGHT} block.
      * <p>
-     * There should be enough data/room in the source and the destination to read/write the block.
+     * This is the internal hook every format implements. The {@code decode} methods handle validation,
+     * byte order, and partial blocks, so implementations may assume both buffers are little-endian and
+     * have room for the whole block, and they never bounds check. Positions are left untouched.
      *
-     * @param src    The source data.
-     * @param srcPos The position in the source data.
-     * @param dst    The destination data.
-     * @param dstPos The position in the destination data.
+     * @param src    The encoded block data.
+     * @param srcPos The absolute index of the block in the source.
+     * @param dst    The destination for the decoded pixels.
+     * @param dstPos The absolute index of the block's top left pixel in the destination.
      * @param stride The number of bytes per line in the destination data.
      */
-    public abstract void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride);
+    abstract void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride);
 
     /**
-     * Decode an entire image, allocating a new byte array as the destination.
+     * Decode an entire image, allocating a new buffer as the destination.
      *
      * @param src       The source data.
      * @param srcWidth  The width of the image.
      * @param srcHeight The height of the image.
-     * @return The newly allocated decoded image.
+     * @return The newly allocated decoded image, a heap buffer positioned at 0.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
      * @throws IndexOutOfBoundsException If the source data is too small.
      */
@@ -127,7 +129,7 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Decode an entire image, using an existing byte array as the destination.
+     * Decode an entire image, using an existing buffer as the destination.
      *
      * @param src       The source data.
      * @param srcWidth  The width of the source image.
@@ -142,7 +144,7 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Decode an entire image, using an existing byte array as the destination.
+     * Decode an entire image, using an existing buffer as the destination.
      * <p>
      * The destination data must have enough room to store the entire image.
      *
@@ -169,12 +171,12 @@ public abstract class BlockDecoder {
      * Both source and destination buffers must be pre-allocated with sufficient space
      * to contain the required data for the specified regions.
      *
-     * @param src       The source byte array containing the encoded image data.
+     * @param src       The source buffer containing the encoded image data.
      * @param srcX      The x-coordinate of the source region to decode.
      * @param srcY      The y-coordinate of the source region to decode.
      * @param srcWidth  The width of the source region to decode.
      * @param srcHeight The height of the source region to decode.
-     * @param dst       The destination byte array where the decoded image data will be stored.
+     * @param dst       The destination buffer where the decoded image data will be stored.
      * @param dstX      The x-coordinate of the destination region where decoded data will be placed.
      * @param dstY      The y-coordinate of the destination region where decoded data will be placed.
      * @param dstWidth  The width of the destination region.

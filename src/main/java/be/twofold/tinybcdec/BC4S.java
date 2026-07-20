@@ -10,7 +10,7 @@ final class BC4S extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteIO.getLong(src, srcPos);
 
         int a0 = Math.max(-127, (byte) (block/*  */));

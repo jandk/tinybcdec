@@ -12,7 +12,7 @@ final class BC5U extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         decoder.decodeBlock(src, srcPos/**/, dst, dstPos/**/, stride);
         decoder.decodeBlock(src, srcPos + 8, dst, dstPos + 1, stride);
     }

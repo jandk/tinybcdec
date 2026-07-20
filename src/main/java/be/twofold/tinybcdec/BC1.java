@@ -16,7 +16,7 @@ final class BC1 extends BlockDecoder {
     }
 
     @Override
-    public void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
+    void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteIO.getLong(src, srcPos);
 
         int c0 = (int) (block/*   */) & 0xFFFF;

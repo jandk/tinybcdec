@@ -4,6 +4,7 @@ import org.junit.jupiter.api.*;
 
 import java.io.*;
 import java.nio.*;
+import java.util.*;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -75,6 +76,42 @@ class BlockDecoderTest {
                 }
             }
         }
+    }
+
+    @Test
+    void testDecodeIgnoresBufferOrder() {
+        Random random = new Random(0);
+        int width = 13; // Deliberately not block aligned, to cover partial blocks too
+        int height = 7;
+
+        for (BlockDecoder decoder : decoders()) {
+            byte[] encoded = new byte[decoder.byteSize(width, height)];
+            random.nextBytes(encoded);
+            int decodedSize = width * height * decoder.bytesPerPixel;
+
+            ByteBuffer heapDst = ByteBuffer.allocate(decodedSize).order(ByteOrder.LITTLE_ENDIAN);
+            decoder.decode(ByteBuffer.wrap(encoded).order(ByteOrder.LITTLE_ENDIAN), width, height, heapDst);
+
+            ByteBuffer directSrc = ByteBuffer.allocateDirect(encoded.length).put(encoded).clear();
+            ByteBuffer directDst = ByteBuffer.allocateDirect(decodedSize);
+            assertThat(directSrc.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
+            decoder.decode(directSrc, width, height, directDst);
+
+            assertThat(directDst).isEqualTo(heapDst);
+            assertThat(directSrc.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
+            assertThat(directDst.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
+        }
+    }
+
+    private static List<BlockDecoder> decoders() {
+        return List.of(
+            BlockDecoder.bc1(false), BlockDecoder.bc1(true),
+            BlockDecoder.bc2(), BlockDecoder.bc3(),
+            BlockDecoder.bc4(false), BlockDecoder.bc4(true),
+            BlockDecoder.bc5(false), BlockDecoder.bc5(true),
+            BlockDecoder.bc6h(false), BlockDecoder.bc6h(true),
+            BlockDecoder.bc7()
+        );
     }
 
     @Test
