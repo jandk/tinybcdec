@@ -64,9 +64,9 @@ class BlockDecoderTest {
                 int w = 8;
                 int h = 8;
                 decoder.decode(
-                    src.position(BCTestUtils.DDS_HEADER_SIZE), srcX, srcY, srcWidth, srcHeight,
-                    dst.position(dstOffset), 0, 0, w, h,
-                    w, h
+                    src.position(BCTestUtils.DDS_HEADER_SIZE), srcWidth, srcHeight,
+                    dst.position(dstOffset), w, h,
+                    srcX, srcY, 0, 0
                 );
 
                 for (int y = 0; y < h; y++) {
@@ -90,12 +90,12 @@ class BlockDecoderTest {
             int decodedSize = width * height * decoder.bytesPerPixel;
 
             ByteBuffer heapDst = ByteBuffer.allocate(decodedSize).order(ByteOrder.LITTLE_ENDIAN);
-            decoder.decode(ByteBuffer.wrap(encoded).order(ByteOrder.LITTLE_ENDIAN), width, height, heapDst);
+            decoder.decode(ByteBuffer.wrap(encoded).order(ByteOrder.LITTLE_ENDIAN), width, height, heapDst, width, height);
 
             ByteBuffer directSrc = ByteBuffer.allocateDirect(encoded.length).put(encoded).clear();
             ByteBuffer directDst = ByteBuffer.allocateDirect(decodedSize);
             assertThat(directSrc.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
-            decoder.decode(directSrc, width, height, directDst);
+            decoder.decode(directSrc, width, height, directDst, width, height);
 
             assertThat(directDst).isEqualTo(heapDst);
             assertThat(directSrc.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
@@ -134,15 +134,17 @@ class BlockDecoderTest {
         // A region whose x + width wraps must not pass as "inside" the source
         assertThatExceptionOfType(IndexOutOfBoundsException.class)
             .isThrownBy(() -> decoder.decode(
-                ByteBuffer.allocate(8), Integer.MAX_VALUE - 3, 0, 4, 4,
-                ByteBuffer.allocate(4 * 4 * 4), 0, 0, 4, 4,
+                ByteBuffer.allocate(8), 4, 4,
+                ByteBuffer.allocate(4 * 4 * 4), 4, 4,
+                Integer.MAX_VALUE - 3, 0, 0, 0,
                 4, 4));
 
         // A destination whose size overflows an int must not pass as "big enough"
         assertThatIllegalArgumentException()
             .isThrownBy(() -> decoder.decode(
-                ByteBuffer.allocate(8), 0, 0, 4, 4,
-                ByteBuffer.allocate(16), 0, 0, 65536, 16384,
+                ByteBuffer.allocate(8), 4, 4,
+                ByteBuffer.allocate(16), 65536, 16384,
+                0, 0, 0, 0,
                 4, 4));
 
         // encodedByteSize must never report a negative or otherwise nonsensical size
@@ -158,7 +160,7 @@ class BlockDecoderTest {
         ByteBuffer dst = ByteBuffer.allocate(8 * 8 * 4).asReadOnlyBuffer();
 
         assertThatExceptionOfType(ReadOnlyBufferException.class)
-            .isThrownBy(() -> decoder.decode(src, 8, 8, dst));
+            .isThrownBy(() -> decoder.decode(src, 8, 8, dst, 8, 8));
 
         // Rejected up front, so the buffers are untouched
         assertThat(src.order()).isEqualTo(ByteOrder.BIG_ENDIAN);

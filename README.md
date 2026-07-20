@@ -34,8 +34,8 @@ The following features are present:
 
 - Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case). The output
   width and height can be smaller than the input, and the library will handle this.
-- BC6H: BC6H is decoded to a little endian half-float buffer. The library does not provide a way to convert this to
-  full float. This can be done with `Float.float16toFloat` in Java 21, or with a library. This also means that the
+- BC6H: BC6H is decoded to a little endian half-float buffer. The library does not provide a way to convert this to full
+  float. This can be done with `Float.float16ToFloat` in Java 21, or with a library. This also means that the
   output buffer is twice as big.
 
 The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
@@ -45,24 +45,54 @@ After construction, decoders produce no heap allocations during decoding. Intern
 reused across calls. Note that this also means instances are **not thread-safe**: each thread must use its own decoder
 instance.
 
-Given `src` is the compressed data, starting at offset `srcPos`, the following code snippet shows how to decode a BC1
-texture.
+Both the source and the destination are a `ByteBuffer`. They are read and written by absolute index, starting at the
+buffer's current position, so decoding never advances a position. Block data is little endian, so both buffers are
+switched to `ByteOrder.LITTLE_ENDIAN` while decoding and set back to their original order afterwards.
+
+Given `src` is the compressed data, positioned at the start of the blocks, the following snippet decodes a BC1 texture
+into a newly allocated buffer.
 
 ```java
 import be.twofold.tinybcdec.*;
 
 BlockDecoder decoder = BlockDecoder.bc1(true);
-byte[] result = decoder.decode(256, 256, src, srcPos);
+ByteBuffer result = decoder.decode(src, 256, 256);
 ```
 
-If you want to pass an existing buffer, you can pass it as the last two arguments `dst` and `dstPos`. There will be no
-return value.
+To decode into a buffer you already have, pass it along with its dimensions. There is no return value.
 
 ```java
-decoder.decode(src, srcPos, 256, 256, dst, dstPos);
+decoder.decode(src, 256,256,dst, 256,256);
 ```
 
-If you want to decode a partial image,
+The destination may be smaller than the source, in which case the image is cropped to the top left. It may not be
+larger, as there would be nothing to fill the remainder with.
+
+```java
+decoder.decode(src, 256,256,dst, 64,64); // the top left 64x64 pixels
+```
+
+To decode somewhere other than the top left, add the source and destination coordinates. The region decoded is whatever
+is left of the destination, which makes this the form to use when the destination is already the size of the region you
+want, such as a single tile.
+
+```java
+decoder.decode(src, 256,256,tile, 64,64,128,64,0,0); // the 64x64 tile at (128, 64)
+```
+
+The general form takes the region size explicitly, and is the only way to decode into part of a larger destination.
+
+```java
+decoder.decode(
+    src, 256,256,     // source buffer and its dimensions
+    dst, 256,256,     // destination buffer and its dimensions
+        128,64,0,0,     // decode from (128, 64) to (0, 0)
+        64,64             // decoding a 64x64 region
+);
+```
+
+Both buffers must hold their entire image, not just the region, since the dimensions are what determine where a row
+starts. `encodedByteSize(width, height)` and `decodedByteSize(width, height)` return the sizes required.
 
 ## Performance
 

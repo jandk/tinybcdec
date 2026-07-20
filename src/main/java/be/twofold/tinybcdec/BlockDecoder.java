@@ -7,8 +7,9 @@ import java.nio.*;
  * <p>
  * To create a new instance, use one of the static factory methods starting with {@code bc}.
  * <p>
- * To decode an entire image, use the {@link #decode(ByteBuffer, int, int)} or {@link #decode(ByteBuffer, int, int, ByteBuffer)} method.
- * Depending on if you want to allocate a new buffer or use an existing one.
+ * To decode an entire image, use the {@link #decode(ByteBuffer, int, int)} or
+ * {@link #decode(ByteBuffer, int, int, ByteBuffer, int, int)} method, depending on if you want to
+ * allocate a new buffer or use an existing one. Both have longer forms that decode a region instead.
  * <p>
  * Buffers are accessed by absolute index, starting at their current position, so decoding reads and
  * writes without ever advancing a position. Block data is little-endian, so both buffers are switched
@@ -112,11 +113,13 @@ public abstract class BlockDecoder {
     abstract void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride);
 
     /**
-     * Decode an entire image, allocating a new buffer as the destination.
+     * Decodes an entire image, allocating a new buffer as the destination.
+     * <p>
+     * The destination is a heap buffer of {@link #decodedByteSize(int, int)} bytes, positioned at 0.
      *
      * @param src       The source data.
-     * @param srcWidth  The width of the image.
-     * @param srcHeight The height of the image.
+     * @param srcWidth  The width of the source image.
+     * @param srcHeight The height of the source image.
      * @return The newly allocated decoded image, a heap buffer positioned at 0.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0,
      *                                   or if the decoded image would not fit in a single buffer.
@@ -125,35 +128,20 @@ public abstract class BlockDecoder {
     public ByteBuffer decode(ByteBuffer src, int srcWidth, int srcHeight) {
         ByteBuffer dst = ByteBuffer
             .allocate(decodedByteSize(srcWidth, srcHeight));
-        decode(src, srcWidth, srcHeight, dst);
+        decode(src, srcWidth, srcHeight, dst, srcWidth, srcHeight);
         return dst;
     }
 
     /**
-     * Decode an entire image, using an existing buffer as the destination.
+     * Decodes an entire image into an existing buffer, cropping to the destination's dimensions.
+     * <p>
+     * Equivalent to {@link #decode(ByteBuffer, int, int, ByteBuffer, int, int, int, int, int, int)}
+     * with both origins at 0, 0.
      *
      * @param src       The source data.
      * @param srcWidth  The width of the source image.
      * @param srcHeight The height of the source image.
-     * @param dst       The destination data.
-     *                  The destination data must have enough room to store the entire image.
-     * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
-     * @throws IndexOutOfBoundsException If the source or destination data is too small.
-     * @throws ReadOnlyBufferException   If the destination is read-only.
-     */
-    public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst) {
-        decode(src, srcWidth, srcHeight, dst, srcWidth, srcHeight);
-    }
-
-    /**
-     * Decode an entire image, using an existing buffer as the destination.
-     * <p>
-     * The destination data must have enough room to store the entire image.
-     *
-     * @param src       The source data.
-     * @param srcWidth  The width of the source data.
-     * @param srcHeight The height of the source data.
-     * @param dst       The destination data.
+     * @param dst       The destination data, which must have room for the entire destination image.
      * @param dstWidth  The width of the destination image.
      * @param dstHeight The height of the destination image.
      * @throws IllegalArgumentException  If any width or height is less than or equal to 0.
@@ -165,37 +153,81 @@ public abstract class BlockDecoder {
      */
     public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst, int dstWidth, int dstHeight) {
         decode(
-            src, 0, 0, srcWidth, srcHeight,
-            dst, 0, 0, dstWidth, dstHeight,
-            dstWidth, dstHeight
+            src, srcWidth, srcHeight,
+            dst, dstWidth, dstHeight,
+            0, 0, 0, 0
         );
     }
 
     /**
-     * Decodes a region of image data from a source buffer to a destination buffer.
-     * Both source and destination buffers must be pre-allocated with sufficient space
-     * to contain the required data for the specified regions.
+     * Decodes from a point in the source image to a point in the destination image, filling the rest
+     * of the destination.
+     * <p>
+     * Equivalent to {@link #decode(ByteBuffer, int, int, ByteBuffer, int, int, int, int, int, int, int, int)}
+     * with a region of {@code dstWidth - dstX} x {@code dstHeight - dstY}.
+     * <p>
+     * Because the region fills the destination, this is meant for a destination that is already the
+     * size of the region you want, such as a single tile. A destination as large as the source
+     * combined with a non-zero {@code srcX} or {@code srcY} does not work, as the source runs out
+     * before the destination is full; use the general form to state a smaller region explicitly.
      *
-     * @param src       The source buffer containing the encoded image data.
-     * @param srcX      The x-coordinate of the source region to decode.
-     * @param srcY      The y-coordinate of the source region to decode.
-     * @param srcWidth  The width of the source region to decode.
-     * @param srcHeight The height of the source region to decode.
-     * @param dst       The destination buffer where the decoded image data will be stored.
-     * @param dstX      The x-coordinate of the destination region where decoded data will be placed.
-     * @param dstY      The y-coordinate of the destination region where decoded data will be placed.
-     * @param dstWidth  The width of the destination region.
-     * @param dstHeight The height of the destination region.
-     * @param width     The target width of the region to decode.
-     * @param height    The target height of the region to decode.
+     * @param src       The source data.
+     * @param srcWidth  The width of the entire source image.
+     * @param srcHeight The height of the entire source image.
+     * @param dst       The destination data, which must have room for the entire destination image.
+     * @param dstWidth  The width of the entire destination image.
+     * @param dstHeight The height of the entire destination image.
+     * @param srcX      The x-coordinate in the source image to decode from.
+     * @param srcY      The y-coordinate in the source image to decode from.
+     * @param dstX      The x-coordinate in the destination image to decode to.
+     * @param dstY      The y-coordinate in the destination image to decode to.
      * @throws IllegalArgumentException  If any width or height is less than or equal to 0.
-     * @throws IndexOutOfBoundsException If either region falls outside of its image, or if the source
-     *                                   or destination buffer is too small for the specified regions.
+     * @throws IndexOutOfBoundsException If either region falls outside of its image, or if either
+     *                                   buffer has less remaining than its entire image requires.
      * @throws ReadOnlyBufferException   If the destination is read-only.
      */
     public void decode(
-        ByteBuffer src, int srcX, int srcY, int srcWidth, int srcHeight,
-        ByteBuffer dst, int dstX, int dstY, int dstWidth, int dstHeight,
+        ByteBuffer src, int srcWidth, int srcHeight,
+        ByteBuffer dst, int dstWidth, int dstHeight,
+        int srcX, int srcY, int dstX, int dstY
+    ) {
+        decode(
+            src, srcWidth, srcHeight,
+            dst, dstWidth, dstHeight,
+            srcX, srcY, dstX, dstY,
+            dstWidth - dstX, dstHeight - dstY
+        );
+    }
+
+    /**
+     * Decodes a region of one image into a region of another.
+     * <p>
+     * This is the general form, of which the shorter overloads are special cases. The two images are
+     * described by their full dimensions, and the region to decode by its origin in each image plus a
+     * shared {@code width} and {@code height}. Both buffers must hold their entire image, not just the
+     * region, since the dimensions are what determine where a row starts.
+     *
+     * @param src       The source buffer containing the encoded image data.
+     * @param srcWidth  The width of the entire source image.
+     * @param srcHeight The height of the entire source image.
+     * @param dst       The destination buffer where the decoded image data will be stored.
+     * @param dstWidth  The width of the entire destination image.
+     * @param dstHeight The height of the entire destination image.
+     * @param srcX      The x-coordinate in the source image to decode from.
+     * @param srcY      The y-coordinate in the source image to decode from.
+     * @param dstX      The x-coordinate in the destination image to decode to.
+     * @param dstY      The y-coordinate in the destination image to decode to.
+     * @param width     The width of the region to decode.
+     * @param height    The height of the region to decode.
+     * @throws IllegalArgumentException  If any width or height is less than or equal to 0.
+     * @throws IndexOutOfBoundsException If either region falls outside of its image, or if either
+     *                                   buffer has less remaining than its entire image requires.
+     * @throws ReadOnlyBufferException   If the destination is read-only.
+     */
+    public void decode(
+        ByteBuffer src, int srcWidth, int srcHeight,
+        ByteBuffer dst, int dstWidth, int dstHeight,
+        int srcX, int srcY, int dstX, int dstY,
         int width, int height
     ) {
         if (width <= 0 || height <= 0) {
