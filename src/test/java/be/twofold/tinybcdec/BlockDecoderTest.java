@@ -85,7 +85,7 @@ class BlockDecoderTest {
         int height = 7;
 
         for (BlockDecoder decoder : decoders()) {
-            byte[] encoded = new byte[decoder.byteSize(width, height)];
+            byte[] encoded = new byte[decoder.encodedByteSize(width, height)];
             random.nextBytes(encoded);
             int decodedSize = width * height * decoder.bytesPerPixel;
 
@@ -119,12 +119,50 @@ class BlockDecoderTest {
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(false)
                 .decode(null, 0, 256))
-            .withMessage("src width (0) or height (256) is not positive");
+            .withMessage("width (0) or height (256) is not positive");
 
         assertThatIllegalArgumentException()
             .isThrownBy(() -> BlockDecoder.bc1(false)
                 .decode(null, 256, 0))
-            .withMessage("src width (256) or height (0) is not positive");
+            .withMessage("width (256) or height (0) is not positive");
+    }
+
+    @Test
+    void testValidationOverflow() {
+        BlockDecoder decoder = BlockDecoder.bc1(false);
+
+        // A region whose x + width wraps must not pass as "inside" the source
+        assertThatExceptionOfType(IndexOutOfBoundsException.class)
+            .isThrownBy(() -> decoder.decode(
+                ByteBuffer.allocate(8), Integer.MAX_VALUE - 3, 0, 4, 4,
+                ByteBuffer.allocate(4 * 4 * 4), 0, 0, 4, 4,
+                4, 4));
+
+        // A destination whose size overflows an int must not pass as "big enough"
+        assertThatIllegalArgumentException()
+            .isThrownBy(() -> decoder.decode(
+                ByteBuffer.allocate(8), 0, 0, 4, 4,
+                ByteBuffer.allocate(16), 0, 0, 65536, 16384,
+                4, 4));
+
+        // encodedByteSize must never report a negative or otherwise nonsensical size
+        assertThatIllegalArgumentException().isThrownBy(() -> decoder.encodedByteSize(65536, 65536));
+        assertThatIllegalArgumentException().isThrownBy(() -> decoder.encodedByteSize(-8, -8));
+        assertThatIllegalArgumentException().isThrownBy(() -> decoder.encodedByteSize(0, 0));
+    }
+
+    @Test
+    void testValidationRejectsReadOnlyDestination() {
+        BlockDecoder decoder = BlockDecoder.bc1(false);
+        ByteBuffer src = ByteBuffer.allocate(decoder.encodedByteSize(8, 8));
+        ByteBuffer dst = ByteBuffer.allocate(8 * 8 * 4).asReadOnlyBuffer();
+
+        assertThatExceptionOfType(ReadOnlyBufferException.class)
+            .isThrownBy(() -> decoder.decode(src, 8, 8, dst));
+
+        // Rejected up front, so the buffers are untouched
+        assertThat(src.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
+        assertThat(dst.order()).isEqualTo(ByteOrder.BIG_ENDIAN);
     }
 
 }

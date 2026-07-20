@@ -118,12 +118,13 @@ public abstract class BlockDecoder {
      * @param srcWidth  The width of the image.
      * @param srcHeight The height of the image.
      * @return The newly allocated decoded image, a heap buffer positioned at 0.
-     * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
+     * @throws IllegalArgumentException  If the width or height is less than or equal to 0,
+     *                                   or if the decoded image would not fit in a single buffer.
      * @throws IndexOutOfBoundsException If the source data is too small.
      */
     public ByteBuffer decode(ByteBuffer src, int srcWidth, int srcHeight) {
         ByteBuffer dst = ByteBuffer
-            .allocate(srcWidth * srcHeight * bytesPerPixel);
+            .allocate(decodedByteSize(srcWidth, srcHeight));
         decode(src, srcWidth, srcHeight, dst);
         return dst;
     }
@@ -138,6 +139,7 @@ public abstract class BlockDecoder {
      *                  The destination data must have enough room to store the entire image.
      * @throws IllegalArgumentException  If the width or height is less than or equal to 0.
      * @throws IndexOutOfBoundsException If the source or destination data is too small.
+     * @throws ReadOnlyBufferException   If the destination is read-only.
      */
     public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst) {
         decode(src, srcWidth, srcHeight, dst, srcWidth, srcHeight);
@@ -154,9 +156,12 @@ public abstract class BlockDecoder {
      * @param dst       The destination data.
      * @param dstWidth  The width of the destination image.
      * @param dstHeight The height of the destination image.
-     * @throws IllegalArgumentException  If the width or height is less than or equal to 0,
-     *                                   or if the destination width or height is less than the source width or height.
-     * @throws IndexOutOfBoundsException If the source or destination data is too small.
+     * @throws IllegalArgumentException  If any width or height is less than or equal to 0.
+     * @throws IndexOutOfBoundsException If the destination is larger than the source, in which case
+     *                                   there is nothing to fill the remainder with, or if the source
+     *                                   or destination data is too small. A destination smaller than
+     *                                   the source is fine, and crops to the top left.
+     * @throws ReadOnlyBufferException   If the destination is read-only.
      */
     public void decode(ByteBuffer src, int srcWidth, int srcHeight, ByteBuffer dst, int dstWidth, int dstHeight) {
         decode(
@@ -183,22 +188,30 @@ public abstract class BlockDecoder {
      * @param dstHeight The height of the destination region.
      * @param width     The target width of the region to decode.
      * @param height    The target height of the region to decode.
-     * @throws IllegalArgumentException  If the specified regions are invalid or if dimensions are out of bounds.
-     * @throws IndexOutOfBoundsException If the source or destination buffer is too small for the specified regions.
+     * @throws IllegalArgumentException  If any width or height is less than or equal to 0.
+     * @throws IndexOutOfBoundsException If either region falls outside of its image, or if the source
+     *                                   or destination buffer is too small for the specified regions.
+     * @throws ReadOnlyBufferException   If the destination is read-only.
      */
     public void decode(
         ByteBuffer src, int srcX, int srcY, int srcWidth, int srcHeight,
         ByteBuffer dst, int dstX, int dstY, int dstWidth, int dstHeight,
         int width, int height
     ) {
+        if (width <= 0 || height <= 0) {
+            throw new IllegalArgumentException("width (" + width + ") or height (" + height + ") is not positive");
+        }
         validateRegion("src", srcX, srcY, srcWidth, srcHeight, width, height);
         validateRegion("dst", dstX, dstY, dstWidth, dstHeight, width, height);
 
-        if (src.remaining() < byteSize(srcWidth, srcHeight)) {
+        if (src.remaining() < encodedByteSize(srcWidth, srcHeight)) {
             throw new IndexOutOfBoundsException("Not enough data in src buffer");
         }
-        if (dst.remaining() < dstWidth * dstHeight * bytesPerPixel) {
+        if (dst.remaining() < decodedByteSize(dstWidth, dstHeight)) {
             throw new IndexOutOfBoundsException("Not enough data in dst buffer");
+        }
+        if (dst.isReadOnly()) {
+            throw new ReadOnlyBufferException();
         }
 
         ByteOrder srcOrder = src.order();
@@ -241,26 +254,65 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns the size in bytes that is required to store an image with the given width and height.
+     * Returns the size in bytes that is required to store an encoded image with the given width and height.
+     * <p>
+     * This is the size of the block compressed source data, rounded up to whole 4x4 blocks. It is the
+     * minimum a source buffer must have remaining to decode an image of this size.
      *
      * @param width  the width of the image
      * @param height the height of the image
-     * @return the size in bytes that is required to store an image with the given width and height
+     * @return the size in bytes of the encoded image
+     * @throws IllegalArgumentException If the width or height is less than or equal to 0,
+     *                                  or if the encoded image would not fit in a single buffer.
+     * @see #decodedByteSize(int, int)
      */
-    public int byteSize(int width, int height) {
-        int widthInBlocks = (width + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
-        int heightInBlocks = (height + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
-        return widthInBlocks * heightInBlocks * bytesPerBlock;
+    public int encodedByteSize(int width, int height) {
+        checkDimensions(width, height);
+        long widthInBlocks = ((long) width + (BLOCK_WIDTH - 1)) / BLOCK_WIDTH;
+        long heightInBlocks = ((long) height + (BLOCK_HEIGHT - 1)) / BLOCK_HEIGHT;
+        return toIntSize(widthInBlocks * heightInBlocks * bytesPerBlock, width, height);
     }
 
-    private void validateRegion(String label, int x, int y, int w, int h, int width, int height) {
-        if (x < 0 || y < 0) {
-            throw new IndexOutOfBoundsException(label + " x (" + x + ") or y (" + y + ") is not positive or zero");
-        }
+    /**
+     * Returns the size in bytes that is required to store a decoded image with the given width and height.
+     * <p>
+     * This is exactly {@code width * height} pixels, with no block rounding, since a partial block only
+     * contributes the pixels that fall inside the image. It is the size {@link #decode(ByteBuffer, int, int)}
+     * allocates, and the minimum a destination buffer must have remaining.
+     *
+     * @param width  the width of the image
+     * @param height the height of the image
+     * @return the size in bytes of the decoded image
+     * @throws IllegalArgumentException If the width or height is less than or equal to 0,
+     *                                  or if the decoded image would not fit in a single buffer.
+     * @see #encodedByteSize(int, int)
+     */
+    public int decodedByteSize(int width, int height) {
+        checkDimensions(width, height);
+        return toIntSize((long) width * height * bytesPerPixel, width, height);
+    }
+
+    private static void checkDimensions(int width, int height) {
         if (width <= 0 || height <= 0) {
-            throw new IllegalArgumentException(label + " width (" + width + ") or height (" + height + ") is not positive");
+            throw new IllegalArgumentException("width (" + width + ") or height (" + height + ") is not positive");
         }
-        if (x + width > w || y + height > h) {
+    }
+
+    private static int toIntSize(long size, int width, int height) {
+        if (size > Integer.MAX_VALUE) {
+            throw new IllegalArgumentException("An image of " + width + " x " + height + " does not fit in a single buffer");
+        }
+        return (int) size;
+    }
+
+    private static void validateRegion(String label, int x, int y, int w, int h, int width, int height) {
+        if (x < 0 || y < 0) {
+            throw new IndexOutOfBoundsException(label + " x (" + x + ") or y (" + y + ") is negative");
+        }
+        if (w <= 0 || h <= 0) {
+            throw new IllegalArgumentException(label + " width (" + w + ") or height (" + h + ") is not positive");
+        }
+        if (width > w - x || height > h - y) {
             throw new IndexOutOfBoundsException(label + " region (" + x + ", " + y + ", " + width + ", " + height + ") is outside of the region (" + w + ", " + h + ")");
         }
     }
