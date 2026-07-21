@@ -65,7 +65,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc4(boolean signed) {
-        return signed ? new BC4S(1) : new BC4U(1);
+        return signed ? new BC4S() : new BC4U();
     }
 
     /**

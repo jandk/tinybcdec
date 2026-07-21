@@ -98,19 +98,19 @@ starts. `encodedByteSize(width, height)` and `decodedByteSize(width, height)` re
 
 I've done some performance testing, and the library is quite fast. I've run some benchmarks on my machine (AMD 7840U).
 
-Some quick benchmarks, tested on a Ryzen 7840U with Oracle Java 21 (MP/s stands for megapixels per second):
+Some quick benchmarks, tested on a Ryzen 7840U with Oracle Java 25 (MP/s stands for megapixels per second):
 
 - BC1: ~1050MP/s
-- BC2: ~750MP/s
+- BC2: ~650MP/s
 - BC3: ~550MP/s
-- BC4: ~1000MP/s
-- BC5: ~550MP/s
-- BC6: ~155MP/s
-- BC7: ~175MP/s
+- BC4: ~900MP/s
+- BC5: ~450MP/s
+- BC6: ~150MP/s
+- BC7: ~170MP/s
 
 These numbers are just an estimate, and can vary depending on the hardware and the JVM.
 
-To give you an idea, this means about 20 ms to decode a 4K texture in BC1, and about 100 ms for BC6 or BC7.
+To give you an idea, this means about 16 ms to decode a 4K texture in BC1, and about 100 ms for BC6 or BC7.
 
 ## Accuracy
 

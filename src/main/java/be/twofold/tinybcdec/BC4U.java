@@ -3,20 +3,34 @@ package be.twofold.tinybcdec;
 import java.nio.*;
 
 final class BC4U extends BlockDecoder {
+    static final int BPP = 4;
+
     private final byte[] alphas = new byte[8];
 
-    BC4U(int pixelStride) {
-        super(pixelStride, 8);
+    BC4U() {
+        super(BPP, 8);
     }
 
     @Override
     void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
         long block = ByteIO.getLong(src, srcPos);
+        byte[] alphas = this.alphas;
+        long indices = buildAlphas(block, alphas);
 
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
+                int alpha = alphas[(int) (indices & 0x07)] & 0xFF;
+                ByteIO.setInt(dst, dstPos + x * BPP, alpha * 0x01_0101 | 0xFF00_0000);
+                indices >>>= 3;
+            }
+            dstPos += stride;
+        }
+    }
+
+    static long buildAlphas(long block, byte[] alphas) {
         int a0 = (int) (block/*  */) & 0xFF;
         int a1 = (int) (block >>> 8) & 0xFF;
 
-        byte[] alphas = this.alphas;
         alphas[0] = (byte) a0;
         alphas[1] = (byte) a1;
 
@@ -36,15 +50,7 @@ final class BC4U extends BlockDecoder {
             alphas[7] = (byte) 0xFF;
         }
 
-        long indices = block >>> 16;
-        for (int y = 0; y < BLOCK_HEIGHT; y++) {
-            for (int x = 0; x < BLOCK_WIDTH; x++) {
-                byte alpha = alphas[(int) (indices & 0x07)];
-                ByteIO.setByte(dst, dstPos + x * bytesPerPixel, alpha);
-                indices >>>= 3;
-            }
-            dstPos += stride;
-        }
+        return block >>> 16;
     }
 
     private static byte scale1785(int i) {

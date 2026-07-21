@@ -31,7 +31,7 @@ class BlockDecoderTest {
         int srcHeight = 119;
         int dstOffset = 31;
 
-        ByteBuffer dst = ByteBuffer.allocate(8 * 8 + dstOffset);
+        ByteBuffer dst = ByteBuffer.allocate((8 * 8 + dstOffset) * 4);
         BlockDecoder decoder = BlockDecoder.bc4(false);
         for (int h = 1; h <= 8; h++) {
             for (int w = 1; w <= 8; w++) {
@@ -39,7 +39,11 @@ class BlockDecoderTest {
 
                 for (int y = 0; y < h; y++) {
                     for (int x = 0; x < w; x++) {
-                        assertThat(dst.get(y * w + x + dstOffset)).isEqualTo(expected.get(y * srcWidth + x));
+                        int dstByte = dstOffset + (y * w + x) * 4;
+                        int srcByte = (y * srcWidth + x) * 4;
+                        for (int c = 0; c < 4; c++) {
+                            assertThat(dst.get(dstByte + c)).isEqualTo(expected.get(srcByte + c));
+                        }
                     }
                 }
             }
@@ -55,7 +59,7 @@ class BlockDecoderTest {
         int srcHeight = 119;
         int dstOffset = 31;
 
-        ByteBuffer dst = ByteBuffer.allocate(8 * 8 + dstOffset);
+        ByteBuffer dst = ByteBuffer.allocate((8 * 8 + dstOffset) * 4);
         BlockDecoder decoder = BlockDecoder.bc4(false);
 
         // Test all offsets between 0 and 8
@@ -71,7 +75,11 @@ class BlockDecoderTest {
 
                 for (int y = 0; y < h; y++) {
                     for (int x = 0; x < w; x++) {
-                        assertThat(dst.get(y * w + x + dstOffset)).isEqualTo(expected.get((srcY + y) * srcWidth + (srcX + x)));
+                        int dstByte = dstOffset + (y * w + x) * 4;
+                        int srcByte = ((srcY + y) * srcWidth + (srcX + x)) * 4;
+                        for (int c = 0; c < 4; c++) {
+                            assertThat(dst.get(dstByte + c)).isEqualTo(expected.get(srcByte + c));
+                        }
                     }
                 }
             }

@@ -18,7 +18,7 @@ public class BC5UBenchmark {
             try {
                 decoder = BlockDecoder.bc5(false);
                 src = BCTestUtils.readResource("/bc5u.dds");
-                dst = ByteBuffer.allocate(256 * 256 * 3);
+                dst = ByteBuffer.allocate(256 * 256 * BC5U.BPP);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

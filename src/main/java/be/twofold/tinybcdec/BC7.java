@@ -4,7 +4,7 @@ import java.nio.*;
 import java.util.*;
 
 final class BC7 extends BPTC {
-    private static final int BPP = 4;
+    static final int BPP = 4;
 
     private static final List<Mode> MODES = List.of(
         new Mode(3, 4, F, F, 4, 0, T, F, 3, 0),
@@ -152,8 +152,8 @@ final class BC7 extends BPTC {
                     }
                 }
 
-                int rgba = r | g << 8 | b << 16 | a << 24;
-                ByteIO.setInt(dst, dstPos + x * BPP, rgba);
+                int bgra = b | g << 8 | r << 16 | a << 24;
+                ByteIO.setInt(dst, dstPos + x * BPP, bgra);
             }
             dstPos += stride;
         }

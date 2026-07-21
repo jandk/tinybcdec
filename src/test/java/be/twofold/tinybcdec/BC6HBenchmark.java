@@ -18,7 +18,7 @@ public class BC6HBenchmark {
             try {
                 decoder = BlockDecoder.bc6h(false);
                 src = BCTestUtils.readResource("/bc6h_uf16.dds");
-                dst = ByteBuffer.allocate(256 * 256 * 6);
+                dst = ByteBuffer.allocate(256 * 256 * BC6H.BPP);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

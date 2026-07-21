@@ -17,7 +17,7 @@ class BC6HTest {
         ByteBuffer actual = decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
         ByteBuffer expected = BCTestUtils.readDDSFP16("/bc6h_uf16_16.dds", 256, 256);
 
-        assertThat(actual).isEqualTo(expected);
+        BCTestUtils.assertBufferEquals(actual, expected);
     }
 
     @Test
@@ -28,7 +28,7 @@ class BC6HTest {
         ByteBuffer actual = decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
         ByteBuffer expected = BCTestUtils.readDDSFP16("/bc6h_sf16_16.dds", 256, 256);
 
-        assertThat(actual).isEqualTo(expected);
+        BCTestUtils.assertBufferEquals(actual, expected);
     }
 
     @Test
@@ -39,7 +39,7 @@ class BC6HTest {
             src.put(0, invalidMode);
             BlockDecoder decoder = BlockDecoder.bc6h(false);
             ByteBuffer actual = decoder.decode(src, 4, 4);
-            ByteBuffer expected = ByteBuffer.allocate(16 * 2 * 3);
+            ByteBuffer expected = ByteBuffer.allocate(16 * 2 * 4);
             assertThat(actual).isEqualTo(expected);
         }
     }

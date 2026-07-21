@@ -56,6 +56,14 @@ final class ByteIO {
         }
     }
 
+    static void setLong(ByteBuffer buffer, int offset, long value) {
+        if (buffer.hasArray()) {
+            VH_LONG.set(buffer.array(), buffer.arrayOffset() + offset, value);
+        } else {
+            buffer.putLong(offset, value);
+        }
+    }
+
     static long getLong(ByteBuffer buffer, int offset) {
         if (buffer.hasArray()) {
             return (long) VH_LONG.get(buffer.array(), buffer.arrayOffset() + offset);
