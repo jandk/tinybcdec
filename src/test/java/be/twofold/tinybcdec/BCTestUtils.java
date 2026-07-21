@@ -93,7 +93,7 @@ public final class BCTestUtils {
         for (int i = 0; i < length; i++) {
             float a = actual.getFloat(actualBase + i * 4);
             float e = Byte.toUnsignedInt(expected.get(expectedBase + i)) / 255.0f;
-            if (Math.abs(a - e) > 0.01f) {
+            if (Math.abs(a - e) > 0.002f) {
                 throw new AssertionError(String.format(
                     "Buffers differ at index %d: expected %.6f but was %.6f", i, e, a));
             }
