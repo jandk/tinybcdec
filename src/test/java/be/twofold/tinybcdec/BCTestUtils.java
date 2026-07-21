@@ -21,7 +21,7 @@ public final class BCTestUtils {
     /**
      * This conversion is actually just a byte level re-arrange and gray expansion.
      */
-    static ByteBuffer readPng(String path) throws IOException {
+    static ByteBuffer readPng(String path, boolean rgba) throws IOException {
         try (InputStream in = BCTestUtils.class.getResourceAsStream(path)) {
             BufferedImage image = ImageIO.read(in);
             int width = image.getWidth();
@@ -36,6 +36,15 @@ public final class BCTestUtils {
             int[] pixels = ((DataBufferInt) argb.getRaster().getDataBuffer()).getData();
             ByteBuffer result = ByteBuffer.allocate(pixels.length * 4).order(ByteOrder.LITTLE_ENDIAN);
             result.asIntBuffer().put(pixels);
+
+            if (rgba) {
+                for (int i = 0; i < result.remaining(); i += 4) {
+                    byte temp = result.get(i);
+                    result.put(i, result.get(i + 2));
+                    result.put(i + 2, temp);
+                }
+            }
+
             return result.order(ByteOrder.BIG_ENDIAN);
         }
     }
@@ -65,6 +74,28 @@ public final class BCTestUtils {
             if (a != e) {
                 throw new AssertionError(String.format(
                     "Buffers differ at index %d: expected 0x%02X but was 0x%02X", i, e, a));
+            }
+        }
+    }
+
+    /**
+     * Compares two buffers float by float, starting at their current positions.
+     * Neither position is modified.
+     */
+    static void assertBufferEqualsFloats(ByteBuffer actual, ByteBuffer expected) {
+        int actualBase = actual.position();
+        int expectedBase = expected.position();
+        int length = expected.remaining();
+
+        if (actual.remaining() != length * 4) {
+            throw new AssertionError("Expected " + length * 4 + " bytes, but was " + actual.remaining());
+        }
+        for (int i = 0; i < length; i++) {
+            float a = actual.getFloat(actualBase + i * 4);
+            float e = Byte.toUnsignedInt(expected.get(expectedBase + i)) / 255.0f;
+            if (Math.abs(a - e) > 0.01f) {
+                throw new AssertionError(String.format(
+                    "Buffers differ at index %d: expected %.6f but was %.6f", i, e, a));
             }
         }
     }

@@ -20,6 +20,8 @@ final class ByteIO {
         MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.LITTLE_ENDIAN);
     private static final VarHandle VH_LONG =
         MethodHandles.byteArrayViewVarHandle(long[].class, ByteOrder.LITTLE_ENDIAN);
+    private static final VarHandle VH_FLOAT =
+        MethodHandles.byteArrayViewVarHandle(float[].class, ByteOrder.LITTLE_ENDIAN);
 
     private ByteIO() {
     }
@@ -69,6 +71,14 @@ final class ByteIO {
             return (long) VH_LONG.get(buffer.array(), buffer.arrayOffset() + offset);
         } else {
             return buffer.getLong(offset);
+        }
+    }
+
+    public static void setFloat(ByteBuffer buffer, int offset, float value) {
+        if (buffer.hasArray()) {
+            VH_FLOAT.set(buffer.array(), buffer.arrayOffset() + offset, value);
+        } else {
+            buffer.putFloat(offset, value);
         }
     }
 

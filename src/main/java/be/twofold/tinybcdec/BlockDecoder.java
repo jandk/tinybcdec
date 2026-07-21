@@ -41,6 +41,16 @@ public abstract class BlockDecoder {
     }
 
     /**
+     * Returns a block decoder for BC1, returning floats.
+     *
+     * @param opaque Whether to decode the image as opaque or not.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc1Float(boolean opaque) {
+        return new BC1Float(opaque ? BC1Mode.OPAQUE : BC1Mode.NORMAL);
+    }
+
+    /**
      * Returns a block decoder for BC2.
      *
      * @return The block decoder.
@@ -50,12 +60,30 @@ public abstract class BlockDecoder {
     }
 
     /**
+     * Returns a block decoder for BC2, returning floats.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc2Float() {
+        return new BC2Float();
+    }
+
+    /**
      * Returns a block decoder for BC3.
      *
      * @return The block decoder.
      */
     public static BlockDecoder bc3() {
         return new BC3();
+    }
+
+    /**
+     * Returns a block decoder for BC3, returning floats.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc3Float() {
+        return new BC3Float();
     }
 
     /**
@@ -69,6 +97,16 @@ public abstract class BlockDecoder {
     }
 
     /**
+     * Returns a block decoder for BC4, returning floats.
+     *
+     * @param signed Whether to interpret the data as signed or unsigned.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc4Float(boolean signed) {
+        return signed ? new BC4SFloat() : new BC4UFloat();
+    }
+
+    /**
      * Returns a block decoder for BC5.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
@@ -76,6 +114,16 @@ public abstract class BlockDecoder {
      */
     public static BlockDecoder bc5(boolean signed) {
         return signed ? new BC5S() : new BC5U();
+    }
+
+    /**
+     * Returns a block decoder for BC5, returning floats.
+     *
+     * @param signed Whether to interpret the data as signed or unsigned.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc5Float(boolean signed) {
+        return signed ? new BC5SFloat() : new BC5UFloat();
     }
 
     /**
@@ -127,7 +175,8 @@ public abstract class BlockDecoder {
      */
     public ByteBuffer decode(ByteBuffer src, int srcWidth, int srcHeight) {
         ByteBuffer dst = ByteBuffer
-            .allocate(decodedByteSize(srcWidth, srcHeight));
+            .allocate(decodedByteSize(srcWidth, srcHeight))
+            .order(ByteOrder.LITTLE_ENDIAN);
         decode(src, srcWidth, srcHeight, dst, srcWidth, srcHeight);
         return dst;
     }
@@ -368,5 +417,9 @@ public abstract class BlockDecoder {
             int dstOff = dstPos + (row * lineStride);
             ByteIO.copy(scratch, srcOff, dst, dstOff, blockW * bytesPerPixel);
         }
+    }
+
+    static float lerp(float a, float b, float t) {
+        return Math.fma(t, b - a, a);
     }
 }

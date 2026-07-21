@@ -15,7 +15,7 @@ class BC5STest {
 
         ByteBuffer actual = BlockDecoder.bc5(true)
             .decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
-        ByteBuffer expected = BCTestUtils.readPng("/bc5s.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc5s.png", false);
 
         for (int i = 0; i < expected.remaining(); i += 4) {
             assertThat(Math.abs((actual.get(i + 1) & 0xFF) - (expected.get(i + 1) & 0xFF))).isLessThanOrEqualTo(1);

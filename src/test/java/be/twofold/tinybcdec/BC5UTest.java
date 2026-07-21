@@ -15,7 +15,7 @@ class BC5UTest {
 
         ByteBuffer actual = BlockDecoder.bc5(false)
             .decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
-        ByteBuffer expected = BCTestUtils.readPng("/bc5u.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc5u.png", false);
 
         for (int i = 0; i < expected.remaining(); i += 4) {
             assertThat(actual.get(i + 1)).isEqualTo(expected.get(i + 1));

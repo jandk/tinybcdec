@@ -16,7 +16,7 @@ class BlockDecoderTest {
 
         ByteBuffer actual = BlockDecoder.bc4(false)
             .decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 157, 119);
-        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png", false);
 
         assertThat(actual).isEqualTo(expected);
     }
@@ -24,7 +24,7 @@ class BlockDecoderTest {
     @Test
     void testPartialBlockCrop() throws IOException {
         ByteBuffer src = BCTestUtils.readResource("/bc4u-part.dds");
-        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png", false);
 
         // Add a bit of chaos for everything
         int srcWidth = 157;
@@ -53,7 +53,7 @@ class BlockDecoderTest {
     @Test
     void testPartialBlockCropExtra() throws IOException {
         ByteBuffer src = BCTestUtils.readResource("/bc4u-part.dds");
-        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc4u-part.png", false);
 
         int srcWidth = 157;
         int srcHeight = 119;

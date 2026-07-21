@@ -14,7 +14,7 @@ class BC7Test {
         ByteBuffer src = BCTestUtils.readResource("/bc7.dds");
 
         ByteBuffer actual = decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
-        ByteBuffer expected = BCTestUtils.readPng("/bc7.png");
+        ByteBuffer expected = BCTestUtils.readPng("/bc7.png", false);
 
         BCTestUtils.assertBufferEquals(actual, expected);
     }
