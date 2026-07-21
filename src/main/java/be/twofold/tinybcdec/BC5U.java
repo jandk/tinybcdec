@@ -17,8 +17,8 @@ final class BC5U extends BlockDecoder {
         byte[] rAlphas = this.rAlphas;
         byte[] gAlphas = this.gAlphas;
 
-        long rIndices = BC4U.buildAlphas(src.getLong(srcPos/**/), rAlphas);
-        long gIndices = BC4U.buildAlphas(src.getLong(srcPos + 8), gAlphas);
+        long rIndices = BC4U.buildAlphas(ByteIO.getLong(src, srcPos/**/), rAlphas);
+        long gIndices = BC4U.buildAlphas(ByteIO.getLong(src, srcPos + 8), gAlphas);
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
                 int rAlpha = rAlphas[(int) (rIndices & 0x07)] & 0xFF;

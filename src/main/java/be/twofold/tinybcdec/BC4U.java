@@ -13,9 +13,8 @@ final class BC4U extends BlockDecoder {
 
     @Override
     void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        long block = ByteIO.getLong(src, srcPos);
         byte[] alphas = this.alphas;
-        long indices = buildAlphas(block, alphas);
+        long indices = buildAlphas(ByteIO.getLong(src, srcPos), alphas);
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
