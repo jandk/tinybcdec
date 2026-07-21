@@ -21,10 +21,14 @@ Currently, the following formats are supported:
 
 ## Output format
 
-- BC1, BC2, BC3 and BC7 are decoded as RGBA (4 bytes per pixel).
-- BC4 is decoded as R (1 byte per pixel).
-- BC5 is decoded as RG (2 bytes per pixel).
-- BC6H is decoded as RGB in little endian half-float (6 bytes per pixel).
+Every format except BC6H is decoded as BGRA, 4 bytes per pixel. Read as little endian integers, that is AWT's
+`TYPE_INT_ARGB` layout, so the result can go straight into a `BufferedImage` without a channel swap.
+
+- BC1, BC2, BC3 and BC7 fill all four channels.
+- BC4 is a single channel, expanded to gray: blue, green and red all get the value, alpha is 255.
+- BC5 is two channels: red and green carry the data, blue is 0 and alpha is 255.
+- BC6H is the exception: it is decoded as RGBA in little endian half-float (8 bytes per pixel), in that channel order
+  rather than BGRA, with alpha set to 1.0.
 
 ## Usage
 
@@ -34,9 +38,8 @@ The following features are present:
 
 - Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case). The output
   width and height can be smaller than the input, and the library will handle this.
-- BC6H: BC6H is decoded to a little endian half-float buffer. The library does not provide a way to convert this to full
-  float. This can be done with `Float.float16ToFloat` in Java 21, or with a library. This also means that the
-  output buffer is twice as big.
+- BC6H: BC6H is decoded to a little endian half-float RGBA buffer, 8 bytes per pixel. The library does not provide a way
+  to convert this to full float. This can be done with `Float.float16ToFloat` in Java 21, or with a library.
 
 The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
 static factory methods. You can let the library create a new buffer, or pass an existing one to save allocations.
@@ -93,6 +96,34 @@ decoder.decode(
 
 Both buffers must hold their entire image, not just the region, since the dimensions are what determine where a row
 starts. `encodedByteSize(width, height)` and `decodedByteSize(width, height)` return the sizes required.
+
+## Converting to an image
+
+The BGRA output maps directly onto the common image types, so these snippets need no per-pixel work. They apply to every
+format except BC6H, whose half-float output does not fit either.
+
+For an AWT `BufferedImage`, the bytes are `TYPE_INT_ARGB` when read as little endian integers:
+
+```java
+ByteBuffer bgra = decoder.decode(src, width, height);
+BufferedImage image = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+int[] pixels = ((DataBufferInt) image.getRaster().getDataBuffer()).getData();
+bgra.order(ByteOrder.LITTLE_ENDIAN).asIntBuffer().get(pixels);
+```
+
+For a JavaFX `Image`, the bytes are straight-alpha BGRA, which is `PixelFormat.getByteBgraInstance()`:
+
+```java
+ByteBuffer bgra = decoder.decode(src, width, height);
+WritableImage image = new WritableImage(width, height);
+image.
+
+getPixelWriter().
+
+setPixels(
+    0,0,width, height,
+    PixelFormat.getByteBgraInstance(),bgra,width *4);
+```
 
 ## Performance
 

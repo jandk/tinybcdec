@@ -101,9 +101,6 @@ final class BC6H extends BPTC {
 
                 int o = dstPos + x * BPP;
                 ByteIO.setLong(dst, o, r | g << 16 | b << 32 | 0x3C00_0000_0000_0000L);
-                // ByteIO.setShort(dst, o/**/, r);
-                // ByteIO.setShort(dst, o + 2, g);
-                // ByteIO.setShort(dst, o + 4, b);
             }
             dstPos += stride;
         }
