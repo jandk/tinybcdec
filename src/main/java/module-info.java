@@ -17,4 +17,7 @@ module be.twofold.tinybcdec {
     requires static java.desktop;
 
     exports be.twofold.tinybcdec;
+
+    // For testing in IntelliJ
+    opens be.twofold.tinybcdec to org.junit.platform.commons;
 }

@@ -4,7 +4,7 @@ import java.nio.*;
 import java.util.*;
 
 final class BC6H extends BPTC {
-    private static final int BPP = 6;
+    static final int BPP = 8;
 
     private static final List<Mode> MODES = List.of(
         new Mode(T, T, 10, +5, +5, +5, new short[]{0x0941, 0x0A41, 0x0E41, 0x000A, 0x010A, 0x020A, 0x0405, 0x0D41, 0x0904, 0x0505, 0x0E01, 0x0D04, 0x0605, 0x0E11, 0x0A04, 0x0805, 0x0E21, 0x0C05, 0x0E31}),
@@ -94,15 +94,16 @@ final class BC6H extends BPTC {
                 indexBits >>>= ib;
 
                 int index = (partitions & 3) * 8;
-                short r = finalUnquantize(interpolate(colors[index/**/], colors[index + 4], weight), signed);
-                short g = finalUnquantize(interpolate(colors[index + 1], colors[index + 5], weight), signed);
-                short b = finalUnquantize(interpolate(colors[index + 2], colors[index + 6], weight), signed);
+                long r = finalUnquantize(interpolate(colors[index/**/], colors[index + 4], weight), signed) & 0xFFFFL;
+                long g = finalUnquantize(interpolate(colors[index + 1], colors[index + 5], weight), signed) & 0xFFFFL;
+                long b = finalUnquantize(interpolate(colors[index + 2], colors[index + 6], weight), signed) & 0xFFFFL;
                 partitions >>>= 2;
 
                 int o = dstPos + x * BPP;
-                ByteIO.setShort(dst, o/**/, r);
-                ByteIO.setShort(dst, o + 2, g);
-                ByteIO.setShort(dst, o + 4, b);
+                ByteIO.setLong(dst, o, r | g << 16 | b << 32 | 0x3C00_0000_0000_0000L);
+                // ByteIO.setShort(dst, o/**/, r);
+                // ByteIO.setShort(dst, o + 2, g);
+                // ByteIO.setShort(dst, o + 4, b);
             }
             dstPos += stride;
         }

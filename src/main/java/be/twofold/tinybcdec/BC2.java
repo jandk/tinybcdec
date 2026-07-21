@@ -3,7 +3,7 @@ package be.twofold.tinybcdec;
 import java.nio.*;
 
 final class BC2 extends BlockDecoder {
-    private static final int BPP = 4;
+    static final int BPP = 4;
 
     private final BC1 colorDecoder = new BC1(BC1Mode.BC2OR3);
 
@@ -22,7 +22,7 @@ final class BC2 extends BlockDecoder {
 
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                byte alpha = (byte) ((alphas & 15) * 17);
+                byte alpha = (byte) ((alphas & 0x0F) * 0x11);
                 ByteIO.setByte(dst, dstPos + x * BPP, alpha);
                 alphas >>>= 4;
             }

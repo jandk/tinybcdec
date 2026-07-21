@@ -18,7 +18,7 @@ public class BC1Benchmark {
             try {
                 decoder = BlockDecoder.bc1(true);
                 src = BCTestUtils.readResource("/bc1.dds");
-                dst = ByteBuffer.allocate(256 * 256 * 4);
+                dst = ByteBuffer.allocate(256 * 256 * BC1.BPP);
             } catch (IOException e) {
                 throw new UncheckedIOException(e);
             }

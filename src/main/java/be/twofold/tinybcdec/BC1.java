@@ -3,7 +3,7 @@ package be.twofold.tinybcdec;
 import java.nio.*;
 
 final class BC1 extends BlockDecoder {
-    private static final int BPP = 4;
+    static final int BPP = 4;
 
     private final int[] colors = new int[4];
     private final boolean bc2Or3;
@@ -31,24 +31,24 @@ final class BC1 extends BlockDecoder {
         int b1 = (c1/*   */) & 0x1F;
 
         int[] colors = this.colors;
-        colors[0] = rgb(scale031(r0), scale063(g0), scale031(b0));
-        colors[1] = rgb(scale031(r1), scale063(g1), scale031(b1));
+        colors[0] = bgr(scale031(r0), scale063(g0), scale031(b0));
+        colors[1] = bgr(scale031(r1), scale063(g1), scale031(b1));
 
         if (c0 > c1 || bc2Or3) {
             int r2 = scale093(2 * r0 + r1);
             int g2 = scale189(2 * g0 + g1);
             int b2 = scale093(2 * b0 + b1);
-            colors[2] = rgb(r2, g2, b2);
+            colors[2] = bgr(r2, g2, b2);
 
             int r3 = scale093(r0 + 2 * r1);
             int g3 = scale189(g0 + 2 * g1);
             int b3 = scale093(b0 + 2 * b1);
-            colors[3] = rgb(r3, g3, b3);
+            colors[3] = bgr(r3, g3, b3);
         } else {
             int r2 = scale062(r0 + r1);
             int g2 = scale126(g0 + g1);
             int b2 = scale062(b0 + b1);
-            colors[2] = rgb(r2, g2, b2);
+            colors[2] = bgr(r2, g2, b2);
             colors[3] = color3;
         }
 
@@ -63,8 +63,8 @@ final class BC1 extends BlockDecoder {
         }
     }
 
-    private static int rgb(int r, int g, int b) {
-        return r | g << 8 | b << 16 | 0xFF000000;
+    private static int bgr(int r, int g, int b) {
+        return b | g << 8 | r << 16 | 0xFF000000;
     }
 
     private static int scale031(int i) {
@@ -90,5 +90,4 @@ final class BC1 extends BlockDecoder {
     private static int scale126(int i) {
         return (i * 4145 + 1019) >>> 11;
     }
-
 }

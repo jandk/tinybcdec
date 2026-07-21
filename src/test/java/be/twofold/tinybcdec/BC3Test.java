@@ -5,8 +5,6 @@ import org.junit.jupiter.api.*;
 import java.io.*;
 import java.nio.*;
 
-import static org.assertj.core.api.Assertions.*;
-
 class BC3Test {
 
     private final BlockDecoder decoder = BlockDecoder.bc3();
@@ -18,7 +16,7 @@ class BC3Test {
         ByteBuffer actual = decoder.decode(src.position(BCTestUtils.DDS_HEADER_SIZE), 256, 256);
         ByteBuffer expected = BCTestUtils.readPng("/bc3.png");
 
-        assertThat(actual).isEqualTo(expected);
+        BCTestUtils.assertBufferEquals(actual, expected);
     }
 
 }
