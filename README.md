@@ -65,14 +65,14 @@ ByteBuffer result = decoder.decode(src, 256, 256);
 To decode into a buffer you already have, pass it along with its dimensions. There is no return value.
 
 ```java
-decoder.decode(src, 256,256,dst, 256,256);
+decoder.decode(src, 256, 256, dst, 256, 256);
 ```
 
 The destination may be smaller than the source, in which case the image is cropped to the top left. It may not be
 larger, as there would be nothing to fill the remainder with.
 
 ```java
-decoder.decode(src, 256,256,dst, 64,64); // the top left 64x64 pixels
+decoder.decode(src, 256, 256, dst, 64, 64); // the top left 64x64 pixels
 ```
 
 To decode somewhere other than the top left, add the source and destination coordinates. The region decoded is whatever
@@ -80,7 +80,7 @@ is left of the destination, which makes this the form to use when the destinatio
 want, such as a single tile.
 
 ```java
-decoder.decode(src, 256,256,tile, 64,64,128,64,0,0); // the 64x64 tile at (128, 64)
+decoder.decode(src, 256, 256, tile, 64, 64, 128, 64, 0, 0); // the 64x64 tile at (128, 64)
 ```
 
 The general form takes the region size explicitly, and is the only way to decode into part of a larger destination.
@@ -89,8 +89,8 @@ The general form takes the region size explicitly, and is the only way to decode
 decoder.decode(
     src, 256,256,     // source buffer and its dimensions
     dst, 256,256,     // destination buffer and its dimensions
-        128,64,0,0,     // decode from (128, 64) to (0, 0)
-        64,64             // decoding a 64x64 region
+    128, 64, 0, 0,    // decode from (128, 64) to (0, 0)
+    64,64             // decoding a 64x64 region
 );
 ```
 
@@ -116,11 +116,7 @@ For a JavaFX `Image`, the bytes are straight-alpha BGRA, which is `PixelFormat.g
 ```java
 ByteBuffer bgra = decoder.decode(src, width, height);
 WritableImage image = new WritableImage(width, height);
-image.
-
-getPixelWriter().
-
-setPixels(
+image.getPixelWriter().setPixels(
     0,0,width, height,
     PixelFormat.getByteBgraInstance(),bgra,width *4);
 ```
