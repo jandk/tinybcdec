@@ -28,7 +28,7 @@ Every format except BC6H is decoded as BGRA, 4 bytes per pixel. Read as little e
 - BC4 is a single channel, expanded to gray: blue, green and red all get the value, alpha is 255.
 - BC5 is two channels: red and green carry the data, blue is 0 and alpha is 255.
 - BC6H is the exception: it is decoded as RGBA in little endian half-float (8 bytes per pixel), in that channel order
-  rather than BGRA, with alpha set to 1.0.
+  rather than BGRA, with alpha set to 1.0. `bc6hFloat` gives the same thing as full floats, 16 bytes per pixel.
 
 ## Usage
 
@@ -38,8 +38,8 @@ The following features are present:
 
 - Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case). The output
   width and height can be smaller than the input, and the library will handle this.
-- BC6H: BC6H is decoded to a little endian half-float RGBA buffer, 8 bytes per pixel. The library does not provide a way
-  to convert this to full float. This can be done with `Float.float16ToFloat` in Java 21, or with a library.
+- BC6H: BC6H is decoded to a little endian half-float RGBA buffer, 8 bytes per pixel. If you would rather have full
+  floats, `bc6hFloat` widens every channel for you, at 16 bytes per pixel.
 
 The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
 static factory methods. You can let the library create a new buffer, or pass an existing one to save allocations.

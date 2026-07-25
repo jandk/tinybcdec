@@ -79,6 +79,34 @@ public final class BCTestUtils {
     }
 
     /**
+     * Compares a decoded float buffer against reference half-float data, component by component,
+     * starting at their current positions. Neither position is modified.
+     * <p>
+     * Every half-float is exactly representable as a float, so this expects an exact match.
+     */
+    static void assertBufferEqualsHalfFloats(ByteBuffer actual, ByteBuffer expected) {
+        int actualBase = actual.position();
+        int expectedBase = expected.position();
+        int count = expected.remaining() / 2;
+
+        if (actual.remaining() != count * 4) {
+            throw new AssertionError("Expected " + count * 4 + " bytes, but was " + actual.remaining());
+        }
+        for (int i = 0; i < count; i++) {
+            // Read the halves little endian by hand, the reference buffer's order is incidental.
+            int lo = expected.get(expectedBase + i * 2/**/) & 0xFF;
+            int hi = expected.get(expectedBase + i * 2 + 1) & 0xFF;
+
+            float a = actual.getFloat(actualBase + i * 4);
+            float e = Platform.float16ToFloat((short) (lo | hi << 8));
+            if (Float.floatToIntBits(a) != Float.floatToIntBits(e)) {
+                throw new AssertionError(String.format(
+                    "Buffers differ at index %d: expected %s but was %s", i, e, a));
+            }
+        }
+    }
+
+    /**
      * Compares two buffers float by float, starting at their current positions.
      * Neither position is modified.
      */

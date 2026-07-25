@@ -137,6 +137,19 @@ public abstract class BlockDecoder {
     }
 
     /**
+     * Returns a block decoder for BC6H, returning floats.
+     * <p>
+     * Unlike {@link #bc6h(boolean)}, which leaves the half-floats as they come out of the block,
+     * this widens each channel to a full float, so the result needs no conversion.
+     *
+     * @param signed Whether to interpret the data as signed or unsigned.
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc6hFloat(boolean signed) {
+        return new BC6HFloat(signed);
+    }
+
+    /**
      * Returns a block decoder for BC7.
      *
      * @return The block decoder.
