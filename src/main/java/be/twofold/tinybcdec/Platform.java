@@ -3,16 +3,16 @@ package be.twofold.tinybcdec;
 import java.lang.invoke.*;
 
 final class Platform {
-    private static MethodHandle Float16ToFloatHandle;
+    private static final MethodHandle Float16ToFloatHandle = findFloat16ToFloat();
 
-    static {
+    private static MethodHandle findFloat16ToFloat() {
         MethodHandles.Lookup lookup = MethodHandles.lookup();
         MethodType type = MethodType.methodType(float.class, short.class);
         try {
-            Float16ToFloatHandle = lookup.findStatic(Float.class, "float16ToFloat", type);
+            return lookup.findStatic(Float.class, "float16ToFloat", type);
         } catch (ReflectiveOperationException e1) {
             try {
-                Float16ToFloatHandle = lookup.findStatic(Platform.class, "float16ToFloat0", type);
+                return lookup.findStatic(Platform.class, "float16ToFloat0", type);
             } catch (ReflectiveOperationException e2) {
                 throw new ExceptionInInitializerError(e2);
             }
