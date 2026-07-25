@@ -313,17 +313,23 @@ public abstract class BlockDecoder {
             int blockH = Math.min(BLOCK_HEIGHT - blockY, height - y);
 
             for (int x = 0; x < width; ) {
-                int srcPosStart = srcBase + srcRowStart + ((srcX + x) / BLOCK_WIDTH * bytesPerBlock);
-                int dstPosStart = dstBase + dstRowStart + ((dstX + x) * bytesPerPixel);
+                int srcPos = srcBase + srcRowStart + ((srcX + x) / BLOCK_WIDTH * bytesPerBlock);
+                int dstPos = dstBase + dstRowStart + ((dstX + x) * bytesPerPixel);
                 int blockX = (srcX + x) % BLOCK_WIDTH;
-                int blockW = Math.min(BLOCK_WIDTH - blockX, width - x);
 
                 if (blockX == 0 && x + BLOCK_WIDTH <= width && blockY == 0 && y + BLOCK_HEIGHT <= height) {
-                    decodeBlock(src, srcPosStart, dst, dstPosStart, dstLineStride);
-                    x += BLOCK_WIDTH;
+                    int srcStep = bytesPerBlock;
+                    int dstStep = BLOCK_WIDTH * bytesPerPixel;
+                    do {
+                        decodeBlock(src, srcPos, dst, dstPos, dstLineStride);
+                        srcPos += srcStep;
+                        dstPos += dstStep;
+                        x += BLOCK_WIDTH;
+                    } while (x + BLOCK_WIDTH <= width);
                 } else {
+                    int blockW = Math.min(BLOCK_WIDTH - blockX, width - x);
                     partialBlock(
-                        src, srcPosStart, dst, dstPosStart, dstLineStride,
+                        src, srcPos, dst, dstPos, dstLineStride,
                         blockX, blockY, blockW, blockH);
                     x += blockW;
                 }
