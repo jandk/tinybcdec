@@ -15,6 +15,10 @@ import java.nio.*;
  * writes without ever advancing a position. Block data is little-endian, so both buffers are switched
  * to {@link ByteOrder#LITTLE_ENDIAN} while decoding and set back to their original order afterwards.
  * <p>
+ * The decoders write BGRA at 4 bytes per pixel, except BC6H, which writes RGBA half-floats at 8 bytes
+ * per pixel. Each factory has a {@code Float} variant that writes RGBA floats at 16 bytes per pixel;
+ * mind that those use a different channel order than the byte output.
+ * <p>
  * <b>Thread safety:</b> instances are not thread-safe. Each thread should use its own decoder instance.
  */
 public abstract class BlockDecoder {
@@ -31,9 +35,9 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC1.
+     * Returns a block decoder for BC1, decoding to BGRA.
      *
-     * @param opaque Whether to decode the image as opaque or not.
+     * @param opaque Whether the transparent index of a three color block decodes to opaque black.
      * @return The block decoder.
      */
     public static BlockDecoder bc1(boolean opaque) {
@@ -41,17 +45,18 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC1, returning floats.
+     * Returns a block decoder for BC1, decoding to RGBA floats.
      *
-     * @param opaque Whether to decode the image as opaque or not.
+     * @param opaque Whether the transparent index of a three color block decodes to opaque black.
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc1Float(boolean opaque) {
         return new BC1Float(opaque ? BC1Mode.OPAQUE : BC1Mode.NORMAL);
     }
 
     /**
-     * Returns a block decoder for BC2.
+     * Returns a block decoder for BC2, decoding to BGRA.
      *
      * @return The block decoder.
      */
@@ -60,16 +65,17 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC2, returning floats.
+     * Returns a block decoder for BC2, decoding to RGBA floats.
      *
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc2Float() {
         return new BC2Float();
     }
 
     /**
-     * Returns a block decoder for BC3.
+     * Returns a block decoder for BC3, decoding to BGRA.
      *
      * @return The block decoder.
      */
@@ -78,16 +84,17 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC3, returning floats.
+     * Returns a block decoder for BC3, decoding to RGBA floats.
      *
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc3Float() {
         return new BC3Float();
     }
 
     /**
-     * Returns a block decoder for BC4.
+     * Returns a block decoder for BC4, decoding its single channel to BGRA as gray.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
@@ -97,17 +104,18 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC4, returning floats.
+     * Returns a block decoder for BC4, decoding its single channel to RGBA floats as gray.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc4Float(boolean signed) {
         return signed ? new BC4SFloat() : new BC4UFloat();
     }
 
     /**
-     * Returns a block decoder for BC5.
+     * Returns a block decoder for BC5, decoding its two channels to the red and green of BGRA.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
@@ -117,17 +125,18 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC5, returning floats.
+     * Returns a block decoder for BC5, decoding its two channels to the red and green of RGBA floats.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc5Float(boolean signed) {
         return signed ? new BC5SFloat() : new BC5UFloat();
     }
 
     /**
-     * Returns a block decoder for BC6H.
+     * Returns a block decoder for BC6H, decoding to RGBA half-floats with alpha set to 1.0.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
@@ -137,20 +146,21 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC6H, returning floats.
+     * Returns a block decoder for BC6H, decoding to RGBA floats.
      * <p>
      * Unlike {@link #bc6h(boolean)}, which leaves the half-floats as they come out of the block,
      * this widens each channel to a full float, so the result needs no conversion.
      *
      * @param signed Whether to interpret the data as signed or unsigned.
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc6hFloat(boolean signed) {
         return new BC6HFloat(signed);
     }
 
     /**
-     * Returns a block decoder for BC7.
+     * Returns a block decoder for BC7, decoding to BGRA.
      *
      * @return The block decoder.
      */
@@ -159,9 +169,10 @@ public abstract class BlockDecoder {
     }
 
     /**
-     * Returns a block decoder for BC7, returning floats.
+     * Returns a block decoder for BC7, decoding to RGBA floats.
      *
      * @return The block decoder.
+     * @since 2.0
      */
     public static BlockDecoder bc7Float() {
         return new BC7Float();
@@ -256,6 +267,7 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If either region falls outside of its image, or if either
      *                                   buffer has less remaining than its entire image requires.
      * @throws ReadOnlyBufferException   If the destination is read-only.
+     * @since 2.0
      */
     public void decode(
         ByteBuffer src, int srcWidth, int srcHeight,
@@ -294,6 +306,7 @@ public abstract class BlockDecoder {
      * @throws IndexOutOfBoundsException If either region falls outside of its image, or if either
      *                                   buffer has less remaining than its entire image requires.
      * @throws ReadOnlyBufferException   If the destination is read-only.
+     * @since 2.0
      */
     public void decode(
         ByteBuffer src, int srcWidth, int srcHeight,
@@ -374,6 +387,7 @@ public abstract class BlockDecoder {
      * @throws IllegalArgumentException If the width or height is less than or equal to 0,
      *                                  or if the encoded image would not fit in a single buffer.
      * @see #decodedByteSize(int, int)
+     * @since 2.0
      */
     public int encodedByteSize(int width, int height) {
         checkDimensions(width, height);
@@ -395,6 +409,7 @@ public abstract class BlockDecoder {
      * @throws IllegalArgumentException If the width or height is less than or equal to 0,
      *                                  or if the decoded image would not fit in a single buffer.
      * @see #encodedByteSize(int, int)
+     * @since 2.0
      */
     public int decodedByteSize(int width, int height) {
         checkDimensions(width, height);
