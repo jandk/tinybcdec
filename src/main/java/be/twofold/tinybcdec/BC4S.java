@@ -30,21 +30,21 @@ final class BC4S extends BlockDecoder {
         int a0 = Math.max(-127, (byte) (block/*  */));
         int a1 = Math.max(-127, (byte) (block >>> 8));
 
-        alphas[0] = scale127(a0);
-        alphas[1] = scale127(a1);
+        alphas[0] = (byte) scale127(a0);
+        alphas[1] = (byte) scale127(a1);
 
         if (a0 > a1) {
-            alphas[2] = scale889(6 * a0 + /**/a1);
-            alphas[3] = scale889(5 * a0 + 2 * a1);
-            alphas[4] = scale889(4 * a0 + 3 * a1);
-            alphas[5] = scale889(3 * a0 + 4 * a1);
-            alphas[6] = scale889(2 * a0 + 5 * a1);
-            alphas[7] = scale889(/**/a0 + 6 * a1);
+            alphas[2] = (byte) scale889(6 * a0 + /**/a1);
+            alphas[3] = (byte) scale889(5 * a0 + 2 * a1);
+            alphas[4] = (byte) scale889(4 * a0 + 3 * a1);
+            alphas[5] = (byte) scale889(3 * a0 + 4 * a1);
+            alphas[6] = (byte) scale889(2 * a0 + 5 * a1);
+            alphas[7] = (byte) scale889(/**/a0 + 6 * a1);
         } else {
-            alphas[2] = scale635(4 * a0 + /**/a1);
-            alphas[3] = scale635(3 * a0 + 2 * a1);
-            alphas[4] = scale635(2 * a0 + 3 * a1);
-            alphas[5] = scale635(/**/a0 + 4 * a1);
+            alphas[2] = (byte) scale635(4 * a0 + /**/a1);
+            alphas[3] = (byte) scale635(3 * a0 + 2 * a1);
+            alphas[4] = (byte) scale635(2 * a0 + 3 * a1);
+            alphas[5] = (byte) scale635(/**/a0 + 4 * a1);
             alphas[6] = (byte) 0x00;
             alphas[7] = (byte) 0xFF;
         }
@@ -52,15 +52,15 @@ final class BC4S extends BlockDecoder {
         return block >>> 16;
     }
 
-    private static byte scale127(int i) {
-        return (byte) ((i * 129 + 16384) >>> 7);
+    static int scale127(int i) {
+        return (i * 129 + 16384) >>> 7;
     }
 
-    private static byte scale889(int i) {
-        return (byte) ((i * 75193 + 67108864) >>> 19);
+    static int scale889(int i) {
+        return (i * 75193 + 67108864) >>> 19;
     }
 
-    private static byte scale635(int i) {
-        return (byte) ((i * 13159 + 8388708) >>> 16);
+    static int scale635(int i) {
+        return (i * 13159 + 8388708) >>> 16;
     }
 }
