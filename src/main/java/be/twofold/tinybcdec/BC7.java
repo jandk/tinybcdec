@@ -17,8 +17,11 @@ final class BC7 extends BPTC {
         new Mode(2, 6, F, F, 5, 5, T, F, 2, 0)
     );
 
+    private static final int ALPHA_OFFSET = 8;
+
     private final Bits bits = new Bits();
     private final int[] colors = new int[3 * 2 * 4];
+    private final int[] table = new int[3 * 8]; // Interpolated pixels per (subset, index)
 
     BC7() {
         super(BPP);
@@ -102,64 +105,107 @@ final class BC7 extends BPTC {
             }
         }
 
-        // Let's try a new method
-        int partitions = partitions(mode.ns, partition);
-        long indexBits1 = indexBits(bits, mode.ib1, mode.ns, partition);
-        long indexBits2 = indexBits(bits, mode.ib2, mode.ns, partition);
-        byte[] weights1 = weights(mode.ib1);
-        byte[] weights2 = weights(mode.ib2);
-        int mask1 = (1 << mode.ib1) - 1;
-        int mask2 = (1 << mode.ib2) - 1;
+        int ib1 = mode.ib1;
+        int ib2 = mode.ib2;
+        int[] table = this.table;
+
+        if (ib2 == 0) {
+            // modes 0, 1, 2, 3, 6 and 7
+            long indexBits = indexBits(bits, ib1, mode.ns, partition);
+
+            buildTable(colors, table, weights(ib1), mode.ns, ib1);
+            writePixels(dst, dstPos, stride, table, indexBits, partitions(mode.ns, partition), ib1);
+        } else {
+            // modes 4 and 5
+            long indexBits1 = indexBits(bits, ib1, mode.ns, partition);
+            long indexBits2 = indexBits(bits, ib2, mode.ns, partition);
+
+            long cIndexBits = selection ? indexBits2 : indexBits1;
+            long aIndexBits = selection ? indexBits1 : indexBits2;
+
+            int cb = selection ? ib2 : ib1;
+            int ab = selection ? ib1 : ib2;
+
+            buildRotatedTables(colors, table, weights(cb), weights(ab), cb, ab, rotation);
+            writeRotatedPixels(dst, dstPos, stride, table, cIndexBits, aIndexBits, cb, ab);
+        }
+    }
+
+    private static void buildTable(int[] colors, int[] table, byte[] weights, int ns, int ib) {
+        int count = 1 << ib;
+        for (int s = 0; s < ns; s++) {
+            int p = s * 8;
+            int r0 = colors[p/*  */], g0 = colors[p + 1], b0 = colors[p + 2], a0 = colors[p + 3];
+            int r1 = colors[p + 4], g1 = colors[p + 5], b1 = colors[p + 6], a1 = colors[p + 7];
+            int base = s << ib;
+            for (int i = 0; i < count; i++) {
+                int w = weights[i];
+                int r = interpolate(r0, r1, w);
+                int g = interpolate(g0, g1, w);
+                int b = interpolate(b0, b1, w);
+                int a = interpolate(a0, a1, w);
+                table[base + i] = b | g << 8 | r << 16 | a << 24;
+            }
+        }
+    }
+
+    private static void buildRotatedTables(
+        int[] colors, int[] table,
+        byte[] cWeights, byte[] aWeights, int cb, int ab, int rotation
+    ) {
+        int r0 = colors[0], g0 = colors[1], b0 = colors[2], a0 = colors[3];
+        int r1 = colors[4], g1 = colors[5], b1 = colors[6], a1 = colors[7];
+
+        int shift = (3 - rotation) << 3;
+        int keep = ~(0xFF << shift);
+
+        int cCount = 1 << cb;
+        for (int i = 0; i < cCount; i++) {
+            int w = cWeights[i];
+            int bgr = interpolate(b0, b1, w) | interpolate(g0, g1, w) << 8 | interpolate(r0, r1, w) << 16;
+            table[i] = (bgr & keep) | (((bgr >>> shift) & 0xFF) << 24);
+        }
+
+        int aCount = 1 << ab;
+        for (int j = 0; j < aCount; j++) {
+            table[ALPHA_OFFSET + j] = interpolate(a0, a1, aWeights[j]) << shift;
+        }
+    }
+
+    private static void writePixels(
+        ByteBuffer dst, int dstPos, int stride,
+        int[] table, long indexBits, int partitions, int ib
+    ) {
+        int mask = (1 << ib) - 1;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int weight1 = weights1[(int) (indexBits1 & mask1)];
-                int cWeight = weight1;
-                int aWeight = weight1;
-                indexBits1 >>>= mode.ib1;
-
-                if (mode.ib2 != 0) {
-                    int weight2 = weights2[(int) (indexBits2 & mask2)];
-                    if (selection) {
-                        cWeight = weight2;
-                    } else {
-                        aWeight = weight2;
-                    }
-                    indexBits2 >>>= mode.ib2;
-                }
-
-                int pIndex = partitions & 3;
-                int r = interpolate(colors[pIndex * 8/**/], colors[pIndex * 8 + 4], cWeight);
-                int g = interpolate(colors[pIndex * 8 + 1], colors[pIndex * 8 + 5], cWeight);
-                int b = interpolate(colors[pIndex * 8 + 2], colors[pIndex * 8 + 6], cWeight);
-                int a = interpolate(colors[pIndex * 8 + 3], colors[pIndex * 8 + 7], aWeight);
-                partitions >>>= 2;
-
-                if (rotation != 0) {
-                    int t = a;
-                    switch (rotation) {
-                        case 1:
-                            a = r;
-                            r = t;
-                            break;
-                        case 2:
-                            a = g;
-                            g = t;
-                            break;
-                        case 3:
-                            a = b;
-                            b = t;
-                            break;
-                    }
-                }
-
-                int bgra = b | g << 8 | r << 16 | a << 24;
+                int bgra = table[((partitions & 3) << ib) + (int) (indexBits & mask)];
                 ByteIO.setInt(dst, dstPos + x * BPP, bgra);
+                indexBits >>>= ib;
+                partitions >>>= 2;
             }
             dstPos += stride;
         }
     }
 
-    private int unpack(int i, int n) {
+    private static void writeRotatedPixels(
+        ByteBuffer dst, int dstPos, int stride,
+        int[] table, long cIndexBits, long aIndexBits, int cb, int ab
+    ) {
+        int cMask = (1 << cb) - 1;
+        int aMask = (1 << ab) - 1;
+        for (int y = 0; y < BLOCK_HEIGHT; y++) {
+            for (int x = 0; x < BLOCK_WIDTH; x++) {
+                int bgra = table[(int) (cIndexBits & cMask)] | table[ALPHA_OFFSET + (int) (aIndexBits & aMask)];
+                ByteIO.setInt(dst, dstPos + x * BPP, bgra);
+                cIndexBits >>>= cb;
+                aIndexBits >>>= ab;
+            }
+            dstPos += stride;
+        }
+    }
+
+    private static int unpack(int i, int n) {
         i = i << (8 - n);
         return i | i >>> n;
     }
