@@ -159,6 +159,15 @@ public abstract class BlockDecoder {
     }
 
     /**
+     * Returns a block decoder for BC7, returning floats.
+     *
+     * @return The block decoder.
+     */
+    public static BlockDecoder bc7Float() {
+        return new BC7Float();
+    }
+
+    /**
      * Decodes a single {@value #BLOCK_WIDTH}x{@value #BLOCK_HEIGHT} block.
      * <p>
      * This is the internal hook every format implements. The {@code decode} methods handle validation,

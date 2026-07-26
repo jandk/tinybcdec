@@ -14,8 +14,6 @@ import java.util.*;
  * Slower codecs lose less.
  */
 final class ByteIO {
-    private static final VarHandle VH_SHORT =
-        MethodHandles.byteArrayViewVarHandle(short[].class, ByteOrder.LITTLE_ENDIAN);
     private static final VarHandle VH_INT =
         MethodHandles.byteArrayViewVarHandle(int[].class, ByteOrder.LITTLE_ENDIAN);
     private static final VarHandle VH_LONG =
@@ -42,11 +40,11 @@ final class ByteIO {
         }
     }
 
-    static void setShort(ByteBuffer buffer, int offset, short value) {
+    static int getInt(ByteBuffer buffer, int offset) {
         if (buffer.hasArray()) {
-            VH_SHORT.set(buffer.array(), buffer.arrayOffset() + offset, value);
+            return (int) VH_INT.get(buffer.array(), buffer.arrayOffset() + offset);
         } else {
-            buffer.putShort(offset, value);
+            return buffer.getInt(offset);
         }
     }
 
@@ -58,19 +56,19 @@ final class ByteIO {
         }
     }
 
-    static void setLong(ByteBuffer buffer, int offset, long value) {
-        if (buffer.hasArray()) {
-            VH_LONG.set(buffer.array(), buffer.arrayOffset() + offset, value);
-        } else {
-            buffer.putLong(offset, value);
-        }
-    }
-
     static long getLong(ByteBuffer buffer, int offset) {
         if (buffer.hasArray()) {
             return (long) VH_LONG.get(buffer.array(), buffer.arrayOffset() + offset);
         } else {
             return buffer.getLong(offset);
+        }
+    }
+
+    static void setLong(ByteBuffer buffer, int offset, long value) {
+        if (buffer.hasArray()) {
+            VH_LONG.set(buffer.array(), buffer.arrayOffset() + offset, value);
+        } else {
+            buffer.putLong(offset, value);
         }
     }
 
