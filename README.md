@@ -123,21 +123,23 @@ image.getPixelWriter().setPixels(
 
 ## Performance
 
-I've done some performance testing, and the library is quite fast. I've run some benchmarks on my machine (AMD 7840U).
+I've done some performance testing, and the library is quite fast.
 
-Some quick benchmarks, tested on a Ryzen 7840U with Oracle Java 25 (MP/s stands for megapixels per second):
+Some quick benchmarks, decoding a 256x256 texture on a Ryzen 5950X with Oracle Java 25 (MP/s stands for megapixels per
+second):
 
-- BC1: ~1050MP/s
+- BC1: ~1000MP/s
 - BC2: ~650MP/s
 - BC3: ~550MP/s
-- BC4: ~900MP/s
-- BC5: ~450MP/s
+- BC4: ~1100MP/s
+- BC5: ~550MP/s
 - BC6: ~150MP/s
-- BC7: ~170MP/s
+- BC7: ~200MP/s
 
 These numbers are just an estimate, and can vary depending on the hardware and the JVM.
 
-To give you an idea, this means about 16 ms to decode a 4K texture in BC1, and about 100 ms for BC6 or BC7.
+To give you an idea, this means about 17 ms to decode a 4096x4096 texture in BC1, and about 110 ms for BC6 or 85 ms for
+BC7.
 
 ## Accuracy
 
