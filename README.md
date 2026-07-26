@@ -28,7 +28,14 @@ Every format except BC6H is decoded as BGRA, 4 bytes per pixel. Read as little e
 - BC4 is a single channel, expanded to gray: blue, green and red all get the value, alpha is 255.
 - BC5 is two channels: red and green carry the data, blue is 0 and alpha is 255.
 - BC6H is the exception: it is decoded as RGBA in little endian half-float (8 bytes per pixel), in that channel order
-  rather than BGRA, with alpha set to 1.0. `bc6hFloat` gives the same thing as full floats, 16 bytes per pixel.
+  rather than BGRA, with alpha set to 1.0.
+
+Every format also has a float variant, from the factory methods ending in `Float`. These decode to RGBA
+single-precision floats, 16 bytes per pixel. Mind the channel order: float output is RGBA, like BC6H, and not BGRA
+like the byte output.
+
+- BC1 through BC5 and BC7 carry the same channels as their byte output, normalized to the range 0 to 1.
+- BC6H is already floating point, so `bc6hFloat` only widens each half-float channel to a full float.
 
 ## Usage
 
@@ -38,8 +45,9 @@ The following features are present:
 
 - Partial decodes: The width and height do not need to be a multiple of the block size (4 in this case). The output
   width and height can be smaller than the input, and the library will handle this.
-- BC6H: BC6H is decoded to a little endian half-float RGBA buffer, 8 bytes per pixel. If you would rather have full
-  floats, `bc6hFloat` widens every channel for you, at 16 bytes per pixel.
+- BC6H: BC6H is decoded to a little endian half-float RGBA buffer, 8 bytes per pixel.
+- Float output: every format has a matching `Float` factory method, decoding straight to RGBA floats at 16 bytes per
+  pixel, so there is no conversion pass afterwards.
 
 The library provides the `BlockDecoder` class, which can be used to decode. A new instance is created by one of the
 static factory methods. You can let the library create a new buffer, or pass an existing one to save allocations.
@@ -99,8 +107,8 @@ starts. `encodedByteSize(width, height)` and `decodedByteSize(width, height)` re
 
 ## Converting to an image
 
-The BGRA output maps directly onto the common image types, so these snippets need no per-pixel work. They apply to every
-format except BC6H, whose half-float output does not fit either.
+The BGRA output maps directly onto the common image types, so these snippets need no per-pixel work. They apply to the
+byte output only, not to BC6H or the float variants, whose floating point output does not fit either.
 
 For an AWT `BufferedImage`, the bytes are `TYPE_INT_ARGB` when read as little endian integers:
 
@@ -120,6 +128,50 @@ image.getPixelWriter().setPixels(
     0,0,width, height,
     PixelFormat.getByteBgraInstance(),bgra,width *4);
 ```
+
+The float output takes a little more work, as there is no ready made image type for it. This is BC6H, but any of the
+`Float` decoders works the same way, since they all produce four floats per pixel:
+
+```java
+ByteBuffer rgba = BlockDecoder.bc6hFloat(false).decode(src, width, height);
+
+float[] pixels = new float[width * height * 4];
+rgba.order(ByteOrder.LITTLE_ENDIAN).asFloatBuffer().get(pixels);
+
+// AWT only deals in the 0 to 1 range, so anything outside it has to go before drawing.
+for (int i = 0; i < pixels.length; i++) {
+    pixels[i] = Math.max(0.0f, Math.min(1.0f, pixels[i])); // Or Math.clamp
+}
+
+ColorModel colorModel = new ComponentColorModel(
+    ColorSpace.getInstance(ColorSpace.CS_LINEAR_RGB), // or CS_sRGB
+    true, false, Transparency.TRANSLUCENT, DataBuffer.TYPE_FLOAT);
+WritableRaster raster = Raster.createWritableRaster(
+    new PixelInterleavedSampleModel(
+        DataBuffer.TYPE_FLOAT, width, height, 4, width * 4, new int[]{0, 1, 2, 3}),
+    new DataBufferFloat(pixels, pixels.length), null);
+BufferedImage image = new BufferedImage(colorModel, raster, false, null);
+```
+
+That clamp is not optional. BC6H is a high dynamic range format, so channels regularly go above 1.0, and a linear
+`ComponentColorModel` looks colors up in a table sized for the 0 to 1 range. Drawing an image with values outside it
+throws an `ArrayIndexOutOfBoundsException`, rather than clamping. Clamping flattens everything brighter than white, so
+tone map instead if the highlights matter.
+
+## Upgrading from 1.0
+
+Version 2.0 changed both the API and the output, so it is not a drop-in replacement.
+
+- Buffers are a `ByteBuffer` instead of a `byte[]`, and the `srcPos` and `dstPos` parameters are gone. Reading and
+  writing start at the buffer's own position, so `decode(data, offset, width, height)` becomes
+  `decode(buffer.position(offset), width, height)`.
+- The 8 bit output is BGRA, where it used to be RGBA. BC6H is unaffected, its half-float output was and stays RGBA.
+  So if your red and blue channels seem swapped, this is why.
+- `byteSize` is split into `encodedByteSize` and `decodedByteSize`, for the source and the destination respectively.
+- `decodeBlock` is no longer public. Never really useful, and no validation.
+
+New in this version is the float output described above, and decoding is quite a bit faster: BC5 by about 30% and
+BC7 by about 20%.
 
 ## Performance
 
