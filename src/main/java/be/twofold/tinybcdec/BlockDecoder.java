@@ -142,7 +142,7 @@ public abstract class BlockDecoder {
      * @return The block decoder.
      */
     public static BlockDecoder bc6h(boolean signed) {
-        return new BC6H(signed);
+        return signed ? new BC6H(true) : new BC6HUnsigned(false);
     }
 
     /**
