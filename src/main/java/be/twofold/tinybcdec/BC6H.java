@@ -34,6 +34,7 @@ final class BC6H extends BPTC {
 
     private final Bits bits = new Bits();
     private final int[] endpoints = new int[16];
+    private final long[] palette = new long[16];
     private final boolean signed;
 
     BC6H(boolean signed) {
@@ -94,26 +95,28 @@ final class BC6H extends BPTC {
         }
 
         int ib = mode.pb ? 3 : 4;
+        buildPalette(endpoints, weights(ib), numPartitions, ib);
+
         int partitions = partitions(numPartitions, partition);
         long indexBits = indexBits(bits, ib, numPartitions, partition);
-        byte[] weights = weights(ib);
-        int mask = (1 << ib) - 1;
+        var palette = this.palette;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int weight = weights[(int) (indexBits & mask)];
-                indexBits >>>= ib;
-
-                int index = (partitions & 3) * 8;
-                long r = finalUnquantize(interpolate(endpoints[index/**/], endpoints[index + 4], weight), signed) & 0xFFFFL;
-                long g = finalUnquantize(interpolate(endpoints[index + 1], endpoints[index + 5], weight), signed) & 0xFFFFL;
-                long b = finalUnquantize(interpolate(endpoints[index + 2], endpoints[index + 6], weight), signed) & 0xFFFFL;
+                long bgra = palette[((partitions & 3) << 3) + (int) (indexBits & 0xF)];
+                ByteIO.setLong(dst, dstPos + x * BPP, bgra);
+                indexBits >>>= 4;
                 partitions >>>= 2;
-
-                int o = dstPos + x * BPP;
-                ByteIO.setLong(dst, o, r | g << 16 | b << 32 | 0x3C00_0000_0000_0000L);
             }
             dstPos += stride;
         }
+    }
+
+    private int mode(Bits bits) {
+        int mode = bits.get(2);
+        if (mode < 2) {
+            return mode;
+        }
+        return bits.get(3) + (mode * 8 - 14);
     }
 
     private int[] readEndpoints(int modeIndex, long lo, long hi) {
@@ -165,14 +168,6 @@ final class BC6H extends BPTC {
                 throw new AssertionError();
         }
         return endpoints;
-    }
-
-    private int mode(Bits bits) {
-        int mode = bits.get(2);
-        if (mode < 2) {
-            return mode;
-        }
-        return bits.get(3) + (mode * 8 - 14);
     }
 
     private void readEndpoints0(long lo, long hi, int[] endpoints) {
@@ -361,6 +356,23 @@ final class BC6H extends BPTC {
         endpoints[6] = (int) (lo >>> 55) & 15;
     }
 
+    private void buildPalette(int[] endpoints, byte[] weights, int ns, int ib) {
+        long[] palette = this.palette;
+        int count = 1 << ib;
+        for (int s = 0; s < ns; s++) {
+            int p = s * 8;
+            int r0 = endpoints[p/**/], g0 = endpoints[p + 1], b0 = endpoints[p + 2];
+            int r1 = endpoints[p + 4], g1 = endpoints[p + 5], b1 = endpoints[p + 6];
+            for (int i = 0; i < count; i++) {
+                int w = weights[i];
+                long r = finalUnquantize(interpolate(r0, r1, w), signed) & 0xFFFFL;
+                long g = finalUnquantize(interpolate(g0, g1, w), signed) & 0xFFFFL;
+                long b = finalUnquantize(interpolate(b0, b1, w), signed) & 0xFFFFL;
+                palette[p + i] = r | g << 16 | b << 32 | 0x3C00L << 48;
+            }
+        }
+    }
+
     private int unquantize(int value, int bits, boolean signed) {
         if (signed) {
             return unquantizeSigned(value, bits);
@@ -411,13 +423,14 @@ final class BC6H extends BPTC {
     }
 
     private int extendSign(int value, int bits) {
-        int signBit = 1 << (bits - 1);
-        return (value ^ signBit) - signBit;
+        int shift = -bits; // shifts get masked
+        return value << shift >> shift;
     }
 
     private int transformInverse(int value, int value0, int bits, boolean signed) {
-        value = (value + value0) & ((1 << bits) - 1);
-        return signed ? extendSign(value, bits) : value;
+        int shift = -bits; // shifts get masked
+        int sum = (value + value0) << shift;
+        return signed ? sum >> shift : sum >>> shift;
     }
 
     private static final class Mode {
