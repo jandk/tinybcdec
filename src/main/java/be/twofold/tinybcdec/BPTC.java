@@ -116,8 +116,8 @@ abstract class BPTC extends BlockDecoder {
     }
 
     static final class Bits {
-        private long lo;
-        private long hi;
+        long lo;
+        long hi;
 
         Bits() {
         }
