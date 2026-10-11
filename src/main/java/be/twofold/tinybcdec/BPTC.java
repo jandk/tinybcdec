@@ -97,7 +97,31 @@ abstract class BPTC extends BlockDecoder {
             indexBits = insertZeroBit(indexBits, ((Math.min(anchor1, anchor2) + 1) * numIndexBits) - 1);
             indexBits = insertZeroBit(indexBits, ((Math.max(anchor1, anchor2) + 1) * numIndexBits) - 1);
         }
-        return indexBits;
+
+        switch (numIndexBits) {
+            case 2:
+                return indexBits2To4(indexBits);
+            case 3:
+                return indexBits3To4(indexBits);
+            default:
+                return indexBits;
+        }
+    }
+
+    static long indexBits2To4(long x) {
+        x = (x | x << 16) & 0x0000_FFFF_0000_FFFFL;
+        x = (x | x << +8) & 0x00FF_00FF_00FF_00FFL;
+        x = (x | x << +4) & 0x0F0F_0F0F_0F0F_0F0FL;
+        x = (x | x << +2) & 0x3333_3333_3333_3333L;
+        return x;
+    }
+
+    static long indexBits3To4(long x) {
+        x = (x << 8) & 0x00FF_FFFF_0000_0000L | x & 0x0000_0000_00FF_FFFFL;
+        x = (x << 4) & 0x0FFF_0000_0FFF_0000L | x & 0x0000_0FFF_0000_0FFFL;
+        x = (x << 2) & 0x3F00_3F00_3F00_3F00L | x & 0x003F_003F_003F_003FL;
+        x = (x << 1) & 0x7070_7070_7070_7070L | x & 0x0707_0707_0707_0707L;
+        return x;
     }
 
     private static long insertZeroBit(long value, int pos) {

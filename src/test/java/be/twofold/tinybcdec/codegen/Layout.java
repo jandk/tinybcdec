@@ -4,4 +4,8 @@ import java.util.*;
 
 interface Layout {
     List<ModeDefinition> generate();
+
+    default boolean unpack() {
+        return false;
+    }
 }

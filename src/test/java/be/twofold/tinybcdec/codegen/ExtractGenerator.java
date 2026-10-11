@@ -11,48 +11,52 @@ final class ExtractGenerator {
     private static final List<Expr.Var> PARAMS = List.of(LO, HI, ENDPOINTS);
 
     public static void main(String[] args) {
-        generateLayout(new BC6HLayout());
+        //generateLayout(new BC6HLayout());
         generateLayout(new BC7Layout());
     }
 
     private static void generateLayout(Layout layout) {
         List<ModeDefinition> definitions = layout.generate();
         for (ModeDefinition definition : definitions) {
-            System.out.println(generateMethod(definition));
+            System.out.println(generateMethod(definition, layout.unpack()));
         }
     }
 
-    private static String generateMethod(ModeDefinition modeDefinition) {
-        List<Integer> pBits = modeDefinition.pBits();
+    private static String generateMethod(ModeDefinition modeDefinition, boolean unpack) {
+        List<Endpoint> endpoints = modeDefinition.endpoints().stream()
+            .sorted(Comparator.comparingInt((Endpoint e) -> e.target().arrayIndex()))
+            .collect(Collectors.toList());
 
         List<Stmt> stmts = new ArrayList<>();
         Map<Integer, Expr.Var> pVars = new HashMap<>();
-        for (int pos : pBits) {
-            if (!pVars.containsKey(pos)) {
+        for (Endpoint endpoint : endpoints) {
+            int pos = endpoint.pBit();
+            if (pos >= 0 && !pVars.containsKey(pos)) {
                 Expr.Var var = new Expr.Var("int", "p" + pVars.size());
                 pVars.put(pos, var);
                 stmts.add(new Stmt.Declare(var, Expr.Binary.list(Expr.Op.OR, extract128(pos, 1, 0))));
             }
         }
 
-        Map<Integer, List<Range>> groups = modeDefinition.ranges().stream()
-            .sorted()
-            .collect(Collectors.groupingBy(r -> r.target().arrayIndex(), TreeMap::new, Collectors.toList()));
-
-        for (Map.Entry<Integer, List<Range>> entry : groups.entrySet()) {
-            int index = entry.getKey();
-
+        for (Endpoint endpoint : endpoints) {
             List<Expr> terms = new ArrayList<>();
-            for (Range range : entry.getValue()) {
+            for (Range range : endpoint.ranges()) {
                 terms.addAll(term(range));
             }
-            if (!pBits.isEmpty()) {
-                terms.add(pVars.get(pBits.get(entry.getValue().get(0).target().index())));
+            if (endpoint.pBit() >= 0) {
+                terms.add(pVars.get(endpoint.pBit()));
+            }
+
+            Expr value = terms.isEmpty()
+                ? new Expr.Const(255)
+                : Expr.Binary.list(Expr.Op.OR, terms);
+            if (unpack && endpoint.bits() < 8) {
+                value = new Expr.Call("unpack" + endpoint.bits(), value);
             }
 
             stmts.add(new Stmt.Assign(
-                new Expr.Index(ENDPOINTS, new Expr.Const(index)),
-                Expr.Binary.list(Expr.Op.OR, terms)
+                new Expr.Index(ENDPOINTS, new Expr.Const(endpoint.target().arrayIndex())),
+                value
             ));
         }
 

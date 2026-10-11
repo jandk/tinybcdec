@@ -52,30 +52,6 @@ final class BC7 extends BPTC {
         bits.getLong(endpointBitsHalf);
         bits.getLong(endpointBits - endpointBitsHalf);
 
-        int numColors = mode.ns * 2;
-
-        // Unpack endpoints
-        int extraBits = (mode.epb ? 1 : 0) + (mode.spb ? 1 : 0);
-        int colorBits = mode.cb + extraBits;
-        int alphaBits = mode.ab + extraBits;
-        for (int i = 0; i < numColors; i++) {
-            if (colorBits < 8) {
-                endpoints[i * 4/**/] = unpack(endpoints[i * 4/**/], colorBits);
-                endpoints[i * 4 + 1] = unpack(endpoints[i * 4 + 1], colorBits);
-                endpoints[i * 4 + 2] = unpack(endpoints[i * 4 + 2], colorBits);
-            }
-            if (mode.ab != 0 && alphaBits < 8) {
-                endpoints[i * 4 + 3] = unpack(endpoints[i * 4 + 3], alphaBits);
-            }
-        }
-
-        // Opaque mode
-        if (mode.ab == 0) {
-            for (int i = 0; i < numColors; i++) {
-                endpoints[i * 4 + 3] = 0xFF;
-            }
-        }
-
         int ib1 = mode.ib1;
         int ib2 = mode.ib2;
         int[] table = this.table;
@@ -85,7 +61,7 @@ final class BC7 extends BPTC {
             long indexBits = indexBits(bits, ib1, mode.ns, partition);
 
             buildPalette(endpoints, table, weights(ib1), mode.ns, ib1);
-            writePixels(dst, dstPos, stride, table, indexBits, partitions(mode.ns, partition), ib1);
+            writePixels(dst, dstPos, stride, table, indexBits, partitions(mode.ns, partition));
         } else {
             // modes 4 and 5
             long indexBits1 = indexBits(bits, ib1, mode.ns, partition);
@@ -98,7 +74,7 @@ final class BC7 extends BPTC {
             int ab = selection ? ib1 : ib2;
 
             buildRotatedPalette(endpoints, table, weights(cb), weights(ab), cb, ab, rotation);
-            writeRotatedPixels(dst, dstPos, stride, table, cIndexBits, aIndexBits, cb, ab);
+            writeRotatedPixels(dst, dstPos, stride, table, cIndexBits, aIndexBits);
         }
     }
 
@@ -137,73 +113,89 @@ final class BC7 extends BPTC {
 
     private void readEndpoints0(long lo, long hi, int[] endpoints) {
         int p0 = (int) (hi >>> 13) & 1;
-        endpoints[0] = (int) (lo >>> 4) & 30 | p0;
-        endpoints[1] = (int) (lo >>> 28) & 30 | p0;
-        endpoints[2] = (int) (lo >>> 52) & 30 | p0;
+        endpoints[0] = unpack5((int) (lo >>> 4) & 30 | p0);
+        endpoints[1] = unpack5((int) (lo >>> 28) & 30 | p0);
+        endpoints[2] = unpack5((int) (lo >>> 52) & 30 | p0);
+        endpoints[3] = 255;
 
         int p1 = (int) (hi >>> 14) & 1;
-        endpoints[4] = (int) (lo >>> 8) & 30 | p1;
-        endpoints[5] = (int) (lo >>> 32) & 30 | p1;
-        endpoints[6] = (int) (lo >>> 56) & 30 | p1;
+        endpoints[4] = unpack5((int) (lo >>> 8) & 30 | p1);
+        endpoints[5] = unpack5((int) (lo >>> 32) & 30 | p1);
+        endpoints[6] = unpack5((int) (lo >>> 56) & 30 | p1);
+        endpoints[7] = 255;
 
         int p2 = (int) (hi >>> 15) & 1;
-        endpoints[8] = (int) (lo >>> 12) & 30 | p2;
-        endpoints[9] = (int) (lo >>> 36) & 30 | p2;
-        endpoints[10] = (int) (lo >>> 60) & 14 | (int) (hi << 4) & 16 | p2;
+        endpoints[8] = unpack5((int) (lo >>> 12) & 30 | p2);
+        endpoints[9] = unpack5((int) (lo >>> 36) & 30 | p2);
+        endpoints[10] = unpack5((int) (lo >>> 60) & 14 | (int) (hi << 4) & 16 | p2);
+        endpoints[11] = 255;
 
         int p3 = (int) (hi >>> 16) & 1;
-        endpoints[12] = (int) (lo >>> 16) & 30 | p3;
-        endpoints[13] = (int) (lo >>> 40) & 30 | p3;
-        endpoints[14] = (int) hi & 30 | p3;
+        endpoints[12] = unpack5((int) (lo >>> 16) & 30 | p3);
+        endpoints[13] = unpack5((int) (lo >>> 40) & 30 | p3);
+        endpoints[14] = unpack5((int) hi & 30 | p3);
+        endpoints[15] = 255;
 
         int p4 = (int) (hi >>> 17) & 1;
-        endpoints[16] = (int) (lo >>> 20) & 30 | p4;
-        endpoints[17] = (int) (lo >>> 44) & 30 | p4;
-        endpoints[18] = (int) (hi >>> 4) & 30 | p4;
+        endpoints[16] = unpack5((int) (lo >>> 20) & 30 | p4);
+        endpoints[17] = unpack5((int) (lo >>> 44) & 30 | p4);
+        endpoints[18] = unpack5((int) (hi >>> 4) & 30 | p4);
+        endpoints[19] = 255;
 
         int p5 = (int) (hi >>> 18) & 1;
-        endpoints[20] = (int) (lo >>> 24) & 30 | p5;
-        endpoints[21] = (int) (lo >>> 48) & 30 | p5;
-        endpoints[22] = (int) (hi >>> 8) & 30 | p5;
+        endpoints[20] = unpack5((int) (lo >>> 24) & 30 | p5);
+        endpoints[21] = unpack5((int) (lo >>> 48) & 30 | p5);
+        endpoints[22] = unpack5((int) (hi >>> 8) & 30 | p5);
+        endpoints[23] = 255;
     }
 
     private void readEndpoints1(long lo, long hi, int[] endpoints) {
         int p0 = (int) (hi >>> 16) & 1;
-        endpoints[0] = (int) (lo >>> 7) & 126 | p0;
-        endpoints[1] = (int) (lo >>> 31) & 126 | p0;
-        endpoints[2] = (int) (lo >>> 55) & 126 | p0;
-        endpoints[4] = (int) (lo >>> 13) & 126 | p0;
-        endpoints[5] = (int) (lo >>> 37) & 126 | p0;
-        endpoints[6] = (int) (lo >>> 61) & 6 | (int) (hi << 3) & 120 | p0;
+        endpoints[0] = unpack7((int) (lo >>> 7) & 126 | p0);
+        endpoints[1] = unpack7((int) (lo >>> 31) & 126 | p0);
+        endpoints[2] = unpack7((int) (lo >>> 55) & 126 | p0);
+        endpoints[3] = 255;
+        endpoints[4] = unpack7((int) (lo >>> 13) & 126 | p0);
+        endpoints[5] = unpack7((int) (lo >>> 37) & 126 | p0);
+        endpoints[6] = unpack7((int) (lo >>> 61) & 6 | (int) (hi << 3) & 120 | p0);
+        endpoints[7] = 255;
 
         int p1 = (int) (hi >>> 17) & 1;
-        endpoints[8] = (int) (lo >>> 19) & 126 | p1;
-        endpoints[9] = (int) (lo >>> 43) & 126 | p1;
-        endpoints[10] = (int) (hi >>> 3) & 126 | p1;
-        endpoints[12] = (int) (lo >>> 25) & 126 | p1;
-        endpoints[13] = (int) (lo >>> 49) & 126 | p1;
-        endpoints[14] = (int) (hi >>> 9) & 126 | p1;
+        endpoints[8] = unpack7((int) (lo >>> 19) & 126 | p1);
+        endpoints[9] = unpack7((int) (lo >>> 43) & 126 | p1);
+        endpoints[10] = unpack7((int) (hi >>> 3) & 126 | p1);
+        endpoints[11] = 255;
+        endpoints[12] = unpack7((int) (lo >>> 25) & 126 | p1);
+        endpoints[13] = unpack7((int) (lo >>> 49) & 126 | p1);
+        endpoints[14] = unpack7((int) (hi >>> 9) & 126 | p1);
+        endpoints[15] = 255;
     }
 
     private void readEndpoints2(long lo, long hi, int[] endpoints) {
-        endpoints[0] = (int) (lo >>> 9) & 31;
-        endpoints[1] = (int) (lo >>> 39) & 31;
-        endpoints[2] = (int) (hi >>> 5) & 31;
-        endpoints[4] = (int) (lo >>> 14) & 31;
-        endpoints[5] = (int) (lo >>> 44) & 31;
-        endpoints[6] = (int) (hi >>> 10) & 31;
-        endpoints[8] = (int) (lo >>> 19) & 31;
-        endpoints[9] = (int) (lo >>> 49) & 31;
-        endpoints[10] = (int) (hi >>> 15) & 31;
-        endpoints[12] = (int) (lo >>> 24) & 31;
-        endpoints[13] = (int) (lo >>> 54) & 31;
-        endpoints[14] = (int) (hi >>> 20) & 31;
-        endpoints[16] = (int) (lo >>> 29) & 31;
-        endpoints[17] = (int) (lo >>> 59);
-        endpoints[18] = (int) (hi >>> 25) & 31;
-        endpoints[20] = (int) (lo >>> 34) & 31;
-        endpoints[21] = (int) hi & 31;
-        endpoints[22] = (int) (hi >>> 30) & 31;
+        endpoints[0] = unpack5((int) (lo >>> 9) & 31);
+        endpoints[1] = unpack5((int) (lo >>> 39) & 31);
+        endpoints[2] = unpack5((int) (hi >>> 5) & 31);
+        endpoints[3] = 255;
+        endpoints[4] = unpack5((int) (lo >>> 14) & 31);
+        endpoints[5] = unpack5((int) (lo >>> 44) & 31);
+        endpoints[6] = unpack5((int) (hi >>> 10) & 31);
+        endpoints[7] = 255;
+        endpoints[8] = unpack5((int) (lo >>> 19) & 31);
+        endpoints[9] = unpack5((int) (lo >>> 49) & 31);
+        endpoints[10] = unpack5((int) (hi >>> 15) & 31);
+        endpoints[11] = 255;
+        endpoints[12] = unpack5((int) (lo >>> 24) & 31);
+        endpoints[13] = unpack5((int) (lo >>> 54) & 31);
+        endpoints[14] = unpack5((int) (hi >>> 20) & 31);
+        endpoints[15] = 255;
+        endpoints[16] = unpack5((int) (lo >>> 29) & 31);
+        endpoints[17] = unpack5((int) (lo >>> 59));
+        endpoints[18] = unpack5((int) (hi >>> 25) & 31);
+        endpoints[19] = 255;
+        endpoints[20] = unpack5((int) (lo >>> 34) & 31);
+        endpoints[21] = unpack5((int) hi & 31);
+        endpoints[22] = unpack5((int) (hi >>> 30) & 31);
+        endpoints[23] = 255;
     }
 
     private void readEndpoints3(long lo, long hi, int[] endpoints) {
@@ -211,42 +203,46 @@ final class BC7 extends BPTC {
         endpoints[0] = (int) (lo >>> 9) & 254 | p0;
         endpoints[1] = (int) (lo >>> 37) & 254 | p0;
         endpoints[2] = (int) (hi >>> 1) & 254 | p0;
+        endpoints[3] = 255;
 
         int p1 = (int) (hi >>> 31) & 1;
         endpoints[4] = (int) (lo >>> 16) & 254 | p1;
         endpoints[5] = (int) (lo >>> 44) & 254 | p1;
         endpoints[6] = (int) (hi >>> 8) & 254 | p1;
+        endpoints[7] = 255;
 
         int p2 = (int) (hi >>> 32) & 1;
         endpoints[8] = (int) (lo >>> 23) & 254 | p2;
         endpoints[9] = (int) (lo >>> 51) & 254 | p2;
         endpoints[10] = (int) (hi >>> 15) & 254 | p2;
+        endpoints[11] = 255;
 
         int p3 = (int) (hi >>> 33) & 1;
         endpoints[12] = (int) (lo >>> 30) & 254 | p3;
         endpoints[13] = (int) (lo >>> 58) & 62 | (int) (hi << 6) & 192 | p3;
         endpoints[14] = (int) (hi >>> 22) & 254 | p3;
+        endpoints[15] = 255;
     }
 
     private void readEndpoints4(long lo, long hi, int[] endpoints) {
-        endpoints[0] = (int) (lo >>> 8) & 31;
-        endpoints[1] = (int) (lo >>> 18) & 31;
-        endpoints[2] = (int) (lo >>> 28) & 31;
-        endpoints[3] = (int) (lo >>> 38) & 63;
-        endpoints[4] = (int) (lo >>> 13) & 31;
-        endpoints[5] = (int) (lo >>> 23) & 31;
-        endpoints[6] = (int) (lo >>> 33) & 31;
-        endpoints[7] = (int) (lo >>> 44) & 63;
+        endpoints[0] = unpack5((int) (lo >>> 8) & 31);
+        endpoints[1] = unpack5((int) (lo >>> 18) & 31);
+        endpoints[2] = unpack5((int) (lo >>> 28) & 31);
+        endpoints[3] = unpack6((int) (lo >>> 38) & 63);
+        endpoints[4] = unpack5((int) (lo >>> 13) & 31);
+        endpoints[5] = unpack5((int) (lo >>> 23) & 31);
+        endpoints[6] = unpack5((int) (lo >>> 33) & 31);
+        endpoints[7] = unpack6((int) (lo >>> 44) & 63);
     }
 
     private void readEndpoints5(long lo, long hi, int[] endpoints) {
-        endpoints[0] = (int) (lo >>> 8) & 127;
-        endpoints[1] = (int) (lo >>> 22) & 127;
-        endpoints[2] = (int) (lo >>> 36) & 127;
+        endpoints[0] = unpack7((int) (lo >>> 8) & 127);
+        endpoints[1] = unpack7((int) (lo >>> 22) & 127);
+        endpoints[2] = unpack7((int) (lo >>> 36) & 127);
         endpoints[3] = (int) (lo >>> 50) & 255;
-        endpoints[4] = (int) (lo >>> 15) & 127;
-        endpoints[5] = (int) (lo >>> 29) & 127;
-        endpoints[6] = (int) (lo >>> 43) & 127;
+        endpoints[4] = unpack7((int) (lo >>> 15) & 127);
+        endpoints[5] = unpack7((int) (lo >>> 29) & 127);
+        endpoints[6] = unpack7((int) (lo >>> 43) & 127);
         endpoints[7] = (int) (lo >>> 58) | (int) (hi << 6) & 192;
     }
 
@@ -266,44 +262,50 @@ final class BC7 extends BPTC {
 
     private void readEndpoints7(long lo, long hi, int[] endpoints) {
         int p0 = (int) (hi >>> 30) & 1;
-        endpoints[0] = (int) (lo >>> 13) & 62 | p0;
-        endpoints[1] = (int) (lo >>> 33) & 62 | p0;
-        endpoints[2] = (int) (lo >>> 53) & 62 | p0;
-        endpoints[3] = (int) (hi >>> 9) & 62 | p0;
+        endpoints[0] = unpack6((int) (lo >>> 13) & 62 | p0);
+        endpoints[1] = unpack6((int) (lo >>> 33) & 62 | p0);
+        endpoints[2] = unpack6((int) (lo >>> 53) & 62 | p0);
+        endpoints[3] = unpack6((int) (hi >>> 9) & 62 | p0);
 
         int p1 = (int) (hi >>> 31) & 1;
-        endpoints[4] = (int) (lo >>> 18) & 62 | p1;
-        endpoints[5] = (int) (lo >>> 38) & 62 | p1;
-        endpoints[6] = (int) (lo >>> 58) & 62 | p1;
-        endpoints[7] = (int) (hi >>> 14) & 62 | p1;
+        endpoints[4] = unpack6((int) (lo >>> 18) & 62 | p1);
+        endpoints[5] = unpack6((int) (lo >>> 38) & 62 | p1);
+        endpoints[6] = unpack6((int) (lo >>> 58) & 62 | p1);
+        endpoints[7] = unpack6((int) (hi >>> 14) & 62 | p1);
 
         int p2 = (int) (hi >>> 32) & 1;
-        endpoints[8] = (int) (lo >>> 23) & 62 | p2;
-        endpoints[9] = (int) (lo >>> 43) & 62 | p2;
-        endpoints[10] = (int) (hi << 1) & 62 | p2;
-        endpoints[11] = (int) (hi >>> 19) & 62 | p2;
+        endpoints[8] = unpack6((int) (lo >>> 23) & 62 | p2);
+        endpoints[9] = unpack6((int) (lo >>> 43) & 62 | p2);
+        endpoints[10] = unpack6((int) (hi << 1) & 62 | p2);
+        endpoints[11] = unpack6((int) (hi >>> 19) & 62 | p2);
 
         int p3 = (int) (hi >>> 33) & 1;
-        endpoints[12] = (int) (lo >>> 28) & 62 | p3;
-        endpoints[13] = (int) (lo >>> 48) & 62 | p3;
-        endpoints[14] = (int) (hi >>> 4) & 62 | p3;
-        endpoints[15] = (int) (hi >>> 24) & 62 | p3;
+        endpoints[12] = unpack6((int) (lo >>> 28) & 62 | p3);
+        endpoints[13] = unpack6((int) (lo >>> 48) & 62 | p3);
+        endpoints[14] = unpack6((int) (hi >>> 4) & 62 | p3);
+        endpoints[15] = unpack6((int) (hi >>> 24) & 62 | p3);
+    }
+
+    private int unpack5(int x) {
+        return x << 3 | x >>> 2;
+    }
+
+    private int unpack6(int x) {
+        return x << 2 | x >>> 4;
+    }
+
+    private int unpack7(int x) {
+        return x << 1 | x >>> 6;
     }
 
     private static void buildPalette(int[] endpoints, int[] palette, byte[] weights, int ns, int ib) {
         int count = 1 << ib;
         for (int s = 0; s < ns; s++) {
             int p = s * 8;
-            int r0 = endpoints[p/**/], g0 = endpoints[p + 1], b0 = endpoints[p + 2], a0 = endpoints[p + 3];
-            int r1 = endpoints[p + 4], g1 = endpoints[p + 5], b1 = endpoints[p + 6], a1 = endpoints[p + 7];
-            int base = s << ib;
+            long e0 = loadRGBA(endpoints, p);
+            long e1 = loadRGBA(endpoints, p + 4);
             for (int i = 0; i < count; i++) {
-                int w = weights[i];
-                int r = interpolate(r0, r1, w);
-                int g = interpolate(g0, g1, w);
-                int b = interpolate(b0, b1, w);
-                int a = interpolate(a0, a1, w);
-                palette[base + i] = b | g << 8 | r << 16 | a << 24;
+                palette[p + i] = interpolate4(e0, e1, weights[i]);
             }
         }
     }
@@ -312,16 +314,17 @@ final class BC7 extends BPTC {
         int[] endpoints, int[] palette,
         byte[] cWeights, byte[] aWeights, int cb, int ab, int rotation
     ) {
-        int r0 = endpoints[0], g0 = endpoints[1], b0 = endpoints[2], a0 = endpoints[3];
-        int r1 = endpoints[4], g1 = endpoints[5], b1 = endpoints[6], a1 = endpoints[7];
+        long e0 = loadRGBA(endpoints, 0) & 0x0000_FFFF_FFFF_FFFFL;
+        long e1 = loadRGBA(endpoints, 4) & 0x0000_FFFF_FFFF_FFFFL;
+        int a0 = endpoints[3];
+        int a1 = endpoints[7];
 
         int shift = (3 - rotation) << 3;
         int keep = ~(0xFF << shift);
 
         int cCount = 1 << cb;
         for (int i = 0; i < cCount; i++) {
-            int w = cWeights[i];
-            int bgr = interpolate(b0, b1, w) | interpolate(g0, g1, w) << 8 | interpolate(r0, r1, w) << 16;
+            int bgr = interpolate4(e0, e1, cWeights[i]);
             palette[i] = (bgr & keep) | (((bgr >>> shift) & 0xFF) << 24);
         }
 
@@ -331,16 +334,25 @@ final class BC7 extends BPTC {
         }
     }
 
+    private static long loadRGBA(int[] endpoints, int p) {
+        return (long) endpoints[p + 2] | (long) endpoints[p + 1] << 16 | (long) endpoints[p] << 32 | (long) endpoints[p + 3] << 48;
+    }
+
+    private static int interpolate4(long e0, long e1, int w) {
+        long x = (e0 * (64 - w) + e1 * w + 0x0020_0020_0020_0020L) >>> 6 & 0x00FF_00FF_00FF_00FFL;
+        x = (x | x >>> 8) & 0x0000_FFFF_0000_FFFFL;
+        return (int) (x | x >>> 16);
+    }
+
     private static void writePixels(
         ByteBuffer dst, int dstPos, int stride,
-        int[] table, long indexBits, int partitions, int ib
+        int[] palette, long indexBits, int partitions
     ) {
-        int mask = (1 << ib) - 1;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int bgra = table[((partitions & 3) << ib) + (int) (indexBits & mask)];
+                int bgra = palette[((partitions & 3) << 3) + (int) (indexBits & 0xF)];
                 ByteIO.setInt(dst, dstPos + x * BPP, bgra);
-                indexBits >>>= ib;
+                indexBits >>>= 4;
                 partitions >>>= 2;
             }
             dstPos += stride;
@@ -349,24 +361,17 @@ final class BC7 extends BPTC {
 
     private static void writeRotatedPixels(
         ByteBuffer dst, int dstPos, int stride,
-        int[] table, long cIndexBits, long aIndexBits, int cb, int ab
+        int[] palette, long cIndexBits, long aIndexBits
     ) {
-        int cMask = (1 << cb) - 1;
-        int aMask = (1 << ab) - 1;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                int bgra = table[(int) (cIndexBits & cMask)] | table[ALPHA_OFFSET + (int) (aIndexBits & aMask)];
+                int bgra = palette[(int) (cIndexBits & 0xF)] | palette[ALPHA_OFFSET + (int) (aIndexBits & 0xF)];
                 ByteIO.setInt(dst, dstPos + x * BPP, bgra);
-                cIndexBits >>>= cb;
-                aIndexBits >>>= ab;
+                cIndexBits >>>= 4;
+                aIndexBits >>>= 4;
             }
             dstPos += stride;
         }
-    }
-
-    private static int unpack(int i, int n) {
-        i = i << (8 - n);
-        return i | i >>> n;
     }
 
     private static final class Mode {

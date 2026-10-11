@@ -108,7 +108,7 @@ final class BC6HLayout implements Layout {
             .takeWhile(Objects::nonNull)
             .collect(Collectors.toList());
 
-        return toRanges(MODES[modeIndex], bits);
+        return combine(MODES[modeIndex], bits);
     }
 
     // region Parsing
@@ -171,7 +171,7 @@ final class BC6HLayout implements Layout {
 
     // region Combining
 
-    private ModeDefinition toRanges(int mode, List<Bit> bits) {
+    private ModeDefinition combine(int mode, List<Bit> bits) {
         List<Range> ranges = new ArrayList<>();
 
         int start = 0;
@@ -196,7 +196,15 @@ final class BC6HLayout implements Layout {
         }
 
         addRange(ranges, bits, start, bits.size(), direction);
-        return new ModeDefinition(mode, ranges, List.of());
+
+        List<Endpoint> endpoints = ranges.stream()
+            .sorted()
+            .collect(Collectors.groupingBy(Range::target, LinkedHashMap::new, Collectors.toList()))
+            .entrySet().stream()
+            .map(e -> new Endpoint(e.getKey(), e.getValue(), -1, e.getValue().stream().mapToInt(Range::count).sum()))
+            .collect(Collectors.toList());
+
+        return new ModeDefinition(mode, endpoints);
     }
 
     private void addRange(List<Range> ranges, List<Bit> bits, int start, int end, int direction) {

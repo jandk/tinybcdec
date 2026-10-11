@@ -17,6 +17,11 @@ final class BC7Layout implements Layout {
         "7 2 6 0 0 5 5 1 0 2 0";
 
     @Override
+    public boolean unpack() {
+        return true;
+    }
+
+    @Override
     public List<ModeDefinition> generate() {
         return LAYOUT.lines()
             .map(this::generateMode)
@@ -41,29 +46,30 @@ final class BC7Layout implements Layout {
         int epCount = 2 * ns;
         int start = (mode + 1) + pb + rb + isb;
         int shift = epb + spb;
+        int pBitStart = start + epCount * (3 * cb + ab);
 
-        List<Range> ranges = new ArrayList<>();
-        for (Field field : List.of(Field.R, Field.G, Field.B)) {
-            for (int ep = 0; ep < epCount; ep++) {
-                ranges.add(new Range(new Target(field, ep), shift, start, cb, false));
-                start += cb;
-            }
-        }
-        if (ab > 0) {
-            for (int ep = 0; ep < epCount; ep++) {
-                ranges.add(new Range(new Target(Field.A, ep), shift, start, ab, false));
-                start += ab;
-            }
-        }
+        List<Field> fields = ab > 0
+            ? List.of(Field.R, Field.G, Field.B, Field.A)
+            : List.of(Field.R, Field.G, Field.B);
 
-        List<Integer> pBits = List.of();
-        if (shift != 0) {
-            pBits = new ArrayList<>();
+        List<Endpoint> endpoints = new ArrayList<>();
+        for (Field field : fields) {
+            int count = field == Field.A ? ab : cb;
             for (int ep = 0; ep < epCount; ep++) {
-                pBits.add(start + (epb != 0 ? ep : ep / 2));
+                Target target = new Target(field, ep);
+                int pBit = shift != 0 ? pBitStart + (epb != 0 ? ep : ep / 2) : -1;
+                Range range = new Range(target, shift, start, count, false);
+                endpoints.add(new Endpoint(target, List.of(range), pBit, count + shift));
+                start += count;
             }
         }
 
-        return new ModeDefinition(mode, ranges, pBits);
+        if (ab == 0) {
+            for (int ep = 0; ep < epCount; ep++) {
+                endpoints.add(new Endpoint(new Target(Field.A, ep), List.of(), -1, 8));
+            }
+        }
+
+        return new ModeDefinition(mode, endpoints);
     }
 }

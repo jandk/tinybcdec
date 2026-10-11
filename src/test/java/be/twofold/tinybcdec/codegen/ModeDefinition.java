@@ -4,24 +4,18 @@ import java.util.*;
 
 final class ModeDefinition {
     private final int mode;
-    private final List<Range> ranges;
-    private final List<Integer> pBits;
+    private final List<Endpoint> endpoints;
 
-    ModeDefinition(int mode, List<Range> ranges, List<Integer> pBits) {
+    ModeDefinition(int mode, List<Endpoint> endpoints) {
         this.mode = mode;
-        this.ranges = ranges;
-        this.pBits = pBits;
+        this.endpoints = List.copyOf(endpoints);
     }
 
     public int mode() {
         return mode;
     }
 
-    public List<Range> ranges() {
-        return ranges;
-    }
-
-    public List<Integer> pBits() {
-        return pBits;
+    public List<Endpoint> endpoints() {
+        return endpoints;
     }
 }
