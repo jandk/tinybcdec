@@ -22,6 +22,11 @@ final class BC7Layout implements Layout {
     }
 
     @Override
+    public boolean packed() {
+        return true;
+    }
+
+    @Override
     public List<ModeDefinition> generate() {
         return LAYOUT.lines()
             .map(this::generateMode)

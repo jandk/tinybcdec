@@ -18,6 +18,7 @@ abstract class Expr {
         AND("&", 2),
         SHL("<<", 3),
         USHR(">>>", 3),
+        MUL("*", 4),
         ;
 
         private final String operator;
@@ -77,7 +78,7 @@ abstract class Expr {
 
         @Override
         int precedence() {
-            return 4;
+            return 5;
         }
 
         @Override
@@ -97,7 +98,7 @@ abstract class Expr {
 
         @Override
         int precedence() {
-            return 5;
+            return 6;
         }
 
         @Override
@@ -117,12 +118,31 @@ abstract class Expr {
 
         @Override
         int precedence() {
-            return 5;
+            return 6;
         }
 
         @Override
         public String toString() {
             return String.valueOf(value);
+        }
+    }
+
+    static final class LongConst extends Expr {
+        private final long value;
+
+        LongConst(long value) {
+            this.value = value;
+        }
+
+        @Override
+        int precedence() {
+            return 6;
+        }
+
+        @Override
+        public String toString() {
+            String hex = String.format("%016X", value);
+            return "0x" + hex.substring(0, 4) + "_" + hex.substring(4, 8) + "_" + hex.substring(8, 12) + "_" + hex.substring(12) + "L";
         }
     }
 
@@ -137,7 +157,7 @@ abstract class Expr {
 
         @Override
         int precedence() {
-            return 5;
+            return 6;
         }
 
         @Override
@@ -161,7 +181,7 @@ abstract class Expr {
 
         @Override
         int precedence() {
-            return 5;
+            return 6;
         }
 
         @Override

@@ -8,4 +8,8 @@ interface Layout {
     default boolean unpack() {
         return false;
     }
+
+    default boolean packed() {
+        return false;
+    }
 }
