@@ -38,7 +38,7 @@ abstract class Expr {
         }
     }
 
-    public static final class Binary extends Expr {
+    static final class Binary extends Expr {
         private final Op op;
         private final Expr lhs;
         private final Expr rhs;
@@ -66,7 +66,7 @@ abstract class Expr {
         }
     }
 
-    public static final class Cast extends Expr {
+    static final class Cast extends Expr {
         private final String type;
         private final Expr expr;
 
@@ -86,7 +86,7 @@ abstract class Expr {
         }
     }
 
-    public static final class Call extends Expr {
+    static final class Call extends Expr {
         private final String name;
         private final List<Expr> args;
 
@@ -108,7 +108,7 @@ abstract class Expr {
         }
     }
 
-    public static final class Const extends Expr {
+    static final class Const extends Expr {
         private final int value;
 
         public Const(int value) {
@@ -126,11 +126,11 @@ abstract class Expr {
         }
     }
 
-    public static final class Index extends Expr {
+    static final class Index extends Expr {
         private final Var var;
-        private final int index;
+        private final Expr index;
 
-        public Index(Var var, int index) {
+        public Index(Var var, Expr index) {
             this.var = Objects.requireNonNull(var);
             this.index = index;
         }
@@ -146,7 +146,7 @@ abstract class Expr {
         }
     }
 
-    public static final class Var extends Expr {
+    static final class Var extends Expr {
         private final String type;
         private final String name;
 

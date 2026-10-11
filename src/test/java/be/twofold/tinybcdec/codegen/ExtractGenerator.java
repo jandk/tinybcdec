@@ -7,6 +7,7 @@ final class ExtractGenerator {
     private static final Expr.Var LO = new Expr.Var("long", "lo");
     private static final Expr.Var HI = new Expr.Var("long", "hi");
     private static final Expr.Var ENDPOINTS = new Expr.Var("int[]", "endpoints");
+    private static final Expr.Var REVERSE_6 = new Expr.Var("byte[]", "REVERSE_6");
     private static final List<Expr.Var> PARAMS = List.of(LO, HI, ENDPOINTS);
 
     public static void main(String[] args) {
@@ -50,7 +51,7 @@ final class ExtractGenerator {
             }
 
             stmts.add(new Stmt.Assign(
-                new Expr.Index(ENDPOINTS, index),
+                new Expr.Index(ENDPOINTS, new Expr.Const(index)),
                 Expr.Binary.list(Expr.Op.OR, terms)
             ));
         }
@@ -67,7 +68,7 @@ final class ExtractGenerator {
     private static List<Expr> term(Range f) {
         if (f.reversed()) {
             Expr expr = Expr.Binary.list(Expr.Op.OR, extract128(f.start(), f.count(), 0));
-            Expr.Call rhs = new Expr.Call("reverse" + f.count(), expr);
+            Expr rhs = new Expr.Index(REVERSE_6, expr);
             return List.of(shift(rhs, -f.shift()));
         }
         return extract128(f.start(), f.count(), f.shift());
