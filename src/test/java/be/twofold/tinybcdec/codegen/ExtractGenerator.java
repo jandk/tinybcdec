@@ -1,101 +1,110 @@
 package be.twofold.tinybcdec.codegen;
 
 import java.util.*;
+import java.util.stream.*;
 
 final class ExtractGenerator {
+    private static final Expr.Var ENDPOINTS = new Expr.Var("int[]", "endpoints");
+    private static final Expr.Var LO = new Expr.Var("long", "lo");
+    private static final Expr.Var HI = new Expr.Var("long", "hi");
+
     public static void main(String[] args) {
         generateLayout(new BC6HLayout());
+        generateLayout(new BC7Layout());
     }
 
     private static void generateLayout(Layout layout) {
         List<ModeDefinition> definitions = layout.generate();
         for (ModeDefinition definition : definitions) {
             System.out.println(generateMethod(definition));
-            break;
         }
     }
 
     private static String generateMethod(ModeDefinition modeDefinition) {
-        int mode = modeDefinition.mode();
-        List<Range> ranges = new ArrayList<>(modeDefinition.ranges());
-        var pBits = modeDefinition.pBits();
-        Collections.sort(ranges);
+        List<Integer> pBits = modeDefinition.pBits();
 
-        StringBuilder sb = new StringBuilder();
-        sb.append('\n');
-        sb.append("private void getColors").append(modeDefinition.mode()).append("(long lo, long hi, int[] colors) {\n");
-        int pBit = -1;
-        int pName = -1;
-        for (int i = 0; i < ranges.size(); ) {
-            int index = ranges.get(i).target().arrayIndex();
-            if (!pBits.isEmpty() && pBits.get(index / 4) != pBit) {
-                pBit = pBits.get(index / 4);
-                pName++;
-                sb.append("    long p").append(pName).append(" = ").append(read(pBit, 1, 0)).append(";\n");
+        List<Stmt> stmts = new ArrayList<>();
+        Map<Integer, Expr.Var> pVars = new HashMap<>();
+        for (int pos : pBits) {
+            if (!pVars.containsKey(pos)) {
+                Expr.Var var = new Expr.Var("int", "p" + pVars.size());
+                pVars.put(pos, var);
+                stmts.add(new Stmt.Declare(var, extract128(pos, 1, 0).get(0)));
             }
+        }
 
-            StringBuilder rhs = new StringBuilder();
-            int j = i;
-            while (j < ranges.size() && ranges.get(j).target().arrayIndex() == index) {
-                if (j > i) {
-                    rhs.append(" | ");
-                }
-                rhs.append(term(ranges.get(j)));
-                j++;
+        Map<Integer, List<Range>> groups = modeDefinition.ranges().stream()
+            .sorted()
+            .collect(Collectors.groupingBy(r -> r.target().arrayIndex(), TreeMap::new, Collectors.toList()));
+
+        for (Map.Entry<Integer, List<Range>> entry : groups.entrySet()) {
+            Integer index = entry.getKey();
+
+            List<Expr> terms = new ArrayList<>();
+            for (Range range : entry.getValue()) {
+                terms.addAll(term(range));
             }
             if (!pBits.isEmpty()) {
-                rhs.append(" | p").append(pName);
+                terms.add(pVars.get(pBits.get(index / 4)));
             }
-            sb.append("    colors[").append(pad(index)).append("] = (int) (").append(rhs).append(");\n");
-            i = j;
+
+            Expr allTerms = terms.stream()
+                .reduce((a, b) -> new Expr.Binary(Expr.Op.OR, a, b))
+                .orElseThrow();
+
+            stmts.add(new Stmt.Assign(new Expr.Index(ENDPOINTS, index), allTerms));
         }
-        return sb.append("}\n").toString();
+
+        String methodDeclaration = "private void readEndpoints" + modeDefinition.mode() + "(long lo, long hi, int[] endpoints) {\n";
+        return stmts.stream()
+            .map(stmt -> "    " + stmt)
+            .collect(Collectors.joining("\n", methodDeclaration, "\n}\n"));
     }
 
-    private static String term(Range f) {
+    private static List<Expr> term(Range f) {
         if (f.reversed()) {
-            String rhs = "REVERSE_" + f.count() + "[(int) (" + read(f.start(), f.count(), 0) + ")]";
-            return f.shift() > 0 ? rhs + " << " + f.shift() : rhs;
+            Expr expr = extract128(f.start(), f.count(), 0).stream()
+                .reduce((lhs, rhs) -> new Expr.Binary(Expr.Op.OR, lhs, rhs))
+                .orElseThrow();
+            Expr.Call rhs = new Expr.Call("reverse" + f.count(), expr);
+            return List.of(shift(rhs, -f.shift()));
         }
-        return read(f.start(), f.count(), f.shift());
+        return extract128(f.start(), f.count(), f.shift());
     }
 
-    private static String read(int pos, int count, int shift) {
+    private static List<Expr> extract128(int pos, int count, int shift) {
         if (pos >= 64) {
-            return extract("hi", pos - 64, count, shift);
+            return List.of(extract64(HI, pos - 64, count, shift));
         }
         if (pos + count <= 64) {
-            return extract("lo", pos, count, shift);
+            return List.of(extract64(LO, pos, count, shift));
         }
 
         int loCount = 64 - pos;
         int hiCount = count - loCount;
 
-        String lhs = extract("lo", pos, loCount, shift);
-        String rhs = extract("hi", 0, hiCount, loCount + shift);
-        return lhs + " | " + rhs;
+        Expr lhs = extract64(LO, pos, loCount, shift);
+        Expr rhs = extract64(HI, 0, hiCount, loCount + shift);
+        return List.of(lhs, rhs);
     }
 
-    private static String extract(String f, int pos, int count, int shift) {
+    private static Expr extract64(Expr.Var var, int pos, int count, int shift) {
         int mask = ((1 << count) - 1) << shift;
-        return shift(f, pos - shift) + " & " + mask(mask);
+        Expr shifted = shift(var, pos - shift);
+        if (shift == 0 && pos + count == 64) {
+            return new Expr.Cast("int", shifted);
+        }
+
+        return new Expr.Binary(Expr.Op.AND, new Expr.Cast("int", shifted), new Expr.Const(mask));
     }
 
-    private static String shift(String src, int amount) {
+    private static Expr shift(Expr src, int amount) {
         if (amount > 0) {
-            return src + " >> " + pad(amount);
+            return new Expr.Binary(Expr.Op.USHR, src, new Expr.Const(amount));
         }
         if (amount < 0) {
-            return src + " << " + pad(-amount);
+            return new Expr.Binary(Expr.Op.SHL, src, new Expr.Const(-amount));
         }
-        return src + " /* */";
-    }
-
-    private static String mask(int mask) {
-        return String.format("0x%03X", mask);
-    }
-
-    private static String pad(int value) {
-        return value < 10 ? "+" + value : Integer.toString(value);
+        return src;
     }
 }
