@@ -84,8 +84,7 @@ abstract class BPTC extends BlockDecoder {
         return WEIGHTS[numIndexBits];
     }
 
-    static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {
-        long indexBits = bits.getLong(numIndexBits * 16 - numPartitions);
+    static long indexBits(long indexBits, int numIndexBits, int numPartitions, int partition) {
         indexBits = insertZeroBit(indexBits, numIndexBits - 1);
 
         if (numPartitions == 2) {
@@ -106,6 +105,11 @@ abstract class BPTC extends BlockDecoder {
             default:
                 return indexBits;
         }
+    }
+
+    static long indexBits(Bits bits, int numIndexBits, int numPartitions, int partition) {
+        long indexBits = bits.getLong(numIndexBits * 16 - numPartitions);
+        return indexBits(indexBits, numIndexBits, numPartitions, partition);
     }
 
     static long indexBits2To4(long x) {

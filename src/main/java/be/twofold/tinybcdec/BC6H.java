@@ -32,7 +32,6 @@ final class BC6H extends BPTC {
         }
     }
 
-    private final Bits bits = new Bits();
     private final int[] endpoints = new int[16];
     private final long[] palette = new long[16];
     private final boolean signed;
@@ -44,13 +43,10 @@ final class BC6H extends BPTC {
 
     @Override
     void decodeBlock(ByteBuffer src, int srcPos, ByteBuffer dst, int dstPos, int stride) {
-        Bits bits = this.bits;
-        bits.read(src, srcPos);
+        long lo = ByteIO.getLong(src, srcPos/**/);
+        long hi = ByteIO.getLong(src, srcPos + 8);
 
-        long lo = bits.lo;
-        long hi = bits.hi;
-
-        int modeIndex = mode(bits);
+        int modeIndex = mode((int) lo);
         if (modeIndex >= MODES.size()) {
             fillInvalidBlock(dst, dstPos, stride, BPP);
             return;
@@ -58,10 +54,6 @@ final class BC6H extends BPTC {
         Mode mode = MODES.get(modeIndex);
 
         int[] endpoints = readEndpoints(modeIndex, lo, hi);
-        bits.getLong(50);
-        bits.getLong(modeIndex < 10 ? modeIndex < 2 ? (75 - 50) : (72 - 50) : (60 - 50));
-
-        int partition = mode.pb ? bits.get(5) : 0;
         int numPartitions = mode.pb ? 2 : 1;
 
         // The values in E0 are sign-extended to the implementation’s internal integer representation if
@@ -88,36 +80,146 @@ final class BC6H extends BPTC {
             }
         }
 
-        for (int i = 0; i < numPartitions * 8; i += 4) {
-            endpoints[i/**/] = unquantize(endpoints[i/**/], mode.epb, signed);
-            endpoints[i + 1] = unquantize(endpoints[i + 1], mode.epb, signed);
-            endpoints[i + 2] = unquantize(endpoints[i + 2], mode.epb, signed);
+        if (mode.epb < (signed ? 16 : 15)) {
+            for (int i = 0; i < numPartitions * 8; i += 4) {
+                endpoints[i/**/] = unquantize(endpoints[i/**/], mode.epb, signed);
+                endpoints[i + 1] = unquantize(endpoints[i + 1], mode.epb, signed);
+                endpoints[i + 2] = unquantize(endpoints[i + 2], mode.epb, signed);
+            }
         }
 
         int ib = mode.pb ? 3 : 4;
-        buildPalette(endpoints, weights(ib), numPartitions, ib);
+        if (signed) {
+            buildPalette(endpoints, weights(ib), numPartitions, ib);
+        } else {
+            buildPaletteUnsigned(endpoints, weights(ib), numPartitions, ib);
+        }
 
-        int partitions = partitions(numPartitions, partition);
-        long indexBits = indexBits(bits, ib, numPartitions, partition);
-        var palette = this.palette;
+        int partition = mode.pb ? (int) (hi >>> 13) & 0x1F : 0;
+        long indexBits = indexBits(mode.pb ? hi >>> 18 : hi >>> 1, ib, numPartitions, partition);
+        int partitionBits = partitions(numPartitions, partition);
+        writePixels(dst, dstPos, stride, indexBits, partitionBits);
+    }
+
+    private int mode(int lo) {
+        int mode = lo & 0x03;
+        if (mode < 2) {
+            return mode;
+        }
+        return ((lo >>> 2) & 0x07) + ((mode * 8) - 14);
+    }
+
+    private void buildPalette(int[] endpoints, byte[] weights, int ns, int ib) {
+        long[] palette = this.palette;
+        for (int p = 0; p < ns * 8; p += 8) {
+            for (int i = 0; i < 1 << ib; i++) {
+                int w = weights[i];
+                long r = finalUnquantize(interpolate(endpoints[p/**/], endpoints[p + 4], w), signed) & 0xFFFFL;
+                long g = finalUnquantize(interpolate(endpoints[p + 1], endpoints[p + 5], w), signed) & 0xFFFFL;
+                long b = finalUnquantize(interpolate(endpoints[p + 2], endpoints[p + 6], w), signed) & 0xFFFFL;
+                palette[p + i] = r | g << 16 | b << 32 | 0x3C00L << 48;
+            }
+        }
+    }
+
+    private void buildPaletteUnsigned(int[] endpoints, byte[] weights, int ns, int ib) {
+        // So we have 64 bits to work with, that gives us 21 bits per lane
+        long[] palette = this.palette;
+        for (int p = 0; p < ns * 8; p += 8) {
+            long e0 = (long) endpoints[p/**/] | (long) endpoints[p + 1] << 21 | (long) endpoints[p + 2] << 42;
+            long e1 = (long) endpoints[p + 4] | (long) endpoints[p + 5] << 21 | (long) endpoints[p + 6] << 42;
+            long half = (e0 + e1) >>> 1 & 0xBFFF_FDFF_FFEF_FFFFL; // mask off spilled bits
+            long even = 0x4000_0200_0010L;
+            long odd = even + half;
+
+            // But the interpolation is an annoying one, as we need 16 times 6 bits multiply, which ends up being 22
+            // So we do a little creative accounting, and interpolate with 5 bits instead of 6, and add the leftovers
+            // at the end. This gives us 21 bits per lane exactly. The unquantize doesn't have this issue, it fits in 20.
+            for (int i = 0; i < 1 << ib; i++) {
+                // interpolate
+                int w = weights[i];
+                long t = e0 * ((64 - w) >> 1) + e1 * (w >> 1) + ((w & 1) != 0 ? odd : even);
+                // finalUnquantize
+                long x = (((t >>> 5) & 0x03FF_FC1F_FFE0_FFFFL) * 31) >>> 6 & 0x01FF_FC0F_FFE0_7FFFL;
+                palette[p + i] = x & 0xFFFFL | x >>> 5 & 0xFFFF_0000L | x >>> 10 & 0xFFFF_0000_0000L | 0x3C00_0000_0000_0000L;
+            }
+        }
+    }
+
+    private void writePixels(ByteBuffer dst, int dstPos, int stride, long indexBits, int partitionBits) {
+        long[] palette = this.palette;
         for (int y = 0; y < BLOCK_HEIGHT; y++) {
             for (int x = 0; x < BLOCK_WIDTH; x++) {
-                long bgra = palette[((partitions & 3) << 3) + (int) (indexBits & 0xF)];
-                ByteIO.setLong(dst, dstPos + x * BPP, bgra);
+                long rgba = palette[((partitionBits & 3) << 3) + ((int) indexBits & 0xF)];
+                ByteIO.setLong(dst, dstPos + x * BPP, rgba);
                 indexBits >>>= 4;
-                partitions >>>= 2;
+                partitionBits >>>= 2;
             }
             dstPos += stride;
         }
     }
 
-    private int mode(Bits bits) {
-        int mode = bits.get(2);
-        if (mode < 2) {
-            return mode;
+    private int unquantize(int value, int bits, boolean signed) {
+        if (signed) {
+            return unquantizeSigned(value, bits);
+        } else {
+            return unquantizeUnsigned(value, bits);
         }
-        return bits.get(3) + (mode * 8 - 14);
     }
+
+    private int unquantizeUnsigned(int value, int bits) {
+        if (value == 0) {
+            return 0;
+        }
+        if (value == ((1 << bits) - 1)) {
+            return 0xFFFF;
+        }
+        return ((value << 15) + 0x4000) >>> (bits - 1);
+    }
+
+    private int unquantizeSigned(int value, int bits) {
+        if (value == 0) {
+            return 0;
+        }
+
+        boolean sign;
+        if (value < 0) {
+            value = -value;
+            sign = true;
+        } else {
+            sign = false;
+        }
+
+        int unq;
+        if (value >= ((1 << (bits - 1)) - 1)) {
+            unq = 0x7FFF;
+        } else {
+            unq = ((value << 15) + 0x4000) >> (bits - 1);
+        }
+        return sign ? -unq : unq;
+    }
+
+    private short finalUnquantize(int i, boolean signed) {
+        if (signed) {
+            i = (short) i;
+            return (short) (i < 0 ? (((-i) * 31) >> 5) + 0x8000 : (i * 31) >> 5);
+        } else {
+            return (short) ((i * 31) >> 6);
+        }
+    }
+
+    private int extendSign(int value, int bits) {
+        int shift = -bits; // shifts get masked
+        return value << shift >> shift;
+    }
+
+    private int transformInverse(int value, int value0, int bits, boolean signed) {
+        int shift = -bits; // shifts get masked
+        int sum = (value + value0) << shift;
+        return signed ? sum >> shift : sum >>> shift;
+    }
+
+    // region Endpoints
 
     private int[] readEndpoints(int modeIndex, long lo, long hi) {
         int[] endpoints = this.endpoints;
@@ -170,7 +272,7 @@ final class BC6H extends BPTC {
         return endpoints;
     }
 
-    private void readEndpoints0(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints0(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 25) & 1023;
@@ -185,7 +287,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) lo & 16 | (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 59) & 2 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints1(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints1(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 127;
         endpoints[1] = (int) (lo >>> 15) & 127;
         endpoints[2] = (int) (lo >>> 25) & 127;
@@ -200,7 +302,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 28) & 32 | (int) (lo >>> 30) & 16 | (int) (lo >>> 29) & 8 | (int) (lo >>> 21) & 4 | (int) (lo >>> 12) & 3;
     }
 
-    private void readEndpoints2(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints2(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 30) & 1024 | (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 39) & 1024 | (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 49) & 1024 | (int) (lo >>> 25) & 1023;
@@ -215,7 +317,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 59) & 2 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints6(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints6(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 29) & 1024 | (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 40) & 1024 | (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 49) & 1024 | (int) (lo >>> 25) & 1023;
@@ -230,7 +332,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 59) & 2 | (int) (hi >>> 5) & 1;
     }
 
-    private void readEndpoints10(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints10(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 29) & 1024 | (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 39) & 1024 | (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 50) & 1024 | (int) (lo >>> 25) & 1023;
@@ -245,7 +347,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (hi >>> 7) & 16 | (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 6 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints14(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints14(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 511;
         endpoints[1] = (int) (lo >>> 15) & 511;
         endpoints[2] = (int) (lo >>> 25) & 511;
@@ -260,7 +362,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 30) & 16 | (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 59) & 2 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints18(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints18(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 255;
         endpoints[1] = (int) (lo >>> 15) & 255;
         endpoints[2] = (int) (lo >>> 25) & 255;
@@ -275,7 +377,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 30) & 24 | (int) (lo >>> 21) & 4 | (int) (lo >>> 59) & 2 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints22(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints22(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 255;
         endpoints[1] = (int) (lo >>> 15) & 255;
         endpoints[2] = (int) (lo >>> 25) & 255;
@@ -290,7 +392,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 30) & 16 | (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 59) & 2 | (int) (lo >>> 13) & 1;
     }
 
-    private void readEndpoints26(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints26(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 255;
         endpoints[1] = (int) (lo >>> 15) & 255;
         endpoints[2] = (int) (lo >>> 25) & 255;
@@ -305,7 +407,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 28) & 32 | (int) (lo >>> 30) & 16 | (int) (hi >>> 9) & 8 | (int) (hi >>> 4) & 4 | (int) (lo >>> 12) & 2 | (int) (lo >>> 50) & 1;
     }
 
-    private void readEndpoints30(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints30(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 63;
         endpoints[1] = (int) (lo >>> 15) & 63;
         endpoints[2] = (int) (lo >>> 25) & 63;
@@ -320,7 +422,7 @@ final class BC6H extends BPTC {
         endpoints[14] = (int) (lo >>> 28) & 32 | (int) (lo >>> 30) & 16 | (int) (lo >>> 29) & 8 | (int) (lo >>> 21) & 4 | (int) (lo >>> 12) & 3;
     }
 
-    private void readEndpoints3(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints3(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 25) & 1023;
@@ -329,7 +431,7 @@ final class BC6H extends BPTC {
         endpoints[6] = (int) (lo >>> 55) | (int) (hi << 9) & 512;
     }
 
-    private void readEndpoints7(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints7(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 34) & 1024 | (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 44) & 1024 | (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (hi << 10) & 1024 | (int) (lo >>> 25) & 1023;
@@ -338,7 +440,7 @@ final class BC6H extends BPTC {
         endpoints[6] = (int) (lo >>> 55);
     }
 
-    private void readEndpoints11(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints11(long lo, long hi, int[] endpoints) {
         endpoints[0] = (int) (lo >>> 32) & 2048 | (int) (lo >>> 34) & 1024 | (int) (lo >>> 5) & 1023;
         endpoints[1] = (int) (lo >>> 42) & 2048 | (int) (lo >>> 44) & 1024 | (int) (lo >>> 15) & 1023;
         endpoints[2] = (int) (lo >>> 52) & 2048 | (int) (hi << 10) & 1024 | (int) (lo >>> 25) & 1023;
@@ -347,7 +449,7 @@ final class BC6H extends BPTC {
         endpoints[6] = (int) (lo >>> 55) & 255;
     }
 
-    private void readEndpoints15(long lo, long hi, int[] endpoints) {
+    private static void readEndpoints15(long lo, long hi, int[] endpoints) {
         endpoints[0] = REVERSE_6[(int) (lo >>> 39) & 63] << 10 | (int) (lo >>> 5) & 1023;
         endpoints[1] = REVERSE_6[(int) (lo >>> 49) & 63] << 10 | (int) (lo >>> 15) & 1023;
         endpoints[2] = REVERSE_6[(int) (lo >>> 59) | (int) (hi << 5) & 32] << 10 | (int) (lo >>> 25) & 1023;
@@ -356,82 +458,7 @@ final class BC6H extends BPTC {
         endpoints[6] = (int) (lo >>> 55) & 15;
     }
 
-    private void buildPalette(int[] endpoints, byte[] weights, int ns, int ib) {
-        long[] palette = this.palette;
-        int count = 1 << ib;
-        for (int s = 0; s < ns; s++) {
-            int p = s * 8;
-            int r0 = endpoints[p/**/], g0 = endpoints[p + 1], b0 = endpoints[p + 2];
-            int r1 = endpoints[p + 4], g1 = endpoints[p + 5], b1 = endpoints[p + 6];
-            for (int i = 0; i < count; i++) {
-                int w = weights[i];
-                long r = finalUnquantize(interpolate(r0, r1, w), signed) & 0xFFFFL;
-                long g = finalUnquantize(interpolate(g0, g1, w), signed) & 0xFFFFL;
-                long b = finalUnquantize(interpolate(b0, b1, w), signed) & 0xFFFFL;
-                palette[p + i] = r | g << 16 | b << 32 | 0x3C00L << 48;
-            }
-        }
-    }
-
-    private int unquantize(int value, int bits, boolean signed) {
-        if (signed) {
-            return unquantizeSigned(value, bits);
-        } else {
-            return unquantizeUnsigned(value, bits);
-        }
-    }
-
-    private int unquantizeUnsigned(int value, int bits) {
-        if (bits >= 15 || value == 0) {
-            return value;
-        }
-        if (value == ((1 << bits) - 1)) {
-            return 0xFFFF;
-        }
-        return ((value << 15) + 0x4000) >>> (bits - 1);
-    }
-
-    private int unquantizeSigned(int value, int bits) {
-        if (bits >= 16 || value == 0) {
-            return value;
-        }
-
-        boolean sign;
-        if (value < 0) {
-            value = -value;
-            sign = true;
-        } else {
-            sign = false;
-        }
-
-        int unq;
-        if (value >= ((1 << (bits - 1)) - 1)) {
-            unq = 0x7FFF;
-        } else {
-            unq = ((value << 15) + 0x4000) >> (bits - 1);
-        }
-        return sign ? -unq : unq;
-    }
-
-    private short finalUnquantize(int i, boolean signed) {
-        if (signed) {
-            i = (short) i;
-            return (short) (i < 0 ? (((-i) * 31) >> 5) + 0x8000 : (i * 31) >> 5);
-        } else {
-            return (short) ((i * 31) >> 6);
-        }
-    }
-
-    private int extendSign(int value, int bits) {
-        int shift = -bits; // shifts get masked
-        return value << shift >> shift;
-    }
-
-    private int transformInverse(int value, int value0, int bits, boolean signed) {
-        int shift = -bits; // shifts get masked
-        int sum = (value + value0) << shift;
-        return signed ? sum >> shift : sum >>> shift;
-    }
+    // endregion
 
     private static final class Mode {
         private final boolean te;
