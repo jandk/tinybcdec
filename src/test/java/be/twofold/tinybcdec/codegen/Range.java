@@ -1,6 +1,12 @@
 package be.twofold.tinybcdec.codegen;
 
-final class Range {
+import java.util.*;
+
+final class Range implements Comparable<Range> {
+    private static final Comparator<Range> COMPARATOR = Comparator
+        .comparingInt((Range r) -> r.target.arrayIndex())
+        .thenComparing(Comparator.comparingInt((Range r) -> r.shift).reversed());
+
     private final Target target;
     private final int shift;
     private final int start;
@@ -33,6 +39,11 @@ final class Range {
 
     public boolean reversed() {
         return reversed;
+    }
+
+    @Override
+    public int compareTo(Range o) {
+        return COMPARATOR.compare(this, o);
     }
 
     @Override

@@ -17,6 +17,10 @@ final class Target {
         return index;
     }
 
+    public int arrayIndex() {
+        return 4 * index + field.ordinal();
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (!(obj instanceof Target)) {

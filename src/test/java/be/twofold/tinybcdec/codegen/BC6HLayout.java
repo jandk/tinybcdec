@@ -3,7 +3,8 @@ package be.twofold.tinybcdec.codegen;
 import java.util.*;
 import java.util.stream.*;
 
-final class BC6HLayout {
+final class BC6HLayout implements Layout {
+    @SuppressWarnings("ConcatenationWithEmptyString")
     private static final String LAYOUT = "" +
         "M0 M0 M0 M0 M0 M0 M0 M0 M0 M0 M0 M0 M0 M0\n" +
         "M1 M1 M1 M1 M1 M1 M1 M1 M1 M1 M1 M1 M1 M1\n" +
@@ -88,71 +89,29 @@ final class BC6HLayout {
         "PB3 PB3 PB3 PB3 PB3 PB3 PB3 PB3 PB3 PB3 IB0,10 IB0,10 IB0,10 IB0,10\n" +
         "PB4 PB4 PB4 PB4 PB4 PB4 PB4 PB4 PB4 PB4 IB0,11 IB0,11 IB0,11 IB0,11";
 
-    List<List<Range>> parseRanges() {
+    static final int[] MODES = {0, 1, 2, 6, 10, 14, 18, 22, 26, 30, 3, 7, 11, 15};
+
+    @Override
+    public List<ModeDefinition> generate() {
         var parsed = LAYOUT.lines()
             .map(this::parseLine)
             .collect(Collectors.toList());
 
         return IntStream.range(0, parsed.get(0).size())
-            .mapToObj(i -> parsed.stream()
-                .map(row -> row.get(i))
-                .takeWhile(Objects::nonNull)
-                .collect(Collectors.toList()))
-            .map(this::toRanges)
+            .mapToObj(i -> generateMode(i, parsed))
             .collect(Collectors.toList());
     }
 
-    private List<Range> toRanges(List<Bit> bits) {
-        var ranges = new ArrayList<Range>();
+    private ModeDefinition generateMode(int modeIndex, List<List<Bit>> parsed) {
+        List<Bit> bits = parsed.stream()
+            .map(row -> row.get(modeIndex))
+            .takeWhile(Objects::nonNull)
+            .collect(Collectors.toList());
 
-        var start = 0;
-        var direction = 0;
-        for (int i = 1; i < bits.size(); i++) {
-            var prev = bits.get(i - 1);
-            var curr = bits.get(i);
-            var diff = curr.shift() - prev.shift();
-
-            var isContinuation = curr.target().equals(prev.target())
-                && Math.abs(diff) == 1
-                && (direction == 0 || direction == diff);
-
-            if (isContinuation) {
-                direction = diff;
-                continue;
-            }
-
-            addRange(ranges, bits, start, i, direction);
-            start = i;
-            direction = 0;
-        }
-
-        addRange(ranges, bits, start, bits.size(), direction);
-        return ranges;
+        return toRanges(MODES[modeIndex], bits);
     }
 
-    private void addRange(List<Range> ranges, List<Bit> bits, int start, int end, int direction) {
-        if (bits.get(start).target().field() == Field.M) {
-            return;
-        }
-        if (direction < 0 && end - start == 2) {
-            ranges.add(toRange(bits, start, start + 1, 0));
-            ranges.add(toRange(bits, start + 1, end, 0));
-        } else {
-            ranges.add(toRange(bits, start, end, direction));
-        }
-    }
-
-    private Range toRange(List<Bit> bits, int start, int end, int direction) {
-        Bit startBit = bits.get(start);
-        int count = end - start;
-        return new Range(
-            startBit.target(),
-            direction < 0 ? startBit.shift() - (count - 1) : startBit.shift(),
-            start,
-            count,
-            direction < 0
-        );
-    }
+    // region Parsing
 
     private List<Bit> parseLine(String line) {
         return Arrays.stream(line.split("\\s+"))
@@ -207,4 +166,63 @@ final class BC6HLayout {
             }
         }
     }
+
+    // endregion
+
+    // region Combining
+
+    private ModeDefinition toRanges(int mode, List<Bit> bits) {
+        var ranges = new ArrayList<Range>();
+
+        var start = 0;
+        var direction = 0;
+        for (int i = 1; i < bits.size(); i++) {
+            var prev = bits.get(i - 1);
+            var curr = bits.get(i);
+            var diff = curr.shift() - prev.shift();
+
+            var isContinuation = curr.target().equals(prev.target())
+                && Math.abs(diff) == 1
+                && (direction == 0 || direction == diff);
+
+            if (isContinuation) {
+                direction = diff;
+                continue;
+            }
+
+            addRange(ranges, bits, start, i, direction);
+            start = i;
+            direction = 0;
+        }
+
+        addRange(ranges, bits, start, bits.size(), direction);
+        return new ModeDefinition(mode, ranges, List.of());
+    }
+
+    private void addRange(List<Range> ranges, List<Bit> bits, int start, int end, int direction) {
+        if (bits.get(start).target().field() == Field.M) {
+            return;
+        }
+        if (direction < 0 && end - start == 2) {
+            ranges.add(toRange(bits, start, start + 1, 0));
+            ranges.add(toRange(bits, start + 1, end, 0));
+        } else {
+            ranges.add(toRange(bits, start, end, direction));
+        }
+    }
+
+    private Range toRange(List<Bit> bits, int start, int end, int direction) {
+        Bit startBit = bits.get(start);
+        int count = end - start;
+        return new Range(
+            startBit.target(),
+            direction < 0 ? startBit.shift() - (count - 1) : startBit.shift(),
+            start,
+            count,
+            direction < 0
+        );
+    }
+
+    // endregion
+
 }
