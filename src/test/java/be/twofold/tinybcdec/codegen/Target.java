@@ -27,14 +27,14 @@ final class Target {
             return false;
         }
 
-        var target = (Target) obj;
+        Target target = (Target) obj;
         return field == target.field
             && index == target.index;
     }
 
     @Override
     public int hashCode() {
-        var result = 1;
+        int result = 1;
         result = 31 * result + field.hashCode();
         result = 31 * result + Integer.hashCode(index);
         return result;

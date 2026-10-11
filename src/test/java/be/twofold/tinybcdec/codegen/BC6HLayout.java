@@ -93,7 +93,7 @@ final class BC6HLayout implements Layout {
 
     @Override
     public List<ModeDefinition> generate() {
-        var parsed = LAYOUT.lines()
+        List<List<Bit>> parsed = LAYOUT.lines()
             .map(this::parseLine)
             .collect(Collectors.toList());
 
@@ -122,7 +122,7 @@ final class BC6HLayout implements Layout {
     private Bit parseBit(String s) {
         return parseTarget(s)
             .map(target -> {
-                var shift = target.field() == Field.M
+                int shift = target.field() == Field.M
                     ? Integer.parseInt(s.substring(1))
                     : Integer.parseInt(s.substring(2));
                 return new Bit(target, shift);
@@ -131,7 +131,7 @@ final class BC6HLayout implements Layout {
     }
 
     private Optional<Target> parseTarget(String s) {
-        var field = parseField(s);
+        Field field = parseField(s);
         switch (field) {
             case IB:
             case PB:
@@ -139,7 +139,7 @@ final class BC6HLayout implements Layout {
             case M:
                 return Optional.of(new Target(Field.M, 0));
             default:
-                var index = Character.digit(s.charAt(1), 10);
+                int index = Character.digit(s.charAt(1), 10);
                 return Optional.of(new Target(field, index));
         }
     }
@@ -172,16 +172,16 @@ final class BC6HLayout implements Layout {
     // region Combining
 
     private ModeDefinition toRanges(int mode, List<Bit> bits) {
-        var ranges = new ArrayList<Range>();
+        List<Range> ranges = new ArrayList<>();
 
-        var start = 0;
-        var direction = 0;
+        int start = 0;
+        int direction = 0;
         for (int i = 1; i < bits.size(); i++) {
-            var prev = bits.get(i - 1);
-            var curr = bits.get(i);
-            var diff = curr.shift() - prev.shift();
+            Bit prev = bits.get(i - 1);
+            Bit curr = bits.get(i);
+            int diff = curr.shift() - prev.shift();
 
-            var isContinuation = curr.target().equals(prev.target())
+            boolean isContinuation = curr.target().equals(prev.target())
                 && Math.abs(diff) == 1
                 && (direction == 0 || direction == diff);
 

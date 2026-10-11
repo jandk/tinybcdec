@@ -4,9 +4,10 @@ import java.util.*;
 import java.util.stream.*;
 
 final class ExtractGenerator {
-    private static final Expr.Var ENDPOINTS = new Expr.Var("int[]", "endpoints");
     private static final Expr.Var LO = new Expr.Var("long", "lo");
     private static final Expr.Var HI = new Expr.Var("long", "hi");
+    private static final Expr.Var ENDPOINTS = new Expr.Var("int[]", "endpoints");
+    private static final List<Expr.Var> PARAMS = List.of(LO, HI, ENDPOINTS);
 
     public static void main(String[] args) {
         generateLayout(new BC6HLayout());
@@ -29,7 +30,7 @@ final class ExtractGenerator {
             if (!pVars.containsKey(pos)) {
                 Expr.Var var = new Expr.Var("int", "p" + pVars.size());
                 pVars.put(pos, var);
-                stmts.add(new Stmt.Declare(var, extract128(pos, 1, 0).get(0)));
+                stmts.add(new Stmt.Declare(var, Expr.Binary.list(Expr.Op.OR, extract128(pos, 1, 0))));
             }
         }
 
@@ -38,34 +39,34 @@ final class ExtractGenerator {
             .collect(Collectors.groupingBy(r -> r.target().arrayIndex(), TreeMap::new, Collectors.toList()));
 
         for (Map.Entry<Integer, List<Range>> entry : groups.entrySet()) {
-            Integer index = entry.getKey();
+            int index = entry.getKey();
 
             List<Expr> terms = new ArrayList<>();
             for (Range range : entry.getValue()) {
                 terms.addAll(term(range));
             }
             if (!pBits.isEmpty()) {
-                terms.add(pVars.get(pBits.get(index / 4)));
+                terms.add(pVars.get(pBits.get(entry.getValue().get(0).target().index())));
             }
 
-            Expr allTerms = terms.stream()
-                .reduce((a, b) -> new Expr.Binary(Expr.Op.OR, a, b))
-                .orElseThrow();
-
-            stmts.add(new Stmt.Assign(new Expr.Index(ENDPOINTS, index), allTerms));
+            stmts.add(new Stmt.Assign(
+                new Expr.Index(ENDPOINTS, index),
+                Expr.Binary.list(Expr.Op.OR, terms)
+            ));
         }
 
-        String methodDeclaration = "private void readEndpoints" + modeDefinition.mode() + "(long lo, long hi, int[] endpoints) {\n";
+        String signature = PARAMS.stream()
+            .map(Expr.Var::declaration)
+            .collect(Collectors.joining(", ", "private void readEndpoints" + modeDefinition.mode() + "(", ") {\n"));
+
         return stmts.stream()
             .map(stmt -> "    " + stmt)
-            .collect(Collectors.joining("\n", methodDeclaration, "\n}\n"));
+            .collect(Collectors.joining("\n", signature, "\n}\n"));
     }
 
     private static List<Expr> term(Range f) {
         if (f.reversed()) {
-            Expr expr = extract128(f.start(), f.count(), 0).stream()
-                .reduce((lhs, rhs) -> new Expr.Binary(Expr.Op.OR, lhs, rhs))
-                .orElseThrow();
+            Expr expr = Expr.Binary.list(Expr.Op.OR, extract128(f.start(), f.count(), 0));
             Expr.Call rhs = new Expr.Call("reverse" + f.count(), expr);
             return List.of(shift(rhs, -f.shift()));
         }

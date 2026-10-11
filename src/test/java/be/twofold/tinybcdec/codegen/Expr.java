@@ -49,6 +49,12 @@ abstract class Expr {
             this.rhs = Objects.requireNonNull(rhs);
         }
 
+        static Expr list(Op op, List<Expr> exprs) {
+            return exprs.stream()
+                .reduce((lhs, rhs) -> new Binary(op, lhs, rhs))
+                .orElseThrow();
+        }
+
         @Override
         int precedence() {
             return op.precedence();
@@ -149,8 +155,8 @@ abstract class Expr {
             this.name = Objects.requireNonNull(name);
         }
 
-        public String type() {
-            return type;
+        public String declaration() {
+            return type + " " + name;
         }
 
         @Override

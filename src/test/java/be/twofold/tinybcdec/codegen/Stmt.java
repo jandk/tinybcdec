@@ -40,7 +40,7 @@ abstract class Stmt {
 
         @Override
         public String toString() {
-            return var.type() + " " + var + " = " + value + ";";
+            return var.declaration() + " = " + value + ";";
         }
     }
 }
